@@ -1,2 +1,3 @@
-#ifndef _DIFFUSIONMATRIX.H
-#define 
+#ifndef _DIFFUSIONMATRIX_H
+#define _DIFFUSIONMATRIX_H
+#endif //_DIFFUSIONMATRIX_H

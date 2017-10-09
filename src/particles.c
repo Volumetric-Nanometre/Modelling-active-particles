@@ -1,8 +1,23 @@
-#include "particles.h"
+
+/*********************
+* Date of creation 09/10/2017
+* Author: Michael O'Donnell
+* Contact: mo14776@my.bristol.ac.uk
+* Other Authors: N/A
+**************************************
+* History
+*
+* 09/10/2017 -Created particle read in function to allocate memory and
+*             bring in inputs.
+**************************************/
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+
+#include "particles.h"
 
 int  particle_read_in(particleVariables **particles)
 {
