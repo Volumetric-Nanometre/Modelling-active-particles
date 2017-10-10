@@ -17,7 +17,7 @@
 
 //
 
-
+double gBoltzmannConst = 1.38064852E-23; // m^2 kg s^-2 K^-1
 
 
 
