@@ -13,6 +13,7 @@
 #include <stdlib.h>
 
 #include "particles.h"
+#include "diffusionmatrix.h"
 //
 
 //
@@ -37,7 +38,21 @@ int main(int argc, char *argv[])
         return numberOfParticles;
     }
 
+    double *diffusionMatrix = NULL ;
 
+    double temperature = 273; // Kelvin
+    double viscosity = 1;
+    double radius = 1;
+
+    if( (diffusionMatrix = diffusion_matrix_creation( numberOfParticles, particles ,temperature, viscosity, radius)) == NULL )
+    {
+        free( particles );
+        particles = NULL ;
+        getchar();
+        return errno;
+    }
+
+    printf("Diffusion matrix created\n" );
     getchar();
 
     //
@@ -47,6 +62,11 @@ int main(int argc, char *argv[])
     if( particles != NULL )
     {
         free( particles );
+        particles = NULL;
+    }
+    if( diffusionMatrix != NULL )
+    {
+        free( diffusionMatrix );
         particles = NULL;
     }
 
