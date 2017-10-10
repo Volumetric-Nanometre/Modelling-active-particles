@@ -21,12 +21,12 @@
 
 int kronecker_delta(int i, int j)
 {
-  if(i == j)
-  {
-    return 1;
-  }
-  else
-  {
-    return 0;
-  }
+    if(i == j)
+    {
+        return 1;
+    }
+        else
+    {
+        return 0;
+    }
 }
