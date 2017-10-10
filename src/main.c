@@ -13,6 +13,13 @@
 #include <stdlib.h>
 
 #include "particles.h"
+//
+
+//
+
+
+
+
 
 int main(int argc, char *argv[])
 {
@@ -24,9 +31,14 @@ int main(int argc, char *argv[])
     //
     if((numberOfParticles = particle_read_in(&particles))<=0)
     {
+
+
+        getchar();
         return numberOfParticles;
     }
 
+
+    getchar();
 
     //
     // Free memory
