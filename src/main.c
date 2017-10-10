@@ -18,18 +18,18 @@
 //
 
 double gBoltzmannConst = 1.38064852E-23; // m^2 kg s^-2 K^-1
-
+double gPi = 3.14159265359;
 
 
 int main(int argc, char *argv[])
 {
-    int numberOfParticles=0;
+    int numberOfParticles = 0;
 
-    particleVariables* particles=NULL;
+    particleVariables* particles = NULL;
     //
     // Call function to read in particle data
     //
-    if((numberOfParticles = particle_read_in(&particles))<=0)
+    if( ( numberOfParticles = particle_read_in( &particles ) ) <= 0)
     {
 
 
@@ -44,10 +44,10 @@ int main(int argc, char *argv[])
     // Free memory
     //
 
-    if(particles!=NULL)
+    if( particles != NULL )
     {
-        free(particles);
-        particles=NULL;
+        free( particles );
+        particles = NULL;
     }
 
     return 0;
