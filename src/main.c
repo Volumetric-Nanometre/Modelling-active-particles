@@ -24,6 +24,19 @@ double gPi = 3.14159265359;
 
 int main(int argc, char *argv[])
 {
+    //
+    // Check Debug mode
+    //
+    int Debug = 0;
+
+    if(argc >= 2)
+    {
+        Debug = 1;
+        printf("Warning debug mode entered. Press any key to continue...\n" );
+        getchar();
+    }
+
+
     int numberOfParticles = 0;
 
     particleVariables* particles = NULL;
@@ -44,6 +57,10 @@ int main(int argc, char *argv[])
     double viscosity = 1;
     double radius = 1;
 
+    //
+    // Create diffusion matrix
+    //
+
     if( (diffusionMatrix = diffusion_matrix_creation( numberOfParticles, particles ,temperature, viscosity, radius)) == NULL )
     {
         free( particles );
@@ -53,6 +70,29 @@ int main(int argc, char *argv[])
     }
 
     printf("Diffusion matrix created\n" );
+
+    //---------------------------- DEBUG------------------------------//
+    //
+    // Prints the diffusionMatrix to a file for inspection
+    //
+    if( Debug == 1)
+    {
+        FILE *matrixOutput = fopen( "matrix_output.txt","w");
+
+        for(int i = 0; i < 3 * numberOfParticles; i++)
+        {
+            for(int j = 0; j < 3 * numberOfParticles; j++)
+            {
+                fprintf(matrixOutput, "%g\t", diffusionMatrix[i * 3 * numberOfParticles + j]);
+            }
+            fprintf(matrixOutput, "\n");
+
+        }
+    }
+    //---------------------------END---------------------------------//
+
+
+
     getchar();
 
     //
