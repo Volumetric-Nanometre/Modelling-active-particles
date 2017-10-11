@@ -156,8 +156,8 @@ void rotational_tensor_creation(double *tempMatrix, particleVariables *particles
         {
             for(int m = 0; m < 3; m ++)
             {
-                tempMatrix[n * 3 + m] =( (dimensionalVector[n] * dimensionalVector [m]) / pow(absDistance,2) - kronecker_delta(n, m) )
-                                        *( 3 * stokesConstantProduct / 16 * pow( absDistance, 3) );       //  Over 16 for interparticle interaction terms
+                tempMatrix[n * 3 + m] =( (dimensionalVector[n] * dimensionalVector [m]) / pow(absDistance,2) - kronecker_delta( i, j) )
+                                        *( stokesConstantProduct / 16 * pow( absDistance, 3) );       //  Over 16 for interparticle interaction terms
             }
 
         }
@@ -201,8 +201,8 @@ void translation_rotation_coupling_tensor_creation(double *tempMatrix, particleV
         {
             for(int m = 0; m < 3; m ++)
             {
-                tempMatrix[n * 3 + m] = ( dimensionalVector[n] / absDistance )*levi_civita_density(n,m)
-                                    *( stokesConstantProduct / 8 * pow( absDistance, 2) );       //  Over 8 for interparticle interaction terms
+                tempMatrix[n * 3 + m] = ( dimensionalVector[n] / pow(absDistance,3) )*levi_civita_density(n,m)
+                                    *( stokesConstantProduct / 8 * pow( absDistance, 3) );       //  Over 16 for interparticle interaction terms
             }
 
         }
