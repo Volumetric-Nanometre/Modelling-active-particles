@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+=======
 *.o
 makefile
 matrix_output.txt
+>>>>>>> refs/remotes/origin/Michael
