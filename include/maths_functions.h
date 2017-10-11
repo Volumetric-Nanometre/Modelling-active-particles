@@ -13,4 +13,8 @@
 #include <stdlib.h>
 
 int kronecker_delta(int i, int k);
+
+int levi_civita_density(int i, int j);
+
+
 #endif  // _MATHS_FUNCTIONS_H

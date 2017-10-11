@@ -30,3 +30,23 @@ int kronecker_delta(int i, int j)
         return 0;
     }
 }
+
+//
+// Performs the levi_civita_density permutation
+//
+
+int levi_civita_density(int i, int j)
+{
+    if(i == j)
+    {
+        return 0;
+    }
+    else if( i < j)
+    {
+        return 1;
+    }
+    else
+    {
+        return -1;
+    }
+}
