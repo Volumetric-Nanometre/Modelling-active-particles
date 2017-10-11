@@ -13,6 +13,7 @@
 #include <math.h>
 #include <errno.h>
 #include <string.h>
+#include <omp.h>
 
 #include "diffusionmatrix.h"
 #include "maths_functions.h"
@@ -31,6 +32,7 @@ extern double gPi;
 
 double *diffusion_matrix_creation(int numberOfParticles, particleVariables *particles, double temperature, double viscosity, double radius)
 {
+
     double *diffusionMatrix = NULL ;
     double oseenMatrix[9] = {0} ;
 
@@ -48,6 +50,7 @@ double *diffusion_matrix_creation(int numberOfParticles, particleVariables *part
     //
     // Scan through the particles and calculate the individual Oseen matrices
     //
+    #pragma omp parallel for collapse(2)
     for( int particleRow = 0; particleRow < 3*numberOfParticles; particleRow+=3)
     {
         for( int particleColumn = 0 ; particleColumn < 3*numberOfParticles; particleColumn+=3)
