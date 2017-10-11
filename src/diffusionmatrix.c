@@ -65,6 +65,11 @@ double *diffusion_matrix_creation(int numberOfParticles, particleVariables *part
                 for(int m = 0; m < 3; m ++)
                 {
                     diffusionMatrix[ (particleRow + n)*3*numberOfParticles +particleColumn+m ] = oseenMatrix[n * 3 + m];
+<<<<<<< HEAD
+=======
+                    printf ("%d\t",(particleRow + n)*3*numberOfParticles +particleColumn+m );
+
+>>>>>>> d23681ced9b9088bb65c4899b8b6b9add059cc26
                 }
             }
 
@@ -89,7 +94,12 @@ void oseen_tensor_creation(double *oseenMatrix, particleVariables *particles, do
             {
                 oseenMatrix[n * 3 + m] = kronecker_delta(n,m) * stokesConstantProduct / 6; // Over 6 for the self interaction terms
 
+<<<<<<< HEAD
+=======
+                //printf ("%g\t",oseenMatrix[n * 3 + m]);
+>>>>>>> d23681ced9b9088bb65c4899b8b6b9add059cc26
             }
+            //printf ("\n");
         }
     }
     else
@@ -111,7 +121,13 @@ void oseen_tensor_creation(double *oseenMatrix, particleVariables *particles, do
             {
                 oseenMatrix[n * 3 + m] = (kronecker_delta(n,m) + (dimensionalVector[n] * dimensionalVector [m])/pow(absDistance,2) )
                                         *( stokesConstantProduct / 8);      //  Over 8 for interparticle interaction terms
+<<<<<<< HEAD
+=======
+                                        //printf ("%g\t",oseenMatrix[n * 3 + m]);
+>>>>>>> d23681ced9b9088bb65c4899b8b6b9add059cc26
             }
+        //    printf ("\n");
+
         }
     }
 
