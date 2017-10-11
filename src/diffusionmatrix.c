@@ -38,7 +38,7 @@ double *diffusion_matrix_creation(int numberOfParticles, particleVariables *part
     //
     // Allocate and check memory
     //
-    diffusionMatrix = calloc( pow(3 * numberOfParticles, 2 ), sizeof ( *diffusionMatrix ));
+    diffusionMatrix = calloc( pow(6 * numberOfParticles, 2 ), sizeof ( *diffusionMatrix ));
 
     if( diffusionMatrix == NULL )
     {
@@ -57,6 +57,29 @@ double *diffusion_matrix_creation(int numberOfParticles, particleVariables *part
             // Create Oseen matrix
             //
             translational_tensor_creation(tempMatrix, particles, temperature, viscosity, radius, particleRow, particleColumn );
+
+            //
+            // Transfer to main diffusion matrix
+            //
+            for(int n = 0; n < 3; n ++)
+            {
+                for(int m = 0; m < 3; m ++)
+                {
+                    diffusionMatrix[ (particleRow + n)*3*numberOfParticles +particleColumn+m ] = tempMatrix[n * 3 + m];
+                }
+            }
+
+        }
+    }
+
+    for( int particleRow = 3*numberOfParticles; particleRow < 6*numberOfParticles; particleRow+=3)
+    {
+        for( int particleColumn = 3*numberOfParticles ; particleColumn < 6*numberOfParticles; particleColumn+=3)
+        {
+            //
+            // Create Oseen matrix
+            //
+            rotational_tensor_creation(tempMatrix, particles, temperature, viscosity, radius, particleRow, particleColumn );
 
             //
             // Transfer to main diffusion matrix

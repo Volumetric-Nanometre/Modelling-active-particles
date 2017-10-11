@@ -74,9 +74,9 @@ int main(int argc, char *argv[])
     {
         FILE *matrixOutput = fopen( "matrix_output.txt","w");
 
-        for(int i = 0; i < 3 * numberOfParticles; i++)
+        for(int i = 0; i < 6 * numberOfParticles; i++)
         {
-            for(int j = 0; j < 3 * numberOfParticles; j++)
+            for(int j = 0; j < 6 * numberOfParticles; j++)
             {
                 fprintf(matrixOutput, "%g\t", diffusionMatrix[i * 3 * numberOfParticles + j]);
             }
