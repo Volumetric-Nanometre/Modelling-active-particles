@@ -56,7 +56,7 @@ double *diffusion_matrix_creation(int numberOfParticles, particleVariables *part
             //
             // Create Oseen matrix
             //
-            oseen_tensor_creation(oseenMatrix, particles, temperature, viscosity, radius, particleRow, particleColumn );
+            translational_tensor_creation(oseenMatrix, particles, temperature, viscosity, radius, particleRow, particleColumn );
 
             //
             // Transfer to main diffusion matrix
@@ -79,7 +79,7 @@ double *diffusion_matrix_creation(int numberOfParticles, particleVariables *part
 //
 // Create 3 x 3 submatrices using the Oseen tensor rules
 //
-void oseen_tensor_creation(double *oseenMatrix, particleVariables *particles, double temperature, double viscosity, double radius, int i, int j)
+void translational_tensor_creation(double *oseenMatrix, particleVariables *particles, double temperature, double viscosity, double radius, int i, int j)
 {
     double stokesConstantProduct = ( gBoltzmannConst * temperature ) / ( gPi * viscosity * radius);
     if(i==j)
@@ -120,3 +120,9 @@ void oseen_tensor_creation(double *oseenMatrix, particleVariables *particles, do
     }
 
 }
+
+//
+// Create the rotational diffusion 3x3 matrices
+//
+
+//void rotational_
