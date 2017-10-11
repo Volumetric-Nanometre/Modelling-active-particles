@@ -112,6 +112,8 @@ void oseen_tensor_creation(double *oseenMatrix, particleVariables *particles, do
                 oseenMatrix[n * 3 + m] = (kronecker_delta(n,m) + (dimensionalVector[n] * dimensionalVector [m])/pow(absDistance,2) )
                                         *( stokesConstantProduct / 8);      //  Over 8 for interparticle interaction terms
             }
+        //    printf ("\n");
+
         }
     }
 
