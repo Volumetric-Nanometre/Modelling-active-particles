@@ -163,3 +163,48 @@ void rotational_tensor_creation(double *tempMatrix, particleVariables *particles
         }
     }
 }
+
+
+//
+// Create the rotational translational coupled matrices
+// Note T-R is the bottom left corner of the grand matrix and is the negative
+// of T-R
+//
+
+void translation_rotation_coupling_tensor_creation(double *tempMatrix, particleVariables *particles, double temperature, double viscosity, double radius, int i, int j)
+{
+    double stokesConstantProduct = ( gBoltzmannConst * temperature ) / ( gPi * viscosity);
+    if(i==j)
+    {
+        for(int n = 0; n < 3; n ++)
+        {
+            for(int m = 0; m < 3; m ++)
+            {
+                tempMatrix[n * 3 + m] = 0;
+            }
+        }
+    }
+    else
+    {
+        //
+        // Calculate dyadic matrix elements by first calculating the dimensional
+        // vectors, i.e x_ij = x_j - x_i
+        //
+        double dimensionalVector[3] = {0};
+        dimensionalVector[0] = particles[j].x - particles[i].x;
+        dimensionalVector[1] = particles[j].y - particles[i].y;
+        dimensionalVector[2] = particles[j].z - particles[i].z;
+
+        double absDistance = sqrt( pow(dimensionalVector[0],2) + pow(dimensionalVector[1],2) + pow(dimensionalVector[2],2) );
+
+        for(int n = 0; n < 3; n ++)
+        {
+            for(int m = 0; m < 3; m ++)
+            {
+                tempMatrix[n * 3 + m] = ( dimensionalVector[n] / pow(absDistance,3) )*levi_civita_density(n,m)
+                                    *( stokesConstantProduct / 8 * pow( absDistance, 3) );       //  Over 16 for interparticle interaction terms
+            }
+
+        }
+    }
+}
