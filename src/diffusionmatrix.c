@@ -48,9 +48,9 @@ double *diffusion_matrix_creation(int numberOfParticles, particleVariables *part
     //
     // Scan through the particles and calculate the individual Oseen matrices
     //
-    for( int particleRow = 0; particleRow < numberOfParticles; particleRow++)
+    for( int particleRow = 0; particleRow < 3*numberOfParticles; particleRow+=3)
     {
-        for( int particleColumn = 0 ; particleColumn < numberOfParticles; particleColumn++)
+        for( int particleColumn = 0 ; particleColumn < 3*numberOfParticles; particleColumn+=3)
         {
             //
             // Create Oseen matrix
@@ -64,7 +64,7 @@ double *diffusion_matrix_creation(int numberOfParticles, particleVariables *part
             {
                 for(int m = 0; m < 3; m ++)
                 {
-                    diffusionMatrix[ (particleRow + n) * 3 + (particleColumn + m) ] = oseenMatrix[n * 3 + m];
+                    diffusionMatrix[ (particleRow + n)*3*numberOfParticles +particleColumn+m ] = oseenMatrix[n * 3 + m];
                 }
             }
 
@@ -81,13 +81,14 @@ double *diffusion_matrix_creation(int numberOfParticles, particleVariables *part
 void oseen_tensor_creation(double *oseenMatrix, particleVariables *particles, double temperature, double viscosity, double radius, int i, int j)
 {
     double stokesConstantProduct = ( gBoltzmannConst * temperature ) / ( gPi * viscosity * radius);
-    if(i!=j)
+    if(i==j)
     {
         for(int n = 0; n < 3; n ++)
         {
             for(int m = 0; m < 3; m ++)
             {
                 oseenMatrix[n * 3 + m] = kronecker_delta(n,m) * stokesConstantProduct / 6; // Over 6 for the self interaction terms
+
             }
         }
     }
@@ -110,7 +111,6 @@ void oseen_tensor_creation(double *oseenMatrix, particleVariables *particles, do
             {
                 oseenMatrix[n * 3 + m] = (kronecker_delta(n,m) + (dimensionalVector[n] * dimensionalVector [m])/pow(absDistance,2) )
                                         *( stokesConstantProduct / 8);      //  Over 8 for interparticle interaction terms
-
             }
         }
     }

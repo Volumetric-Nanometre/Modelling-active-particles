@@ -4,10 +4,7 @@
 * Contact: mo14776@my.bristol.ac.uk
 * Other Authors: N/A
 **************************************
-* History
-*
-* 09/10/2017 -Created particl_read_in prototype. Also created the struct
-*             particleVariables to store the varibles in use.
+* Change History
 **************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,17 +18,17 @@
 double gBoltzmannConst = 1.38064852E-23; // m^2 kg s^-2 K^-1
 double gPi = 3.14159265359;
 
+int gDebug = 0;
 
 int main(int argc, char *argv[])
 {
     //
     // Check Debug mode
     //
-    int Debug = 0;
 
     if(argc >= 2)
     {
-        Debug = 1;
+        gDebug = 1;
         printf("Warning debug mode entered. Press any key to continue...\n" );
         getchar();
     }
@@ -45,8 +42,6 @@ int main(int argc, char *argv[])
     //
     if( ( numberOfParticles = particle_read_in( &particles ) ) <= 0)
     {
-
-
         getchar();
         return numberOfParticles;
     }
@@ -75,7 +70,7 @@ int main(int argc, char *argv[])
     //
     // Prints the diffusionMatrix to a file for inspection
     //
-    if( Debug == 1)
+    if( gDebug == 1)
     {
         FILE *matrixOutput = fopen( "matrix_output.txt","w");
 
