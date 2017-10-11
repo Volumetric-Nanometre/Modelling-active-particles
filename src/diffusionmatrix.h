@@ -10,5 +10,6 @@ void translational_tensor_creation(double *tempMatrix, particleVariables *partic
 
 void rotational_tensor_creation(double *tempMatrix, particleVariables *particles, double temperature, double viscosity, double radius, int i, int j);
 
+void translation_rotation_coupling_tensor_creation(double *tempMatrix, particleVariables *particles, double temperature, double viscosity, double radius, int i, int j);
 
 #endif //_DIFFUSIONMATRIX_H
