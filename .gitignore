@@ -1,0 +1,3 @@
+*.o
+makefile
+matrix_output.txt
