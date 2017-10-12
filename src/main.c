@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     // Check Debug mode
     //
 
-    //if(argc >= 2)
+    if(argc >= 2)
     {
         gDebug = 1;
         printf("Warning debug mode entered. Press any key to continue...\n" );
