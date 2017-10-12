@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     // Check Debug mode
     //
 
-    if(argc >= 2)
+    //if(argc >= 2)
     {
         gDebug = 1;
         printf("Warning debug mode entered. Press any key to continue...\n" );
@@ -45,6 +45,8 @@ int main(int argc, char *argv[])
         getchar();
         return numberOfParticles;
     }
+
+    printf("Data read in success\n" );
 
     double *diffusionMatrix = NULL ;
 
@@ -78,7 +80,7 @@ int main(int argc, char *argv[])
         {
             for(int j = 0; j < 6 * numberOfParticles; j++)
             {
-                fprintf(matrixOutput, "%g\t", diffusionMatrix[i * 3 * numberOfParticles + j]);
+                fprintf(matrixOutput, "%e\t", diffusionMatrix[i * 6 * numberOfParticles + j]);
             }
             fprintf(matrixOutput, "\n");
 

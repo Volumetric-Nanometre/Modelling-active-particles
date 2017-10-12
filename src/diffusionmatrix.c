@@ -33,7 +33,10 @@ double *diffusion_matrix_creation(int numberOfParticles, particleVariables *part
 {
 
     double *diffusionMatrix = NULL ;
-    double tempMatrix[9] = {0} ;
+    double tempTransMatrix[9] = {0} ;
+    double tempRotatMatrix[9] = {0} ;
+    double tempCouplMatrix[9] = {0} ;
+
 
     //
     // Allocate and check memory
@@ -49,15 +52,24 @@ double *diffusion_matrix_creation(int numberOfParticles, particleVariables *part
     //
     // Scan through the particles and calculate the individual Oseen matrices
     //
-    for( int particleRow = 0; particleRow < 3*numberOfParticles; particleRow+=3)
+
+
+    for( int particleRow = 0; particleRow < numberOfParticles; particleRow++)
     {
-        for( int particleColumn = 0 ; particleColumn < 3*numberOfParticles; particleColumn+=3)
+        for( int particleColumn = 0 ; particleColumn < numberOfParticles; particleColumn++)
         {
             //
-            // Create Oseen matrix
+            // Create translational submatrix
             //
-            translational_tensor_creation(tempMatrix, particles, temperature, viscosity, radius, particleRow, particleColumn );
-
+            translational_tensor_creation(tempTransMatrix, particles, temperature, viscosity, radius, particleRow, particleColumn );
+            //
+            // Create rotational submatrix
+            //
+            rotational_tensor_creation(tempRotatMatrix, particles, temperature, viscosity, radius, particleRow, particleColumn );
+            //
+            //Create coupled submatrix
+            //
+            translation_rotation_coupling_tensor_creation(tempCouplMatrix, particles, temperature, viscosity, radius, particleRow, particleColumn );
             //
             // Transfer to main diffusion matrix
             //
@@ -65,12 +77,20 @@ double *diffusion_matrix_creation(int numberOfParticles, particleVariables *part
             {
                 for(int m = 0; m < 3; m ++)
                 {
-                    diffusionMatrix[ (particleRow + n)*3*numberOfParticles +particleColumn+m ] = tempMatrix[n * 3 + m];
+                    int translationPosition = (particleRow * 3 + n) * 6 * numberOfParticles + particleColumn * 3 + m;
+                    int rotationPosition = ( (particleRow + numberOfParticles )* 3 + n) * 6 * numberOfParticles + (particleColumn + numberOfParticles) * 3 + m ;
+                //    int couplingPosition = (particleRow * 3 + n) * 6 * numberOfParticles + particleColumn * 3 + m;
+
+                    diffusionMatrix[ translationPosition] = tempTransMatrix[n * 3 + m];
+                    diffusionMatrix[ rotationPosition] = tempRotatMatrix[n * 3 + m];
+                //    diffusionMatrix[ couplingPosition] = tempCouplMatrix[n * 3 + m];
                 }
             }
-
         }
     }
+    /*
+    particleRowCount=0;
+    particleColumnCount=0;
 
     for( int particleRow = 3*numberOfParticles; particleRow < 6*numberOfParticles; particleRow+=3)
     {
@@ -79,7 +99,7 @@ double *diffusion_matrix_creation(int numberOfParticles, particleVariables *part
             //
             // Create Oseen matrix
             //
-            rotational_tensor_creation(tempMatrix, particles, temperature, viscosity, radius, particleRow, particleColumn );
+            rotational_tensor_creation(tempMatrix, particles, temperature, viscosity, radius, particleRowCount, particleColumnCount );
 
             //
             // Transfer to main diffusion matrix
@@ -91,10 +111,11 @@ double *diffusion_matrix_creation(int numberOfParticles, particleVariables *part
                     diffusionMatrix[ (particleRow + n)*3*numberOfParticles +particleColumn+m ] = tempMatrix[n * 3 + m];
                 }
             }
-
+            particleColumnCount++;
         }
+        particleRowCount++;
     }
-
+*/
     return diffusionMatrix;
 }
 
