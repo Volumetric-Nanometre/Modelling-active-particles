@@ -13,6 +13,7 @@
 #include <math.h>
 #include <errno.h>
 #include <string.h>
+#include <omp.h>
 
 #include "diffusionmatrix.h"
 #include "maths_functions.h"
@@ -49,10 +50,15 @@ double *diffusion_matrix_creation(int numberOfParticles, particleVariables *part
     //
     // Scan through the particles and calculate the individual Oseen matrices
     //
+
+    double tie=omp_get_wtime();
+
+    #pragma omp parallel for collapse(2) 
     for( int particleRow = 0; particleRow < numberOfParticles; particleRow++)
     {
         for( int particleColumn = 0 ; particleColumn < numberOfParticles; particleColumn++)
         {
+
             //
             // Create translational submatrix
             //
@@ -91,6 +97,11 @@ double *diffusion_matrix_creation(int numberOfParticles, particleVariables *part
             }
         }
     }
+
+    tie=omp_get_wtime()-tie;
+
+    printf("%lfs\n",tie );
+
     return diffusionMatrix;
 }
 
