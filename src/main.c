@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
     //
     // Prints the diffusionMatrix to a file for inspection
     //
-    if( gDebug == 1)
+    if( gDebug == 1 && diffusionMatrix != NULL)
     {
         FILE *matrixOutput = fopen( "matrix_output.txt","w");
 
