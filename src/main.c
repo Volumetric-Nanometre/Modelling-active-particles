@@ -37,6 +37,8 @@ int main(int argc, char *argv[])
 
     int numberOfParticles = 0;
 
+    int deltaTime = 1E-3; // Seconds
+
     particleVariables* particles = NULL;
     //
     // Call function to read in particle data
@@ -48,6 +50,39 @@ int main(int argc, char *argv[])
     }
 
     printf("Data read in success\n" );
+
+    //
+    // Create generalised coordinates
+    //
+
+    double *generalisedCoordinates = NULL ;
+
+    if( (generalisedCoordinates = generalised_coordinate_creation( numberOfParticles, particles) ) == NULL )
+    {
+        free( particles );
+        particles = NULL ;
+        getchar();
+        return errno;
+    }
+
+    //---------------------------- DEBUG------------------------------//
+    //
+    // Prints the generalisedCoordinates to a file for inspection
+    //
+    if( gDebug == 1 && generalisedCoordinates != NULL)
+    {
+        FILE *genCoordOutput = fopen( "genCoord_output.txt","w");
+
+        for(int i = 0; i < 6 * numberOfParticles; i++)
+        {
+            fprintf(genCoordOutput, "%e\n", generalisedCoordinates[i]);
+        }
+        fclose (genCoordOutput);
+    }
+    //---------------------------END---------------------------------//
+
+
+
 
     double *diffusionMatrix = NULL ;
 
@@ -61,8 +96,11 @@ int main(int argc, char *argv[])
 
     if( (diffusionMatrix = diffusion_matrix_creation( numberOfParticles, particles ,temperature, viscosity, radius)) == NULL )
     {
+
         free( particles );
         particles = NULL ;
+        free( generalisedCoordinates );
+        generalisedCoordinates = NULL ;
         getchar();
         return errno;
     }
@@ -86,6 +124,7 @@ int main(int argc, char *argv[])
             fprintf(matrixOutput, "\n");
 
         }
+        fclose (matrixOutput);
     }
     //---------------------------END---------------------------------//
 
@@ -103,6 +142,9 @@ int main(int argc, char *argv[])
         free( diffusionMatrix );
         diffusionMatrix = NULL ;
 
+        free( generalisedCoordinates );
+        generalisedCoordinates = NULL ;
+
         getchar();
         return errno;
     }
@@ -110,8 +152,33 @@ int main(int argc, char *argv[])
 
 
     //
+    // Include additional forces
     //
+
+    double *additionalForces = NULL;
+
+    if( (additionalForces = calloc(6*numberOfParticles, sizeof *additionalForces) ) == NULL )
+    {
+        free( particles );
+        particles = NULL ;
+
+        free( generalisedCoordinates );
+        generalisedCoordinates = NULL ;
+
+        free( diffusionMatrix );
+        diffusionMatrix = NULL ;
+
+        free( stochasticForce );
+        stochasticForce = NULL ;
+
+        getchar();
+        return errno;
+    }
+
     //
+    // Calculate time step.
+    //
+
 
 
 
@@ -131,6 +198,16 @@ int main(int argc, char *argv[])
     if( diffusionMatrix != NULL )
     {
         free( diffusionMatrix );
+        particles = NULL;
+    }
+    if( generalisedCoordinates != NULL )
+    {
+        free( generalisedCoordinates );
+        particles = NULL;
+    }
+    if( stochasticForce != NULL )
+    {
+        free( stochasticForce );
         particles = NULL;
     }
 
