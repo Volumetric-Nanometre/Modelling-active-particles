@@ -53,7 +53,7 @@ double *diffusion_matrix_creation(int numberOfParticles, particleVariables *part
 
     double tie=omp_get_wtime();
 
-    #pragma omp parallel for collapse(2) 
+    //#pragma omp parallel for collapse(2)
     for( int particleRow = 0; particleRow < numberOfParticles; particleRow++)
     {
         for( int particleColumn = 0 ; particleColumn < numberOfParticles; particleColumn++)
@@ -118,7 +118,7 @@ void translational_tensor_creation(double *tempMatrix, particleVariables *partic
         {
             for(int m = 0; m < 3; m ++)
             {
-                tempMatrix[n * 3 + m] = kronecker_delta(n,m) * stokesConstantProduct / (6* radius); // Over 6 for the self interaction terms
+                tempMatrix[n * 3 + m] = kronecker_delta(n,m) * stokesConstantProduct / (6 * radius); // Over 6 for the self interaction terms
 
 
             }

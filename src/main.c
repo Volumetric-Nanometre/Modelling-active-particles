@@ -14,6 +14,7 @@
 #include "particles.h"
 #include "diffusionmatrix.h"
 #include "stochastic_force.h"
+#include "moving_on.h"
 
 
 double gBoltzmannConst = 1.38064852E-23; // m^2 kg s^-2 K^-1
@@ -34,10 +35,19 @@ int main(int argc, char *argv[])
         getchar();
     }
 
+    FILE *output = fopen("output.txt","w");
+
+    if(output == NULL)
+    {
+        printf("-Error %d : %s\n", errno, strerror( errno ) );
+        return -errno;
+    }
+
+
 
     int numberOfParticles = 0;
 
-    int deltaTime = 1E-3; // Seconds
+    double deltaTime = 1E-3; // Seconds
 
     particleVariables* particles = NULL;
     //
@@ -86,9 +96,9 @@ int main(int argc, char *argv[])
 
     double *diffusionMatrix = NULL ;
 
-    double temperature = 273; // Kelvin
-    double viscosity = 1;
-    double radius = 1;
+    double temperature = 298; // K
+    double viscosity = 8.9E-4; //N m^-2 s
+    double radius = 1E-6; // m
 
     //
     // Create diffusion matrix
@@ -132,9 +142,9 @@ int main(int argc, char *argv[])
     // Create the stochastic force
     //
 
-    double *stochasticForce = NULL;
+    double *stochasticDisplacement = NULL;
 
-    if( (stochasticForce = stochastic_force_creation( numberOfParticles ) ) == NULL )
+    if( (stochasticDisplacement = stochastic_displacement_creation( numberOfParticles ) ) == NULL )
     {
         free( particles );
         particles = NULL ;
@@ -144,6 +154,8 @@ int main(int argc, char *argv[])
 
         free( generalisedCoordinates );
         generalisedCoordinates = NULL ;
+
+        fclose (output);
 
         getchar();
         return errno;
@@ -168,8 +180,10 @@ int main(int argc, char *argv[])
         free( diffusionMatrix );
         diffusionMatrix = NULL ;
 
-        free( stochasticForce );
-        stochasticForce = NULL ;
+        free( stochasticDisplacement );
+        stochasticDisplacement = NULL ;
+
+        fclose (output);
 
         getchar();
         return errno;
@@ -179,16 +193,18 @@ int main(int argc, char *argv[])
     // Calculate time step.
     //
 
+    moving_on_routine(numberOfParticles, deltaTime, temperature, diffusionMatrix, additionalForces, stochasticDisplacement, &generalisedCoordinates);
 
-
-
-
-
-    getchar();
+    for(int i = 0; i < 6 * numberOfParticles; i++)
+    {
+        fprintf(output, "%e\n", generalisedCoordinates[i]);
+    }
 
     //
     // Free memory
     //
+
+    fclose (output);
 
     if( particles != NULL )
     {
@@ -205,9 +221,9 @@ int main(int argc, char *argv[])
         free( generalisedCoordinates );
         particles = NULL;
     }
-    if( stochasticForce != NULL )
+    if( stochasticDisplacement != NULL )
     {
-        free( stochasticForce );
+        free( stochasticDisplacement );
         particles = NULL;
     }
 
