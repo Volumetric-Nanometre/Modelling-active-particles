@@ -11,6 +11,7 @@
 
 #include "particles.h"
 #include "diffusionmatrix.h"
+#include "stochastic_force.h"
 //
 
 //
