@@ -1,3 +1,4 @@
 *.o
 makefile
 matrix_output.txt
+genCoord_output.txt
