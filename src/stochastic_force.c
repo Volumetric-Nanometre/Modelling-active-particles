@@ -15,7 +15,7 @@
 #include "stochastic_force.h"
 
 
-double *stochastic_force_creation(int numberOfParticles)
+double *stochastic_displacement_creation(int numberOfParticles)
 {
     double *stochastic_force = NULL ;
     //
