@@ -76,3 +76,31 @@ int  particle_read_in(particleVariables **particles)
     *particles=initParticles;
     return numberOfParticles;
 }
+
+double *generalised_coordinate_creation(int numberOfParticles, particleVariables *particles)
+{
+    double *generalisedCoordinates = NULL ;
+    //
+    // Allocate and check memory
+    //
+    generalisedCoordinates = calloc( 6 * numberOfParticles, sizeof  *generalisedCoordinates );
+
+    if( generalisedCoordinates == NULL )
+    {
+        printf("-Error %d : %s\n", errno, strerror( errno ) );
+        return NULL;
+    }
+
+    for(int i = 0; i < numberOfParticles; i ++)
+    {
+        generalisedCoordinates[ i * 3 ] = particles[i].x;
+        generalisedCoordinates[ i * 3 + 1 ] = particles[i].y;
+        generalisedCoordinates[ i * 3 + 2 ] = particles[i].z;
+        generalisedCoordinates[ ( i + numberOfParticles ) * 3 ] = particles[i].alpha;
+        generalisedCoordinates[ ( i + numberOfParticles ) * 3 + 1 ] = particles[i].beta;
+        generalisedCoordinates[ ( i + numberOfParticles ) * 3 + 2 ] = particles[i].gamma;
+    }
+
+    return generalisedCoordinates;
+
+}
