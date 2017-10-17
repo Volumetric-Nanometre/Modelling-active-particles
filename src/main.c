@@ -8,13 +8,13 @@
 **************************************/
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <string.h>
 
 #include "particles.h"
 #include "diffusionmatrix.h"
 #include "stochastic_force.h"
-//
 
-//
 
 double gBoltzmannConst = 1.38064852E-23; // m^2 kg s^-2 K^-1
 double gPi = 3.14159265359;
@@ -88,6 +88,32 @@ int main(int argc, char *argv[])
         }
     }
     //---------------------------END---------------------------------//
+
+    //
+    // Create the stochastic force
+    //
+
+    double *stochasticForce = NULL;
+
+    if( (stochasticForce = stochastic_force_creation( numberOfParticles ) ) == NULL )
+    {
+        free( particles );
+        particles = NULL ;
+
+        free( diffusionMatrix );
+        diffusionMatrix = NULL ;
+
+        getchar();
+        return errno;
+    }
+
+
+
+    //
+    //
+    //
+
+
 
 
 

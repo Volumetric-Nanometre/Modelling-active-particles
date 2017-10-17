@@ -12,6 +12,6 @@
 #ifndef _STOCHASTIC_FORCE_H
 #define _STOCHASTIC_FORCE_H
 
-
+double *stochastic_force_creation(int numberOfParticles);
 
 #endif // _STOCHASTIC_FORCE_H

@@ -7,10 +7,10 @@ LDIR =../lib
 
 LIBS=-lm
 
-_DEPS = diffusionmatrix.h maths_functions.h particles.h
+_DEPS = diffusionmatrix.h maths_functions.h particles.h stochastic_force.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = diffusionmatrix.o main.o maths_functions.o particles.o
+_OBJ = diffusionmatrix.o main.o maths_functions.o particles.o stochastic_force.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 
