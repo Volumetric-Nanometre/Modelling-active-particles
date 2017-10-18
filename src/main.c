@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 
     int numberOfParticles = 0;
 
-    double deltaTime = 1E-3; // Seconds
+
 
     particleVariables* particles = NULL;
     //
@@ -152,58 +152,66 @@ int main(int argc, char *argv[])
     double temperature = 298; // K
     double viscosity = 8.9E-4; //N m^-2 s
     double radius = 1E-6; // m
+    double currentTime = 0;
+    double deltaTime = 1E-3; // Seconds
+    double endTime = 10; // Seconds
 
-    //
-    // Create diffusion matrix
-    //
-
-    diffusion_matrix_creation( numberOfParticles, diffusionMatrix, particles ,temperature, viscosity, radius);
-
-    printf("Diffusion matrix created\n" );
-
-    //---------------------------- DEBUG------------------------------//
-    //
-    // Prints the diffusionMatrix to a file for inspection
-    //
-    if( gDebug == 1 && diffusionMatrix != NULL)
+    while(currentTime<=endTime)
     {
-        FILE *matrixOutput = fopen( "matrix_output.txt","w");
+        //
+        // Create diffusion matrix
+        //
 
+        diffusion_matrix_creation( numberOfParticles, diffusionMatrix, particles ,temperature, viscosity, radius);
+
+        //---------------------------- DEBUG------------------------------//
+        //
+        // Prints the diffusionMatrix to a file for inspection
+        //
+        if( gDebug == 1 && diffusionMatrix != NULL)
+        {
+            currentTime = endTime+1;
+            FILE *matrixOutput = fopen( "matrix_output.txt","w");
+
+            for(int i = 0; i < 6 * numberOfParticles; i++)
+            {
+                for(int j = 0; j < 6 * numberOfParticles; j++)
+                {
+                    fprintf(matrixOutput, "%e\t", diffusionMatrix[i * 6 * numberOfParticles + j]);
+                }
+                fprintf(matrixOutput, "\n");
+
+            }
+            fclose (matrixOutput);
+        }
+        //---------------------------END---------------------------------//
+
+
+        //
+        // Create the stochastic displacement
+        //
+
+
+        stochastic_displacement_creation( numberOfParticles , stochasticDisplacement );
+
+        //
+        // Include additional forces
+        //
+
+
+        //
+        // Calculate time step.
+        //
+
+        moving_on_routine(numberOfParticles, deltaTime, temperature, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates);
+        fprintf(output, "%lf\t", currentTime);
         for(int i = 0; i < 6 * numberOfParticles; i++)
         {
-            for(int j = 0; j < 6 * numberOfParticles; j++)
-            {
-                fprintf(matrixOutput, "%e\t", diffusionMatrix[i * 6 * numberOfParticles + j]);
-            }
-            fprintf(matrixOutput, "\n");
-
+            fprintf(output, "%e\t", generalisedCoordinates[i]);
         }
-        fclose (matrixOutput);
-    }
-    //---------------------------END---------------------------------//
+        fprintf(output, "\n");
 
-
-    //
-    // Create the stochastic displacement
-    //
-
-
-    stochastic_displacement_creation( numberOfParticles , stochasticDisplacement );
-
-    //
-    // Include additional forces
-    //
-
-
-    //
-    // Calculate time step.
-    //
-
-    moving_on_routine(numberOfParticles, deltaTime, temperature, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates);
-
-    for(int i = 0; i < 6 * numberOfParticles; i++)
-    {
-        fprintf(output, "%e\n", generalisedCoordinates[i]);
+        currentTime+=deltaTime; // time step
     }
 
     //

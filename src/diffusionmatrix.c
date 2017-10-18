@@ -84,12 +84,6 @@ void diffusion_matrix_creation(int numberOfParticles, double *diffusionMatrix, p
         }
     }
 
-<<<<<<< HEAD
-=======
-    tie=omp_get_wtime()-tie;
-
-    printf("%lfs\n",tie );
->>>>>>> fa8273b50c07033f837724c0c952a1bfe0ad546f
 }
 
 
