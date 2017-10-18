@@ -30,30 +30,16 @@ extern double gPi;
 // Create the diffusion matrix
 //
 
-double *diffusion_matrix_creation(int numberOfParticles, particleVariables *particles, double temperature, double viscosity, double radius)
+void diffusion_matrix_creation(int numberOfParticles, double *diffusionMatrix, particleVariables *particles, double temperature, double viscosity, double radius)
 {
-
-    double *diffusionMatrix = NULL ;
     double tempTransMatrix[9] = {0} ;
     double tempRotatMatrix[9] = {0} ;
     double tempCouplMatrix[9] = {0} ;
-    //
-    // Allocate and check memory
-    //
-    diffusionMatrix = calloc( pow(6 * numberOfParticles, 2 ), sizeof ( *diffusionMatrix ));
 
-    if( diffusionMatrix == NULL )
-    {
-        printf("-Error %d : %s\n", errno, strerror( errno ) );
-        return NULL;
-    }
     //
-    // Scan through the particles and calculate the individual Oseen matrices
+    // Scan through the particles and calculate the individual matrices
     //
 
-    double tie=omp_get_wtime();
-
-    //#pragma omp parallel for collapse(2)
     for( int particleRow = 0; particleRow < numberOfParticles; particleRow++)
     {
         for( int particleColumn = 0 ; particleColumn < numberOfParticles; particleColumn++)
@@ -98,11 +84,6 @@ double *diffusion_matrix_creation(int numberOfParticles, particleVariables *part
         }
     }
 
-    tie=omp_get_wtime()-tie;
-
-    printf("%lfs\n",tie );
-
-    return diffusionMatrix;
 }
 
 

@@ -16,11 +16,9 @@
 
 extern double gBoltzmannConst;
 
-void moving_on_routine(int numberOfParticles, double timeStep, double temperature, double *diffusionMatrix, double *additionalForces, double *stochasticDisplacement, double **generalisedCoordinates)
+void moving_on_routine(int numberOfParticles, double timeStep, double temperature, double *diffusionMatrix, double *additionalForces, double *stochasticDisplacement, double *generalisedCoordinates)
 {
     double frontConst = timeStep / ( temperature * gBoltzmannConst);
-    double *tempCoords = *generalisedCoordinates;
-
 
     for(int i = 0; i < 6 * numberOfParticles; i++)
     {
@@ -42,12 +40,11 @@ void moving_on_routine(int numberOfParticles, double timeStep, double temperatur
         // Replace the original generalisedCoordinates with the new coordinates
         //
 
-        tempCoords[i] = temp + stochasticDisplacement[i] + tempCoords[i];
+        generalisedCoordinates[i] = temp + stochasticDisplacement[i] + generalisedCoordinates[i];
     }
 
     //
     // Calculate dD/dy *deltat ( currently this term is ignored )
     //
-    *generalisedCoordinates=tempCoords;
 
 }
