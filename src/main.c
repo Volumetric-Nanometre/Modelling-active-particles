@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <math.h>
 
 #include "particles.h"
 #include "diffusionmatrix.h"
@@ -92,9 +93,61 @@ int main(int argc, char *argv[])
     //---------------------------END---------------------------------//
 
 
+    //
+    // Allocate memory required for the program.
+    // Requires: Diffusion matrix, stochastic displacement,
+    //          additional forces
+    //
+
+
 
 
     double *diffusionMatrix = NULL ;
+    double *stochasticDisplacement = NULL;
+    double *additionalForces = NULL ;
+
+    if( (diffusionMatrix = calloc( pow( 6 * numberOfParticles, 2), sizeof *diffusionMatrix) ) == NULL)
+    {
+        free( particles );
+        particles = NULL ;
+        free( generalisedCoordinates );
+        generalisedCoordinates = NULL ;
+        printf("-Error %d : %s\n", errno, strerror( errno ) );
+
+        getchar();
+        return -errno;
+    }
+
+    if( (stochasticDisplacement = calloc( 6 * numberOfParticles, sizeof *stochasticDisplacement) ) == NULL)
+    {
+        free( particles );
+        particles = NULL ;
+        free( generalisedCoordinates );
+        generalisedCoordinates = NULL ;
+        free( diffusionMatrix );
+        diffusionMatrix = NULL;
+        printf("-Error %d : %s\n", errno, strerror( errno ) );
+
+        getchar();
+        return -errno;
+    }
+
+    if( (additionalForces = calloc( 6 * numberOfParticles, sizeof *additionalForces) ) == NULL)
+    {
+        free( particles );
+        particles = NULL ;
+        free( generalisedCoordinates );
+        generalisedCoordinates = NULL ;
+        free( diffusionMatrix );
+        diffusionMatrix = NULL;
+        free( stochasticDisplacement );
+        stochasticDisplacement = NULL;
+        printf("-Error %d : %s\n", errno, strerror( errno ) );
+
+        getchar();
+        return -errno;
+    }
+
 
     double temperature = 298; // K
     double viscosity = 8.9E-4; //N m^-2 s
@@ -104,16 +157,7 @@ int main(int argc, char *argv[])
     // Create diffusion matrix
     //
 
-    if( (diffusionMatrix = diffusion_matrix_creation( numberOfParticles, particles ,temperature, viscosity, radius)) == NULL )
-    {
-
-        free( particles );
-        particles = NULL ;
-        free( generalisedCoordinates );
-        generalisedCoordinates = NULL ;
-        getchar();
-        return errno;
-    }
+    diffusion_matrix_creation( numberOfParticles, diffusionMatrix, particles ,temperature, viscosity, radius);
 
     printf("Diffusion matrix created\n" );
 
@@ -138,62 +182,24 @@ int main(int argc, char *argv[])
     }
     //---------------------------END---------------------------------//
 
+
     //
-    // Create the stochastic force
+    // Create the stochastic displacement
     //
 
-    double *stochasticDisplacement = NULL;
 
-    if( (stochasticDisplacement = stochastic_displacement_creation( numberOfParticles ) ) == NULL )
-    {
-        free( particles );
-        particles = NULL ;
-
-        free( diffusionMatrix );
-        diffusionMatrix = NULL ;
-
-        free( generalisedCoordinates );
-        generalisedCoordinates = NULL ;
-
-        fclose (output);
-
-        getchar();
-        return errno;
-    }
-
-
+    stochastic_displacement_creation( numberOfParticles , stochasticDisplacement );
 
     //
     // Include additional forces
     //
 
-    double *additionalForces = NULL;
-
-    if( (additionalForces = calloc(6*numberOfParticles, sizeof *additionalForces) ) == NULL )
-    {
-        free( particles );
-        particles = NULL ;
-
-        free( generalisedCoordinates );
-        generalisedCoordinates = NULL ;
-
-        free( diffusionMatrix );
-        diffusionMatrix = NULL ;
-
-        free( stochasticDisplacement );
-        stochasticDisplacement = NULL ;
-
-        fclose (output);
-
-        getchar();
-        return errno;
-    }
 
     //
     // Calculate time step.
     //
 
-    moving_on_routine(numberOfParticles, deltaTime, temperature, diffusionMatrix, additionalForces, stochasticDisplacement, &generalisedCoordinates);
+    moving_on_routine(numberOfParticles, deltaTime, temperature, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates);
 
     for(int i = 0; i < 6 * numberOfParticles; i++)
     {
