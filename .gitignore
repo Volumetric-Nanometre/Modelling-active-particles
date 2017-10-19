@@ -1,6 +1,5 @@
-<<<<<<< HEAD
-=======
 *.o
 makefile
 matrix_output.txt
->>>>>>> refs/remotes/origin/Michael
+genCoord_output.txt
+output.txt

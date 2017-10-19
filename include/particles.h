@@ -7,7 +7,7 @@
 * History
 *
 * 09/10/2017 -Created particl_read_in prototype. Also created the struct
-*             particleVariables to store the varibles in use. 
+*             particleVariables to store the varibles in use.
 **************************************/
 
 
@@ -34,5 +34,7 @@ typedef struct
 
 
 int  particle_read_in(particleVariables **particles);
+
+double *generalised_coordinate_creation(int numberOfParticles, particleVariables *particles);
 
 #endif // _PARTICLES_H
