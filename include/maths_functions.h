@@ -16,5 +16,9 @@ int kronecker_delta(int i, int k);
 
 int levi_civita_density(int i, int j);
 
+float ran1(long *idum);
+
+float guassdev(long *idum);
+
 
 #endif  // _MATHS_FUNCTIONS_H

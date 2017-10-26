@@ -12,6 +12,7 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#include <CL\cl.h>
 
 #include "particles.h"
 #include "diffusionmatrix.h"
@@ -29,6 +30,8 @@ int main(int argc, char *argv[])
     //
     // Check Debug mode
     //
+
+
 
     if(argc >= 2)
     {
@@ -107,7 +110,7 @@ int main(int argc, char *argv[])
     double *stochasticWeighting = NULL;
     double *additionalForces = NULL ;
 
-    if( (diffusionMatrix = calloc( pow( 6 * numberOfParticles, 2), sizeof *diffusionMatrix) ) == NULL)
+    if( (diffusionMatrix = (double *) calloc( pow( 6 * numberOfParticles, 2), sizeof *diffusionMatrix) ) == NULL)
     {
         free( particles );
         particles = NULL ;
@@ -119,7 +122,7 @@ int main(int argc, char *argv[])
         return -errno;
     }
 
-    if( (stochasticWeighting = calloc( 6 * numberOfParticles, sizeof *stochasticWeighting) ) == NULL)
+    if( (stochasticWeighting = (double *) calloc( 6 * numberOfParticles, sizeof *stochasticWeighting) ) == NULL)
     {
         free( particles );
         particles = NULL ;
@@ -133,7 +136,7 @@ int main(int argc, char *argv[])
         return -errno;
     }
 
-    if( (additionalForces = calloc( 6 * numberOfParticles, sizeof *additionalForces) ) == NULL)
+    if( (additionalForces = (double *) calloc( 6 * numberOfParticles, sizeof *additionalForces) ) == NULL)
     {
         free( particles );
         particles = NULL ;
@@ -193,7 +196,7 @@ int main(int argc, char *argv[])
         //
 
 		double *stochasticDisplacement; // Temporarily doing this here
-		stochasticDisplacement = calloc(6*numberOfParticles,sizeof(double)); // 3 displacements per particle, corresponding to each cartesian axis
+		stochasticDisplacement = (double *) calloc(6*numberOfParticles,sizeof(double)); // 3 displacements per particle, corresponding to each cartesian axis
 
 		time_t tSeed;
 		time(&tSeed);
