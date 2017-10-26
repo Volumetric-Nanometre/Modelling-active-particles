@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 
 #include "particles.h"
 #include "diffusionmatrix.h"
@@ -103,7 +104,7 @@ int main(int argc, char *argv[])
 
 
     double *diffusionMatrix = NULL ;
-    double *stochasticDisplacement = NULL;
+    double *stochasticWeighting = NULL;
     double *additionalForces = NULL ;
 
     if( (diffusionMatrix = calloc( pow( 6 * numberOfParticles, 2), sizeof *diffusionMatrix) ) == NULL)
@@ -118,7 +119,7 @@ int main(int argc, char *argv[])
         return -errno;
     }
 
-    if( (stochasticDisplacement = calloc( 6 * numberOfParticles, sizeof *stochasticDisplacement) ) == NULL)
+    if( (stochasticWeighting = calloc( 6 * numberOfParticles, sizeof *stochasticWeighting) ) == NULL)
     {
         free( particles );
         particles = NULL ;
@@ -140,8 +141,8 @@ int main(int argc, char *argv[])
         generalisedCoordinates = NULL ;
         free( diffusionMatrix );
         diffusionMatrix = NULL;
-        free( stochasticDisplacement );
-        stochasticDisplacement = NULL;
+        free( stochasticWeighting );
+        stochasticWeighting = NULL;
         printf("-Error %d : %s\n", errno, strerror( errno ) );
 
         getchar();
@@ -162,7 +163,7 @@ int main(int argc, char *argv[])
         // Create diffusion matrix
         //
 
-        diffusion_matrix_creation( numberOfParticles, diffusionMatrix, particles ,temperature, viscosity, radius);
+        diffusion_matrix_creation( numberOfParticles, diffusionMatrix, particles, temperature, viscosity, radius);
 
         //---------------------------- DEBUG------------------------------//
         //
@@ -191,8 +192,13 @@ int main(int argc, char *argv[])
         // Create the stochastic displacement
         //
 
+		double *stochasticDisplacement; // Temporarily doing this here
+		stochasticDisplacement = calloc(6*numberOfParticles,sizeof(double)); // 3 displacements per particle, corresponding to each cartesian axis
 
-        stochastic_displacement_creation( numberOfParticles , stochasticDisplacement );
+		time_t tSeed;
+		time(&tSeed);
+
+        stochastic_displacement_creation( numberOfParticles, stochasticWeighting, stochasticDisplacement, tSeed );
 
         //
         // Include additional forces
@@ -235,9 +241,9 @@ int main(int argc, char *argv[])
         free( generalisedCoordinates );
         particles = NULL;
     }
-    if( stochasticDisplacement != NULL )
+    if( stochasticWeighting != NULL )
     {
-        free( stochasticDisplacement );
+        free( stochasticWeighting );
         particles = NULL;
     }
 
