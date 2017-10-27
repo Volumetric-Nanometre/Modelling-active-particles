@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
     double radius = 1E-6; // m
     double currentTime = 0;
     double deltaTime = 1E-3; // Seconds
-    double endTime = 10; // Seconds
+    double endTime = 1E-2; // Seconds
 
     while(currentTime<=endTime)
     {
