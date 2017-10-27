@@ -2,7 +2,7 @@
 * Date of creation 09/10/2017
 * Author: Michael O'Donnell
 * Contact: mo14776@my.bristol.ac.uk
-* Other Authors: N/A
+* Other Authors: Oliver Hinds
 **************************************
 * History
 *
@@ -15,6 +15,10 @@
 int kronecker_delta(int i, int k);
 
 int levi_civita_density(int i, int j);
+
+float ran1(long *idum);
+
+float guassdev(long *idum);
 
 
 #endif  // _MATHS_FUNCTIONS_H

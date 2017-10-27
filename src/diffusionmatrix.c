@@ -13,6 +13,7 @@
 #include <math.h>
 #include <errno.h>
 #include <string.h>
+#include <omp.h>
 
 #include "diffusionmatrix.h"
 #include "maths_functions.h"
@@ -29,30 +30,21 @@ extern double gPi;
 // Create the diffusion matrix
 //
 
-double *diffusion_matrix_creation(int numberOfParticles, particleVariables *particles, double temperature, double viscosity, double radius)
+void diffusion_matrix_creation(int numberOfParticles, double *diffusionMatrix, double *stochasticWeighting, particleVariables *particles, double temperature, double viscosity, double radius)
 {
-
-    double *diffusionMatrix = NULL ;
     double tempTransMatrix[9] = {0} ;
     double tempRotatMatrix[9] = {0} ;
     double tempCouplMatrix[9] = {0} ;
-    //
-    // Allocate and check memory
-    //
-    diffusionMatrix = calloc( pow(6 * numberOfParticles, 2 ), sizeof ( *diffusionMatrix ));
 
-    if( diffusionMatrix == NULL )
-    {
-        printf("-Error %d : %s\n", errno, strerror( errno ) );
-        return NULL;
-    }
     //
-    // Scan through the particles and calculate the individual Oseen matrices
+    // Scan through the particles and calculate the individual matrices
     //
+    #pragma omp parallel for private(tempTransMatrix,tempRotatMatrix,tempCouplMatrix) collapse (2)
     for( int particleRow = 0; particleRow < numberOfParticles; particleRow++)
     {
         for( int particleColumn = 0 ; particleColumn < numberOfParticles; particleColumn++)
         {
+
             //
             // Create translational submatrix
             //
@@ -83,15 +75,15 @@ double *diffusion_matrix_creation(int numberOfParticles, particleVariables *part
                     // Note the couplingPositionBottomLeft requires that the values be the negative of
                     // the couplingPositionTopRight values.
                     //
-                    diffusionMatrix[ translationPosition ] = tempTransMatrix[n * 3 + m];
-                    diffusionMatrix[ rotationPosition ] = tempRotatMatrix[n * 3 + m];
-                    diffusionMatrix[ couplingPositionTopRight ] = tempCouplMatrix[n * 3 + m];
-                    diffusionMatrix[ couplingPositionBottomLeft ] = -tempCouplMatrix[n * 3 + m];
+                    stochasticWeighting[translationPosition] = diffusionMatrix[ translationPosition ] = tempTransMatrix[n * 3 + m];
+                    stochasticWeighting[rotationPosition] = diffusionMatrix[ rotationPosition ] = tempRotatMatrix[n * 3 + m];
+                    stochasticWeighting[couplingPositionTopRight] = diffusionMatrix[ couplingPositionTopRight ] = tempCouplMatrix[n * 3 + m];
+                    stochasticWeighting[couplingPositionBottomLeft] = diffusionMatrix[ couplingPositionBottomLeft ] = -tempCouplMatrix[n * 3 + m];
                 }
             }
         }
     }
-    return diffusionMatrix;
+
 }
 
 
@@ -107,7 +99,7 @@ void translational_tensor_creation(double *tempMatrix, particleVariables *partic
         {
             for(int m = 0; m < 3; m ++)
             {
-                tempMatrix[n * 3 + m] = kronecker_delta(n,m) * stokesConstantProduct / (6* radius); // Over 6 for the self interaction terms
+                tempMatrix[n * 3 + m] = kronecker_delta(n,m) * stokesConstantProduct / (6 * radius); // Over 6 for the self interaction terms
 
 
             }
