@@ -2,7 +2,7 @@
 * Date of creation 09/10/2017
 * Author: Michael O'Donnell
 * Contact: mo14776@my.bristol.ac.uk
-* Other Authors: N/A
+* Other Authors: Oliver Hinds
 **************************************
 * Change History
 **************************************/
@@ -109,8 +109,9 @@ int main(int argc, char *argv[])
     double *diffusionMatrix = NULL ;
     double *stochasticWeighting = NULL;
     double *additionalForces = NULL ;
+    double *stochasticDisplacement = NULL;
 
-    if( (diffusionMatrix = (double *) calloc( pow( 6 * numberOfParticles, 2), sizeof *diffusionMatrix) ) == NULL)
+    if( (diffusionMatrix = calloc( pow( 6 * numberOfParticles, 2), sizeof *diffusionMatrix) ) == NULL)
     {
         free( particles );
         particles = NULL ;
@@ -122,7 +123,7 @@ int main(int argc, char *argv[])
         return -errno;
     }
 
-    if( (stochasticWeighting = (double *) calloc( 6 * numberOfParticles, sizeof *stochasticWeighting) ) == NULL)
+    if( (stochasticWeighting = calloc( pow( 6 * numberOfParticles, 2), sizeof *stochasticWeighting) ) == NULL)
     {
         free( particles );
         particles = NULL ;
@@ -136,7 +137,7 @@ int main(int argc, char *argv[])
         return -errno;
     }
 
-    if( (additionalForces = (double *) calloc( 6 * numberOfParticles, sizeof *additionalForces) ) == NULL)
+    if( (stochasticDisplacement = calloc( 6 * numberOfParticles, sizeof *stochasticDisplacement) ) == NULL)
     {
         free( particles );
         particles = NULL ;
@@ -144,6 +145,24 @@ int main(int argc, char *argv[])
         generalisedCoordinates = NULL ;
         free( diffusionMatrix );
         diffusionMatrix = NULL;
+        free( stochasticWeighting );
+        stochasticWeighting = NULL;
+        printf("-Error %d : %s\n", errno, strerror( errno ) );
+
+        getchar();
+        return -errno;
+    }
+
+    if( (additionalForces = calloc( 6 * numberOfParticles, sizeof *additionalForces) ) == NULL)
+    {
+        free( particles );
+        particles = NULL ;
+        free( generalisedCoordinates );
+        generalisedCoordinates = NULL ;
+        free( diffusionMatrix );
+        diffusionMatrix = NULL;
+        free( stochasticDisplacement );
+        stochasticDisplacement = NULL;
         free( stochasticWeighting );
         stochasticWeighting = NULL;
         printf("-Error %d : %s\n", errno, strerror( errno ) );
@@ -166,7 +185,7 @@ int main(int argc, char *argv[])
         // Create diffusion matrix
         //
 
-        diffusion_matrix_creation( numberOfParticles, diffusionMatrix, particles, temperature, viscosity, radius);
+        diffusion_matrix_creation( numberOfParticles, diffusionMatrix, stochasticWeighting, particles, temperature, viscosity, radius);
 
         //---------------------------- DEBUG------------------------------//
         //
@@ -194,9 +213,6 @@ int main(int argc, char *argv[])
         //
         // Create the stochastic displacement
         //
-
-		double *stochasticDisplacement; // Temporarily doing this here
-		stochasticDisplacement = (double *) calloc(6*numberOfParticles,sizeof(double)); // 3 displacements per particle, corresponding to each cartesian axis
 
 		time_t tSeed;
 		time(&tSeed);
@@ -247,6 +263,11 @@ int main(int argc, char *argv[])
     if( stochasticWeighting != NULL )
     {
         free( stochasticWeighting );
+        particles = NULL;
+    }
+    if( stochasticDisplacement != NULL )
+    {
+        free( stochasticDisplacement );
         particles = NULL;
     }
 
