@@ -8,6 +8,13 @@
 *
 **************************************/
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <errno.h>
+#include <string.h>
+#include <omp.h>
+
 #include "diffusionmatrix.h"
 #include "maths_functions.h"
 #include "particles.h"
