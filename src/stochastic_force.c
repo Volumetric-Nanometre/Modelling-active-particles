@@ -7,16 +7,9 @@
 **************************************
 * History
 **************************************/
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <string.h>
-#include <math.h>
-#include <time.h>
 
 #include "stochastic_force.h"
 #include "maths_functions.h"
-
 
 void stochastic_displacement_creation(int numberOfParticles, double *stochasticWeighting, double *stochasticDisplacement, time_t tSeed)
 {
@@ -52,7 +45,7 @@ void stochastic_displacement_creation(int numberOfParticles, double *stochasticW
 		}
 	}
 
-	tSeed=-tSeed;
+
 
 	for (int i = 0; i < N; i++)
 	{

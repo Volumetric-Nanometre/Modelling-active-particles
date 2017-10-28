@@ -8,11 +8,6 @@
 *
 **************************************/
 
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-
 #include "maths_functions.h"
 
 //
@@ -49,6 +44,17 @@ int levi_civita_density(int i, int j)
     {
         return -1;
     }
+}
+
+double randSign(time_t tSeed) // Randomly generate -1 or +1
+{
+	if (ran1(&tSeed)>0.5)
+	{
+		return 1.0;
+	} else
+	{
+		return -1.0;
+	}
 }
 
 #define IA 16807

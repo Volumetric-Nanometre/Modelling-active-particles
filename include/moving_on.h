@@ -12,8 +12,13 @@
 #ifndef _MOVING_ON_H
 #define _MOVING_ON_H
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <string.h>
 
-void moving_on_routine(int numberOfParticles, double timeStep, double temperature, double *diffusionMatrix, double *additionalForces, double *stochasticDisplacement, double *generalisedCoordinates);
+#include "particles.h"
+
+void moving_on_routine(int numberOfParticles, environmentVariables *conditions, double *diffusionMatrix, double *additionalForces, double *stochasticDisplacement, double *generalisedCoordinates);
 
 #endif // _MOVING_ON_H
