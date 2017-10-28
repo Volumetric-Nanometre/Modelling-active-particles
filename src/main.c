@@ -246,6 +246,11 @@ int main(int argc, char *argv[])
         // Include additional forces
         //
 
+		// Gravity
+		{
+			additionalForces[6*i+2] = -conditions.mass*gGrav; // F_z = -mg
+			// This needs to be 'conditions->mass' when it's moved to another file
+		}
 
         //
         // Calculate time step.
