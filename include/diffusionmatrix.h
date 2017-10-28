@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include "particles.h"
 
-void diffusion_matrix_creation(int numberOfParticles, double *diffusionMatrix, particleVariables *particles, double temperature, double viscosity, double radius);
+void diffusion_matrix_creation(int numberOfParticles, double *diffusionMatrix, double *stochasticWeighting, particleVariables *particles, double temperature, double viscosity, double radius);
 
 void translational_tensor_creation(double *tempMatrix, particleVariables *particles, double temperature, double viscosity, double radius, int i, int j);
 

@@ -2,7 +2,7 @@
 * Date of creation 09/10/2017
 * Author: Michael O'Donnell
 * Contact: mo14776@my.bristol.ac.uk
-* Other Authors: N/A
+* Other Authors: Oliver Hinds
 **************************************
 * History
 *
@@ -108,7 +108,8 @@ float guassdev(long *idum)
 	static float gset;
 	float fac,rsq,v1,v2;
 
-	if (*idum < 0) iset=0;
+	if (*idum < 0)
+    iset=0;
 	if (iset == 0)
 	{
 		do

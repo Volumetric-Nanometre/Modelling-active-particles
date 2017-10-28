@@ -30,7 +30,7 @@ extern double gPi;
 // Create the diffusion matrix
 //
 
-void diffusion_matrix_creation(int numberOfParticles, double *diffusionMatrix, particleVariables *particles, double temperature, double viscosity, double radius)
+void diffusion_matrix_creation(int numberOfParticles, double *diffusionMatrix, double *stochasticWeighting, particleVariables *particles, double temperature, double viscosity, double radius)
 {
     double tempTransMatrix[9] = {0} ;
     double tempRotatMatrix[9] = {0} ;
@@ -39,7 +39,7 @@ void diffusion_matrix_creation(int numberOfParticles, double *diffusionMatrix, p
     //
     // Scan through the particles and calculate the individual matrices
     //
-
+    #pragma omp parallel for private(tempTransMatrix,tempRotatMatrix,tempCouplMatrix) collapse (2)
     for( int particleRow = 0; particleRow < numberOfParticles; particleRow++)
     {
         for( int particleColumn = 0 ; particleColumn < numberOfParticles; particleColumn++)
@@ -75,10 +75,10 @@ void diffusion_matrix_creation(int numberOfParticles, double *diffusionMatrix, p
                     // Note the couplingPositionBottomLeft requires that the values be the negative of
                     // the couplingPositionTopRight values.
                     //
-                    diffusionMatrix[ translationPosition ] = tempTransMatrix[n * 3 + m];
-                    diffusionMatrix[ rotationPosition ] = tempRotatMatrix[n * 3 + m];
-                    diffusionMatrix[ couplingPositionTopRight ] = tempCouplMatrix[n * 3 + m];
-                    diffusionMatrix[ couplingPositionBottomLeft ] = -tempCouplMatrix[n * 3 + m];
+                    stochasticWeighting[translationPosition] = diffusionMatrix[ translationPosition ] = tempTransMatrix[n * 3 + m];
+                    stochasticWeighting[rotationPosition] = diffusionMatrix[ rotationPosition ] = tempRotatMatrix[n * 3 + m];
+                    stochasticWeighting[couplingPositionTopRight] = diffusionMatrix[ couplingPositionTopRight ] = tempCouplMatrix[n * 3 + m];
+                    stochasticWeighting[couplingPositionBottomLeft] = diffusionMatrix[ couplingPositionBottomLeft ] = -tempCouplMatrix[n * 3 + m];
                 }
             }
         }

@@ -1,6 +1,6 @@
 /*********************
 * Date of creation 17/10/2017
-* Author:
+* Author: Oliver Hinds
 * Contact:
 * Other Authors: N/A
 **************************************
