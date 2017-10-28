@@ -32,7 +32,7 @@ int  particle_read_in(particleVariables **particles)
 
     if(particleInput == NULL)
     {
-        printf("- Error %d : %s\n", errno,strerror(errno));
+        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
         numberOfParticles=-errno;
     }
     else
@@ -57,7 +57,7 @@ int  particle_read_in(particleVariables **particles)
 
             if((initParticles=calloc(numberOfParticles,sizeof(*initParticles))) == NULL)
             {
-                printf("- Error %d : %s\n", errno,strerror(errno));
+                printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
                 fclose (particleInput);
                 numberOfParticles=-errno;
             }
@@ -87,7 +87,7 @@ double *generalised_coordinate_creation(int numberOfParticles, particleVariables
 
     if( generalisedCoordinates == NULL )
     {
-        printf("-Error %d : %s\n", errno, strerror( errno ) );
+        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
         return NULL;
     }
 

@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 
     if(output == NULL)
     {
-        printf("-Error %d : %s\n", errno, strerror( errno ) );
+        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
         return -errno;
     }
 
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
         particles = NULL ;
         free( generalisedCoordinates );
         generalisedCoordinates = NULL ;
-        printf("-Error %d : %s\n", errno, strerror( errno ) );
+        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
 
         getchar();
         return -errno;
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
         generalisedCoordinates = NULL ;
         free( diffusionMatrix );
         diffusionMatrix = NULL;
-        printf("-Error %d : %s\n", errno, strerror( errno ) );
+        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
 
         getchar();
         return -errno;
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
         diffusionMatrix = NULL;
         free( stochasticWeighting );
         stochasticWeighting = NULL;
-        printf("-Error %d : %s\n", errno, strerror( errno ) );
+        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
 
         getchar();
         return -errno;
@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
         stochasticDisplacement = NULL;
         free( stochasticWeighting );
         stochasticWeighting = NULL;
-        printf("-Error %d : %s\n", errno, strerror( errno ) );
+        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
 
         getchar();
         return -errno;
