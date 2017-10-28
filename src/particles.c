@@ -22,7 +22,7 @@ int  particle_read_in(particleVariables **particles)
     //
     // Open and check input file
     //
-    FILE* particleInput=fopen("particleInput.txt","r");
+    FILE* particleInput=fopen("../bin/particleInput.txt","r");
 
     if(particleInput == NULL)
     {

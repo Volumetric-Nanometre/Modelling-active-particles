@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
         getchar();
     }
 
-    FILE *output = fopen("output.txt","w");
+    FILE *output = fopen("../bin/output.txt","w");
 
     if(output == NULL)
     {
@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
     //
     if( gDebug == 1 && generalisedCoordinates != NULL)
     {
-        FILE *genCoordOutput = fopen( "genCoord_output.txt","w");
+        FILE *genCoordOutput = fopen("../bin/genCoord_output.txt","w");
 
         for(int i = 0; i < 6 * numberOfParticles; i++)
         {
@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
         if( gDebug == 1 && diffusionMatrix != NULL)
         {
             conditions.currentTime = conditions.endTime+1;
-            FILE *matrixOutput = fopen( "matrix_output.txt","w");
+            FILE *matrixOutput = fopen("../bin/matrix_output.txt","w");
 
             for(int i = 0; i < 6 * numberOfParticles; i++)
             {
@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
 		if( gDebug == 1 && stochasticWeighting != NULL)
         {
             conditions.currentTime = conditions.endTime+1;
-            FILE *stochasticOutput = fopen( "stochastic_matrix_output.txt","w");
+            FILE *stochasticOutput = fopen("../bin/stochastic_matrix_output.txt","w");
 
             for(int i = 0; i < 6 * numberOfParticles; i++)
             {
