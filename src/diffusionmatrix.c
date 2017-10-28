@@ -8,13 +8,6 @@
 *
 **************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <errno.h>
-#include <string.h>
-#include <omp.h>
-
 #include "diffusionmatrix.h"
 #include "maths_functions.h"
 #include "particles.h"
@@ -30,7 +23,7 @@ extern double gPi;
 // Create the diffusion matrix
 //
 
-void diffusion_matrix_creation(int numberOfParticles, double *diffusionMatrix, double *stochasticWeighting, particleVariables *particles, double temperature, double viscosity, double radius)
+void diffusion_matrix_creation(int numberOfParticles, double *diffusionMatrix, double *stochasticWeighting, particleVariables *particles, environmentVariables *conditions)
 {
     double tempTransMatrix[9] = {0} ;
     double tempRotatMatrix[9] = {0} ;
@@ -48,15 +41,15 @@ void diffusion_matrix_creation(int numberOfParticles, double *diffusionMatrix, d
             //
             // Create translational submatrix
             //
-            translational_tensor_creation(tempTransMatrix, particles, temperature, viscosity, radius, particleRow, particleColumn );
+            translational_tensor_creation(tempTransMatrix, particles, conditions , particleRow, particleColumn );
             //
             // Create rotational submatrix
             //
-            rotational_tensor_creation(tempRotatMatrix, particles, temperature, viscosity, radius, particleRow, particleColumn );
+            rotational_tensor_creation(tempRotatMatrix, particles, conditions, particleRow, particleColumn );
             //
             //Create coupled submatrix
             //
-            translation_rotation_coupling_tensor_creation(tempCouplMatrix, particles, temperature, viscosity, radius, particleRow, particleColumn );
+            translation_rotation_coupling_tensor_creation(tempCouplMatrix, particles, conditions, particleRow, particleColumn );
             //
             // Transfer to main diffusion matrix
             //
@@ -90,16 +83,16 @@ void diffusion_matrix_creation(int numberOfParticles, double *diffusionMatrix, d
 //
 // Create 3 x 3 submatrices using the Oseen tensor rules
 //
-void translational_tensor_creation(double *tempMatrix, particleVariables *particles, double temperature, double viscosity, double radius, int i, int j)
+void translational_tensor_creation(double *tempMatrix, particleVariables *particles, environmentVariables *conditions, int i, int j)
 {
-    double stokesConstantProduct = ( gBoltzmannConst * temperature ) / ( gPi * viscosity);
+    double stokesConstantProduct = ( gBoltzmannConst * conditions->temperature ) / ( gPi * conditions->viscosity);
     if(i==j)
     {
         for(int n = 0; n < 3; n ++)
         {
             for(int m = 0; m < 3; m ++)
             {
-                tempMatrix[n * 3 + m] = kronecker_delta(n,m) * stokesConstantProduct / (6 * radius); // Over 6 for the self interaction terms
+                tempMatrix[n * 3 + m] = kronecker_delta(n,m) * stokesConstantProduct / (6 * conditions->radius); // Over 6 for the self interaction terms
 
 
             }
@@ -135,16 +128,16 @@ void translational_tensor_creation(double *tempMatrix, particleVariables *partic
 // Create the rotational diffusion 3x3 matrices
 //
 
-void rotational_tensor_creation(double *tempMatrix, particleVariables *particles, double temperature, double viscosity, double radius, int i, int j)
+void rotational_tensor_creation(double *tempMatrix, particleVariables *particles, environmentVariables *conditions, int i, int j)
 {
-    double stokesConstantProduct = ( gBoltzmannConst * temperature ) / ( gPi * viscosity);
+    double stokesConstantProduct = ( gBoltzmannConst * conditions->temperature ) / ( gPi * conditions->viscosity);
     if(i==j)
     {
         for(int n = 0; n < 3; n ++)
         {
             for(int m = 0; m < 3; m ++)
             {
-                tempMatrix[n * 3 + m] = kronecker_delta(n,m) * stokesConstantProduct / (8 * pow(radius, 3) ); // Over 8 for the self interaction terms
+                tempMatrix[n * 3 + m] = kronecker_delta(n,m) * stokesConstantProduct / (8 * pow(conditions->radius, 3) ); // Over 8 for the self interaction terms
 
 
             }
@@ -182,9 +175,9 @@ void rotational_tensor_creation(double *tempMatrix, particleVariables *particles
 // of T-R
 //
 
-void translation_rotation_coupling_tensor_creation(double *tempMatrix, particleVariables *particles, double temperature, double viscosity, double radius, int i, int j)
+void translation_rotation_coupling_tensor_creation(double *tempMatrix, particleVariables *particles, environmentVariables *conditions, int i, int j)
 {
-    double stokesConstantProduct = ( gBoltzmannConst * temperature ) / ( gPi * viscosity);
+    double stokesConstantProduct = ( gBoltzmannConst * conditions->temperature ) / ( gPi * conditions->viscosity);
     if(i==j)
     {
         for(int n = 0; n < 3; n ++)
