@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 
     if(output == NULL)
     {
-        printf("-Error %d : %s\n", errno, strerror( errno ) );
+        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
         return -errno;
     }
 
@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
         particles = NULL ;
         free( generalisedCoordinates );
         generalisedCoordinates = NULL ;
-        printf("-Error %d : %s\n", errno, strerror( errno ) );
+        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
 
         getchar();
         return -errno;
@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
         diffusionMatrix = NULL;
         free( stochasticWeighting );
         stochasticWeighting = NULL;
-        printf("-Error %d : %s\n", errno, strerror( errno ) );
+        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
 
         getchar();
         return -errno;
@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
         stochasticDisplacement = NULL;
         free( stochasticWeighting );
         stochasticWeighting = NULL;
-        printf("-Error %d : %s\n", errno, strerror( errno ) );
+        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
 
         getchar();
         return -errno;
@@ -180,11 +180,11 @@ int main(int argc, char *argv[])
     conditions.currentTime = 0;
     conditions.deltaTime = 1E-3; // Seconds
     conditions.endTime = 1E-2; // Seconds
-	conditions.mass = 1; // kg
+	conditions.mass = pow(conditions.radius,3)*19320; // kg - density of gold
 
-	time_t tSeed;
-	time(&tSeed);
-	tSeed=-tSeed;
+	time_t tSeed1;
+	time(&tSeed1);
+	long int tSeed = -1*(long int) tSeed1;
 
 	initialVelocities(numberOfParticles, particles, &conditions, tSeed);
 
@@ -224,6 +224,23 @@ int main(int argc, char *argv[])
         //
 
         stochastic_displacement_creation( numberOfParticles, stochasticWeighting, stochasticDisplacement, tSeed );
+
+		if( gDebug == 1 && stochasticWeighting != NULL)
+        {
+            conditions.currentTime = conditions.endTime+1;
+            FILE *stochasticOutput = fopen( "stochastic_matrix_output.txt","w");
+
+            for(int i = 0; i < 6 * numberOfParticles; i++)
+            {
+                for(int j = 0; j < 6 * numberOfParticles; j++)
+                {
+                    fprintf(stochasticOutput, "%e\t", stochasticWeighting[i * 6 * numberOfParticles + j]);
+                }
+                fprintf(stochasticOutput, "\n");
+
+            }
+            fclose (stochasticOutput);
+		}
 
         //
         // Include additional forces

@@ -46,7 +46,7 @@ int levi_civita_density(int i, int j)
     }
 }
 
-double randSign(time_t tSeed) // Randomly generate -1 or +1
+double randSign(long int tSeed) // Randomly generate -1 or +1
 {
 	if (ran1(&tSeed)>0.5)
 	{

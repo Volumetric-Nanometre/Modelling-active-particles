@@ -9,7 +9,7 @@
 
 #include "particles.h"
 
-void initialVelocities(int numberOfParticles, particleVariables *particles, environmentVariables *conditions, time_t tSeed);
+void initialVelocities(int numberOfParticles, particleVariables *particles, environmentVariables *conditions, long int tSeed);
 
 
 #endif

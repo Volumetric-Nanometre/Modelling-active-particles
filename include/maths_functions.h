@@ -20,7 +20,7 @@ int kronecker_delta(int i, int k);
 
 int levi_civita_density(int i, int j);
 
-double randSign(time_t tSeed);
+double randSign(long int tSeed);
 
 float ran1(long *idum);
 
