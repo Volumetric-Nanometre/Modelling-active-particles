@@ -248,11 +248,12 @@ int main(int argc, char *argv[])
         //
 
 		// Gravity
-		for (int i=0; i < 6*numberOfParticles; i++)
-		{
-			additionalForces[6*i+2] = -conditions.mass*gGrav; // F_z = -mg
-			// This needs to be 'conditions->mass' when it's moved to another file
-		}
+		#pragma omp parallel for
+			for (int i=0; i < numberOfParticles; i++)
+			{
+				additionalForces[6*i+2] = -conditions.mass*gGrav; // F_z = -mg
+				// This needs to be 'conditions->mass' when it's moved to another file
+			}
 
         //
         // Calculate time step.
