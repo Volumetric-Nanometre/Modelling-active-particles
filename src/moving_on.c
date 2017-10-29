@@ -8,10 +8,10 @@
 * History
 **************************************/
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <omp.h>
 
 #include "moving_on.h"
 #include "particles.h"
@@ -29,7 +29,7 @@ void moving_on_routine(int numberOfParticles, environmentVariables *conditions, 
         //
         double temp = 0;
 
-        //#pragma omp parallel for reduction(+ : temp)
+        #pragma omp parallel for reduction(+ : temp)
         for(int j = 0; j < 6 * numberOfParticles; j++)
         {
             temp += frontConst*diffusionMatrix[i * numberOfParticles + j] * additionalForces[j];
