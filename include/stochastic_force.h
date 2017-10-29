@@ -13,10 +13,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
-#include <string.h>
-#include <math.h>
-#include <time.h>
 
 
 void stochastic_displacement_creation(int numberOfParticles, double *stochasticWeighting, double *stochasticDisplacement, long int tSeed);

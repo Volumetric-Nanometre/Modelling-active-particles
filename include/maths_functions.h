@@ -11,9 +11,7 @@
 #ifndef _MATHS_FUNCTIONS_H
 #define _MATHS_FUNCTIONS_H
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
 
 int kronecker_delta(int i, int k);

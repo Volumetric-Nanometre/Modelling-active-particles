@@ -2,10 +2,6 @@
 #define _INITIAL_VELOCITIES_H
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <errno.h>
-#include <omp.h>
 
 #include "particles.h"
 

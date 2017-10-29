@@ -24,6 +24,7 @@
 
 double gBoltzmannConst = 1.38064852E-23; // m^2 kg s^-2 K^-1
 double gPi = 3.14159265359;
+double gGrav = 9.80665; // m s^-2
 
 int gDebug = 0;
 
@@ -246,6 +247,13 @@ int main(int argc, char *argv[])
         // Include additional forces
         //
 
+		// Gravity
+		#pragma omp parallel for
+			for (int i=0; i < numberOfParticles; i++)
+			{
+				additionalForces[6*i+2] = -conditions.mass*gGrav; // F_z = -mg
+				// This needs to be 'conditions->mass' when it's moved to another file
+			}
 
         //
         // Calculate time step.

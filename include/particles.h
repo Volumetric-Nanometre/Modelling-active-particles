@@ -14,10 +14,6 @@
 #define _PARTICLES_H
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <string.h>
-
 
 typedef struct
 {

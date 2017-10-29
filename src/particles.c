@@ -11,6 +11,11 @@
 *             bring in inputs.
 **************************************/
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <string.h>
+
 #include "particles.h"
 
 int  particle_read_in(particleVariables **particles)
