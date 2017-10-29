@@ -251,9 +251,15 @@ int main(int argc, char *argv[])
 		#pragma omp parallel for
 			for (int i=0; i < numberOfParticles; i++)
 			{
+<<<<<<< HEAD
                 additionalForces[6*i] = -(6 * gPi * conditions.viscosity * conditions.radius) * particles[i].dx ;
                 additionalForces[6*i+1]= -(6 * gPi * conditions.viscosity * conditions.radius) * particles[i].dy ;
 				additionalForces[6*i+2] = -conditions.mass * gGrav  - (6 * gPi * conditions.viscosity * conditions.radius) * particles[i].dz; // F_z = -mg
+=======
+                additionalForces[6*i] = -(6 * gPi * conditions.viscosity * conditions.radius) * particles->dx ;
+                additionalForces[6*i+1]= -(6 * gPi * conditions.viscosity * conditions.radius) * particles->dy ;
+				additionalForces[6*i+2] = -conditions.mass * gGrav  - (6 * gPi * conditions.viscosity * conditions.radius) * particles->dz; // F_z = -mg
+>>>>>>> 7f060110615a771d62830b1b3b4d974620b15ef3
 				// This needs to be 'conditions->mass' when it's moved to another file
 			}
 
