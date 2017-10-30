@@ -222,7 +222,7 @@ int main(int argc, char *argv[])
     // second 3N is the angular velocities
     //
 
-/*    for(int i = 0; i < numberOfParticles; i ++)
+    for(int i = 0; i < numberOfParticles; i ++)
     {
         velocities[i * 3] = particles[i].dx;
         velocities[i * 3 + 1] = particles[i].dy;
@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
         velocities[ (i + numberOfParticles) * 3 + 1] = particles[i].dbeta;
         velocities[ (i + numberOfParticles) * 3 + 2] = particles[i].dgamma;
     }
-*/
+
 
     //
     // Loop through time, output each time step to a file.
@@ -296,11 +296,11 @@ int main(int argc, char *argv[])
 
 		// Gravity
 		#pragma omp parallel for
-		for (int i=0; i < numberOfParticles; i++)
+		for (int i = 0; i < numberOfParticles; i++)
 		{
-            additionalForces[3*i] = -(6 * gPi * conditions.viscosity * conditions.radius) * particles[i].dx ;
-            additionalForces[3*i+1]= -(6 * gPi * conditions.viscosity * conditions.radius) * particles[i].dy ;
-			additionalForces[3*i+2] = -conditions.mass * gGrav  - (6 * gPi * conditions.viscosity * conditions.radius) * particles[i].dz; // F_z = -mg
+            additionalForces[3 * i] = -(6 * gPi * conditions.viscosity * conditions.radius) * velocities[3 * i] ;
+            additionalForces[3 * i + 1]= -(6 * gPi * conditions.viscosity * conditions.radius) * velocities[3 * i + 1] ;
+			additionalForces[3 * i + 2] = -conditions.mass * gGrav  - (6 * gPi * conditions.viscosity * conditions.radius) * velocities[3 * i + 2]; // F_z = -mg
 			// This needs to be 'conditions->mass' when it's moved to another file
 		}
 
@@ -308,7 +308,7 @@ int main(int argc, char *argv[])
         // Calculate time step.
         //
 
-        moving_on_routine(numberOfParticles, &conditions, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates);
+        moving_on_routine(numberOfParticles, &conditions, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates, velocities);
         fprintf(output, "%lf\t", conditions.currentTime);
         for(int i = 0; i < 6 * numberOfParticles; i++)
         {

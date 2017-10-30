@@ -38,7 +38,7 @@ void diffusion_matrix_creation(int numberOfParticles, double *diffusionMatrix, d
     //
     // Scan through the particles and calculate the individual matrices
     //
-    #pragma omp parallel for private(tempTransMatrix,tempRotatMatrix,tempCouplMatrix) collapse (2)
+    //#pragma omp parallel for private(tempTransMatrix,tempRotatMatrix,tempCouplMatrix) collapse (2)
     for( int particleRow = 0; particleRow < numberOfParticles; particleRow++)
     {
         for( int particleColumn = 0 ; particleColumn < numberOfParticles; particleColumn++)
@@ -111,9 +111,9 @@ void translational_tensor_creation(double *tempMatrix, double *generalisedCoordi
         // vectors, i.e x_ij = x_j - x_i
         //
         double dimensionalVector[3] = {0};
-        dimensionalVector[0] = generalisedCoordinates[j*3] - generalisedCoordinates[i*3];
-        dimensionalVector[1] = generalisedCoordinates[j*3] - generalisedCoordinates[i*3];
-        dimensionalVector[2] = generalisedCoordinates[j*3] - generalisedCoordinates[i*3];
+        dimensionalVector[0] = generalisedCoordinates[j * 3] - generalisedCoordinates[i * 3];
+        dimensionalVector[1] = generalisedCoordinates[j * 3 + 1] - generalisedCoordinates[i * 3 + 1];
+        dimensionalVector[2] = generalisedCoordinates[j * 3 + 2] - generalisedCoordinates[i * 3 + 2];
 
         double absDistance = sqrt( pow(dimensionalVector[0],2) + pow(dimensionalVector[1],2) + pow(dimensionalVector[2],2) );
 
@@ -122,11 +122,15 @@ void translational_tensor_creation(double *tempMatrix, double *generalisedCoordi
             for(int m = 0; m < 3; m ++)
             {
                 tempMatrix[n * 3 + m] = ( kronecker_delta(n,m)+ (dimensionalVector[n] * dimensionalVector [m])/pow(absDistance,2) )
-                                        *( stokesConstantProduct / 8 * absDistance);      //  Over 8 for interparticle interaction terms
+                                        *( stokesConstantProduct / (8 * absDistance));      //  Over 8 for interparticle interaction terms
+
             }
 
         }
+
+
     }
+
 
 }
 
@@ -156,9 +160,9 @@ void rotational_tensor_creation(double *tempMatrix, double *generalisedCoordinat
         // vectors, i.e x_ij = x_j - x_i
         //
         double dimensionalVector[3] = {0};
-        dimensionalVector[0] = generalisedCoordinates[j*3] - generalisedCoordinates[i*3];
-        dimensionalVector[1] = generalisedCoordinates[j*3] - generalisedCoordinates[i*3];
-        dimensionalVector[2] = generalisedCoordinates[j*3] - generalisedCoordinates[i*3];
+        dimensionalVector[0] = generalisedCoordinates[j * 3] - generalisedCoordinates[i * 3];
+        dimensionalVector[1] = generalisedCoordinates[j * 3 + 1] - generalisedCoordinates[i * 3 + 1];
+        dimensionalVector[2] = generalisedCoordinates[j * 3 + 2] - generalisedCoordinates[i * 3 + 2];
 
         double absDistance = sqrt( pow(dimensionalVector[0],2) + pow(dimensionalVector[1],2) + pow(dimensionalVector[2],2) );
 
@@ -167,7 +171,7 @@ void rotational_tensor_creation(double *tempMatrix, double *generalisedCoordinat
             for(int m = 0; m < 3; m ++)
             {
                 tempMatrix[n * 3 + m] =( (dimensionalVector[n] * dimensionalVector [m]) / pow(absDistance,2) - kronecker_delta(n, m) )
-                                        *( 3 * stokesConstantProduct / 16 * pow( absDistance, 3) );       //  Over 16 for interparticle interaction terms
+                                        *( 3 * stokesConstantProduct / (16 * pow( absDistance, 3) ));       //  Over 16 for interparticle interaction terms
             }
 
         }
@@ -201,9 +205,9 @@ void translation_rotation_coupling_tensor_creation(double *tempMatrix, double *g
         // vectors, i.e x_ij = x_j - x_i
         //
         double dimensionalVector[3] = {0};
-        dimensionalVector[0] = generalisedCoordinates[j*3] - generalisedCoordinates[i*3];
-        dimensionalVector[1] = generalisedCoordinates[j*3] - generalisedCoordinates[i*3];
-        dimensionalVector[2] = generalisedCoordinates[j*3] - generalisedCoordinates[i*3];
+        dimensionalVector[0] = generalisedCoordinates[j * 3] - generalisedCoordinates[i * 3];
+        dimensionalVector[1] = generalisedCoordinates[j * 3 + 1] - generalisedCoordinates[i * 3 + 1];
+        dimensionalVector[2] = generalisedCoordinates[j * 3 + 2] - generalisedCoordinates[i * 3 + 2];
 
         double absDistance = sqrt( pow(dimensionalVector[0],2) + pow(dimensionalVector[1],2) + pow(dimensionalVector[2],2) );
 
@@ -212,7 +216,7 @@ void translation_rotation_coupling_tensor_creation(double *tempMatrix, double *g
             for(int m = 0; m < 3; m ++)
             {
                 tempMatrix[n * 3 + m] = ( dimensionalVector[n] / absDistance )*levi_civita_density(n,m)
-                                    *( stokesConstantProduct / 8 * pow( absDistance, 2) );       //  Over 8 for interparticle interaction terms
+                                    *( stokesConstantProduct /( 8 * pow( absDistance, 2)) );       //  Over 8 for interparticle interaction terms
             }
 
         }
