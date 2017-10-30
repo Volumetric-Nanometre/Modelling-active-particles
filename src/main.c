@@ -103,16 +103,16 @@ int main(int argc, char *argv[])
     //
     // Allocate memory required for the program.
     // Requires: Diffusion matrix, stochastic displacement,
-    //          additional forces
+    //          additional forces, stochasticWeighting,
+    //          velocities
     //
-
-
 
 
     double *diffusionMatrix = NULL ;
     double *stochasticWeighting = NULL;
-    double *additionalForces = NULL ;
+    double *additionalForces = NULL;
     double *stochasticDisplacement = NULL;
+    double *velocities = NULL;
 
     if( (diffusionMatrix = calloc( pow( 6 * numberOfParticles, 2), sizeof *diffusionMatrix) ) == NULL)
     {
@@ -174,6 +174,31 @@ int main(int argc, char *argv[])
         return -errno;
     }
 
+    if( (velocities = calloc( 6 * numberOfParticles, sizeof *velocities) ) == NULL)
+    {
+        free( particles );
+        particles = NULL ;
+        free( generalisedCoordinates );
+        generalisedCoordinates = NULL ;
+        free( diffusionMatrix );
+        diffusionMatrix = NULL;
+        free( stochasticDisplacement );
+        stochasticDisplacement = NULL;
+        free( stochasticWeighting );
+        stochasticWeighting = NULL;
+        free( additionalForces );
+        additionalForces = NULL;
+        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
+
+        getchar();
+        return -errno;
+    }
+
+    //
+    // Allocate the environmental conditions and nano particle
+    // characteristics
+    //
+
 	environmentVariables conditions;
     conditions.temperature = 298; // K
     conditions.viscosity = 8.9E-4; //N m^-2 s
@@ -187,15 +212,37 @@ int main(int argc, char *argv[])
 	time(&tSeed1);
 	long int tSeed = -1*(long int) tSeed1;
 
+    //
+    // Create random velocities
+    //
 	initialVelocities(numberOfParticles, particles, &conditions, tSeed);
 
+    //
+    // Put velocities into an array. First 3N is the linear velocites
+    // second 3N is the angular velocities
+    //
+
+/*    for(int i = 0; i < numberOfParticles; i ++)
+    {
+        velocities[i * 3] = particles[i].dx;
+        velocities[i * 3 + 1] = particles[i].dy;
+        velocities[i * 3 + 2] = particles[i].dz;
+        velocities[ (i + numberOfParticles) * 3] = particles[i].dalpha;
+        velocities[ (i + numberOfParticles) * 3 + 1] = particles[i].dbeta;
+        velocities[ (i + numberOfParticles) * 3 + 2] = particles[i].dgamma;
+    }
+*/
+
+    //
+    // Loop through time, output each time step to a file.
+    //
     while(conditions.currentTime<=conditions.endTime)
     {
         //
         // Create diffusion matrix
         //
 
-        diffusion_matrix_creation( numberOfParticles, diffusionMatrix, stochasticWeighting, particles, &conditions);
+        diffusion_matrix_creation( numberOfParticles, diffusionMatrix, stochasticWeighting, generalisedCoordinates, &conditions);
 
         //---------------------------- DEBUG------------------------------//
         //
@@ -249,19 +296,13 @@ int main(int argc, char *argv[])
 
 		// Gravity
 		#pragma omp parallel for
-			for (int i=0; i < numberOfParticles; i++)
-			{
-<<<<<<< HEAD
-                additionalForces[6*i] = -(6 * gPi * conditions.viscosity * conditions.radius) * particles[i].dx ;
-                additionalForces[6*i+1]= -(6 * gPi * conditions.viscosity * conditions.radius) * particles[i].dy ;
-				additionalForces[6*i+2] = -conditions.mass * gGrav  - (6 * gPi * conditions.viscosity * conditions.radius) * particles[i].dz; // F_z = -mg
-=======
-                additionalForces[6*i] = -(6 * gPi * conditions.viscosity * conditions.radius) * particles->dx ;
-                additionalForces[6*i+1]= -(6 * gPi * conditions.viscosity * conditions.radius) * particles->dy ;
-				additionalForces[6*i+2] = -conditions.mass * gGrav  - (6 * gPi * conditions.viscosity * conditions.radius) * particles->dz; // F_z = -mg
->>>>>>> 7f060110615a771d62830b1b3b4d974620b15ef3
-				// This needs to be 'conditions->mass' when it's moved to another file
-			}
+		for (int i=0; i < numberOfParticles; i++)
+		{
+            additionalForces[3*i] = -(6 * gPi * conditions.viscosity * conditions.radius) * particles[i].dx ;
+            additionalForces[3*i+1]= -(6 * gPi * conditions.viscosity * conditions.radius) * particles[i].dy ;
+			additionalForces[3*i+2] = -conditions.mass * gGrav  - (6 * gPi * conditions.viscosity * conditions.radius) * particles[i].dz; // F_z = -mg
+			// This needs to be 'conditions->mass' when it's moved to another file
+		}
 
         //
         // Calculate time step.
@@ -308,6 +349,11 @@ int main(int argc, char *argv[])
     {
         free( stochasticDisplacement );
         particles = NULL;
+    }
+    if( velocities != NULL )
+    {
+        free( velocities );
+        velocities = NULL;
     }
 
     return 0;

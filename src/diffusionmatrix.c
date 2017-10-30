@@ -29,7 +29,7 @@ extern double gPi;
 // Create the diffusion matrix
 //
 
-void diffusion_matrix_creation(int numberOfParticles, double *diffusionMatrix, double *stochasticWeighting, particleVariables *particles, environmentVariables *conditions)
+void diffusion_matrix_creation(int numberOfParticles, double *diffusionMatrix, double *stochasticWeighting, double *generalisedCoordinates, environmentVariables *conditions)
 {
     double tempTransMatrix[9] = {0} ;
     double tempRotatMatrix[9] = {0} ;
@@ -47,15 +47,15 @@ void diffusion_matrix_creation(int numberOfParticles, double *diffusionMatrix, d
             //
             // Create translational submatrix
             //
-            translational_tensor_creation(tempTransMatrix, particles, conditions , particleRow, particleColumn );
+            translational_tensor_creation(tempTransMatrix, generalisedCoordinates, conditions , particleRow, particleColumn );
             //
             // Create rotational submatrix
             //
-            rotational_tensor_creation(tempRotatMatrix, particles, conditions, particleRow, particleColumn );
+            rotational_tensor_creation(tempRotatMatrix, generalisedCoordinates, conditions, particleRow, particleColumn );
             //
             //Create coupled submatrix
             //
-            translation_rotation_coupling_tensor_creation(tempCouplMatrix, particles, conditions, particleRow, particleColumn );
+            translation_rotation_coupling_tensor_creation(tempCouplMatrix, generalisedCoordinates, conditions, particleRow, particleColumn );
             //
             // Transfer to main diffusion matrix
             //
@@ -89,7 +89,7 @@ void diffusion_matrix_creation(int numberOfParticles, double *diffusionMatrix, d
 //
 // Create 3 x 3 submatrices using the Oseen tensor rules
 //
-void translational_tensor_creation(double *tempMatrix, particleVariables *particles, environmentVariables *conditions, int i, int j)
+void translational_tensor_creation(double *tempMatrix, double *generalisedCoordinates, environmentVariables *conditions, int i, int j)
 {
     double stokesConstantProduct = ( gBoltzmannConst * conditions->temperature ) / ( gPi * conditions->viscosity);
     if(i==j)
@@ -111,9 +111,9 @@ void translational_tensor_creation(double *tempMatrix, particleVariables *partic
         // vectors, i.e x_ij = x_j - x_i
         //
         double dimensionalVector[3] = {0};
-        dimensionalVector[0] = particles[j].x - particles[i].x;
-        dimensionalVector[1] = particles[j].y - particles[i].y;
-        dimensionalVector[2] = particles[j].z - particles[i].z;
+        dimensionalVector[0] = generalisedCoordinates[j*3] - generalisedCoordinates[i*3];
+        dimensionalVector[1] = generalisedCoordinates[j*3] - generalisedCoordinates[i*3];
+        dimensionalVector[2] = generalisedCoordinates[j*3] - generalisedCoordinates[i*3];
 
         double absDistance = sqrt( pow(dimensionalVector[0],2) + pow(dimensionalVector[1],2) + pow(dimensionalVector[2],2) );
 
@@ -134,7 +134,7 @@ void translational_tensor_creation(double *tempMatrix, particleVariables *partic
 // Create the rotational diffusion 3x3 matrices
 //
 
-void rotational_tensor_creation(double *tempMatrix, particleVariables *particles, environmentVariables *conditions, int i, int j)
+void rotational_tensor_creation(double *tempMatrix, double *generalisedCoordinates, environmentVariables *conditions, int i, int j)
 {
     double stokesConstantProduct = ( gBoltzmannConst * conditions->temperature ) / ( gPi * conditions->viscosity);
     if(i==j)
@@ -156,9 +156,9 @@ void rotational_tensor_creation(double *tempMatrix, particleVariables *particles
         // vectors, i.e x_ij = x_j - x_i
         //
         double dimensionalVector[3] = {0};
-        dimensionalVector[0] = particles[j].x - particles[i].x;
-        dimensionalVector[1] = particles[j].y - particles[i].y;
-        dimensionalVector[2] = particles[j].z - particles[i].z;
+        dimensionalVector[0] = generalisedCoordinates[j*3] - generalisedCoordinates[i*3];
+        dimensionalVector[1] = generalisedCoordinates[j*3] - generalisedCoordinates[i*3];
+        dimensionalVector[2] = generalisedCoordinates[j*3] - generalisedCoordinates[i*3];
 
         double absDistance = sqrt( pow(dimensionalVector[0],2) + pow(dimensionalVector[1],2) + pow(dimensionalVector[2],2) );
 
@@ -181,7 +181,7 @@ void rotational_tensor_creation(double *tempMatrix, particleVariables *particles
 // of T-R
 //
 
-void translation_rotation_coupling_tensor_creation(double *tempMatrix, particleVariables *particles, environmentVariables *conditions, int i, int j)
+void translation_rotation_coupling_tensor_creation(double *tempMatrix, double *generalisedCoordinates, environmentVariables *conditions, int i, int j)
 {
     double stokesConstantProduct = ( gBoltzmannConst * conditions->temperature ) / ( gPi * conditions->viscosity);
     if(i==j)
@@ -201,9 +201,9 @@ void translation_rotation_coupling_tensor_creation(double *tempMatrix, particleV
         // vectors, i.e x_ij = x_j - x_i
         //
         double dimensionalVector[3] = {0};
-        dimensionalVector[0] = particles[j].x - particles[i].x;
-        dimensionalVector[1] = particles[j].y - particles[i].y;
-        dimensionalVector[2] = particles[j].z - particles[i].z;
+        dimensionalVector[0] = generalisedCoordinates[j*3] - generalisedCoordinates[i*3];
+        dimensionalVector[1] = generalisedCoordinates[j*3] - generalisedCoordinates[i*3];
+        dimensionalVector[2] = generalisedCoordinates[j*3] - generalisedCoordinates[i*3];
 
         double absDistance = sqrt( pow(dimensionalVector[0],2) + pow(dimensionalVector[1],2) + pow(dimensionalVector[2],2) );
 

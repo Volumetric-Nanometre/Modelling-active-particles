@@ -76,6 +76,11 @@ int  particle_read_in(particleVariables **particles)
     return numberOfParticles;
 }
 
+//
+// Takes the spatial and rotational coordinates of the particles and creates
+// a generalised coordinate to represent every particle.
+//
+
 double *generalised_coordinate_creation(int numberOfParticles, particleVariables *particles)
 {
     double *generalisedCoordinates = NULL ;
@@ -90,6 +95,10 @@ double *generalised_coordinate_creation(int numberOfParticles, particleVariables
         return NULL;
     }
 
+    //
+    // Allocate the coordinates
+    //
+
     for(int i = 0; i < numberOfParticles; i ++)
     {
         generalisedCoordinates[ i * 3 ] = particles[i].x;
@@ -101,5 +110,4 @@ double *generalised_coordinate_creation(int numberOfParticles, particleVariables
     }
 
     return generalisedCoordinates;
-
 }
