@@ -38,7 +38,7 @@ void diffusion_matrix_creation(int numberOfParticles, double *diffusionMatrix, d
     //
     // Scan through the particles and calculate the individual matrices
     //
-    //#pragma omp parallel for private(tempTransMatrix,tempRotatMatrix,tempCouplMatrix) collapse (2)
+    #pragma omp parallel for private(tempTransMatrix,tempRotatMatrix,tempCouplMatrix) collapse (2)
     for( int particleRow = 0; particleRow < numberOfParticles; particleRow++)
     {
         for( int particleColumn = 0 ; particleColumn < numberOfParticles; particleColumn++)
