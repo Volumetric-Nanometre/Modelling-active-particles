@@ -10,9 +10,9 @@
 *             particleVariables to store the varibles in use.
 **************************************/
 
-
 #ifndef _PARTICLES_H
 #define _PARTICLES_H
+
 #include <stdio.h>
 
 typedef struct
@@ -31,6 +31,17 @@ typedef struct
     double dbeta;
     double dgamma;
 }particleVariables;
+
+typedef struct
+{
+	double temperature; // K
+    double viscosity; //N m^-2 s
+    double radius; // m
+    double currentTime;
+    double deltaTime; // Seconds
+    double endTime; // Seconds
+	double mass; // kg
+}environmentVariables;
 
 
 int  particle_read_in(particleVariables **particles);

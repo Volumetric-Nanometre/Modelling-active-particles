@@ -7,18 +7,20 @@
 **************************************
 * History
 **************************************/
-#include <stdio.h>
+
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <omp.h>
 
 #include "moving_on.h"
+#include "particles.h"
 
 extern double gBoltzmannConst;
 
-void moving_on_routine(int numberOfParticles, double timeStep, double temperature, double *diffusionMatrix, double *additionalForces, double *stochasticDisplacement, double *generalisedCoordinates)
+void moving_on_routine(int numberOfParticles, environmentVariables *conditions, double *diffusionMatrix, double *additionalForces, double *stochasticDisplacement, double *generalisedCoordinates)
 {
-    double frontConst = timeStep / ( temperature * gBoltzmannConst);
+    double frontConst = conditions->deltaTime / ( conditions->temperature * gBoltzmannConst);
 
     for(int i = 0; i < 6 * numberOfParticles; i++)
     {
@@ -27,7 +29,7 @@ void moving_on_routine(int numberOfParticles, double timeStep, double temperatur
         //
         double temp = 0;
 
-        //#pragma omp parallel for reduction(+ : temp)
+        #pragma omp parallel for reduction(+ : temp)
         for(int j = 0; j < 6 * numberOfParticles; j++)
         {
             temp += frontConst*diffusionMatrix[i * numberOfParticles + j] * additionalForces[j];

@@ -14,6 +14,8 @@
 
 #include <stdlib.h>
 
-void moving_on_routine(int numberOfParticles, double timeStep, double temperature, double *diffusionMatrix, double *additionalForces, double *stochasticDisplacement, double *generalisedCoordinates);
+#include "particles.h"
+
+void moving_on_routine(int numberOfParticles, environmentVariables *conditions, double *diffusionMatrix, double *additionalForces, double *stochasticDisplacement, double *generalisedCoordinates);
 
 #endif // _MOVING_ON_H

@@ -6,6 +6,7 @@
 **************************************
 * Change History
 **************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -18,10 +19,12 @@
 #include "diffusionmatrix.h"
 #include "stochastic_force.h"
 #include "moving_on.h"
+#include "initial_velocities.h"
 
 
 double gBoltzmannConst = 1.38064852E-23; // m^2 kg s^-2 K^-1
 double gPi = 3.14159265359;
+double gGrav = 9.80665; // m s^-2
 
 int gDebug = 0;
 
@@ -33,18 +36,18 @@ int main(int argc, char *argv[])
 
 
 
-    if(argc >= 2)
+    if(argc > 1)
     {
         gDebug = 1;
         printf("Warning debug mode entered. Press any key to continue...\n" );
         getchar();
     }
 
-    FILE *output = fopen("output.txt","w");
+    FILE *output = fopen("../bin/output.txt","w");
 
     if(output == NULL)
     {
-        printf("-Error %d : %s\n", errno, strerror( errno ) );
+        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
         return -errno;
     }
 
@@ -86,7 +89,7 @@ int main(int argc, char *argv[])
     //
     if( gDebug == 1 && generalisedCoordinates != NULL)
     {
-        FILE *genCoordOutput = fopen( "genCoord_output.txt","w");
+        FILE *genCoordOutput = fopen("../bin/genCoord_output.txt","w");
 
         for(int i = 0; i < 6 * numberOfParticles; i++)
         {
@@ -100,16 +103,16 @@ int main(int argc, char *argv[])
     //
     // Allocate memory required for the program.
     // Requires: Diffusion matrix, stochastic displacement,
-    //          additional forces
+    //          additional forces, stochasticWeighting,
+    //          velocities
     //
-
-
 
 
     double *diffusionMatrix = NULL ;
     double *stochasticWeighting = NULL;
-    double *additionalForces = NULL ;
+    double *additionalForces = NULL;
     double *stochasticDisplacement = NULL;
+    double *velocities = NULL;
 
     if( (diffusionMatrix = calloc( pow( 6 * numberOfParticles, 2), sizeof *diffusionMatrix) ) == NULL)
     {
@@ -117,7 +120,7 @@ int main(int argc, char *argv[])
         particles = NULL ;
         free( generalisedCoordinates );
         generalisedCoordinates = NULL ;
-        printf("-Error %d : %s\n", errno, strerror( errno ) );
+        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
 
         getchar();
         return -errno;
@@ -147,7 +150,7 @@ int main(int argc, char *argv[])
         diffusionMatrix = NULL;
         free( stochasticWeighting );
         stochasticWeighting = NULL;
-        printf("-Error %d : %s\n", errno, strerror( errno ) );
+        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
 
         getchar();
         return -errno;
@@ -165,27 +168,81 @@ int main(int argc, char *argv[])
         stochasticDisplacement = NULL;
         free( stochasticWeighting );
         stochasticWeighting = NULL;
-        printf("-Error %d : %s\n", errno, strerror( errno ) );
+        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
 
         getchar();
         return -errno;
     }
 
+    if( (velocities = calloc( 6 * numberOfParticles, sizeof *velocities) ) == NULL)
+    {
+        free( particles );
+        particles = NULL ;
+        free( generalisedCoordinates );
+        generalisedCoordinates = NULL ;
+        free( diffusionMatrix );
+        diffusionMatrix = NULL;
+        free( stochasticDisplacement );
+        stochasticDisplacement = NULL;
+        free( stochasticWeighting );
+        stochasticWeighting = NULL;
+        free( additionalForces );
+        additionalForces = NULL;
+        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
 
-    double temperature = 298; // K
-    double viscosity = 8.9E-4; //N m^-2 s
-    double radius = 1E-6; // m
-    double currentTime = 0;
-    double deltaTime = 1E-3; // Seconds
-    double endTime = 1E-2; // Seconds
+        getchar();
+        return -errno;
+    }
 
-    while(currentTime<=endTime)
+    //
+    // Allocate the environmental conditions and nano particle
+    // characteristics
+    //
+
+	environmentVariables conditions;
+    conditions.temperature = 298; // K
+    conditions.viscosity = 8.9E-4; //N m^-2 s
+    conditions.radius = 1E-6; // m
+    conditions.currentTime = 0;
+    conditions.deltaTime = 1E-3; // Seconds
+    conditions.endTime = 1E-2; // Seconds
+	conditions.mass = pow(conditions.radius,3)*19320; // kg - density of gold
+
+	time_t tSeed1;
+	time(&tSeed1);
+	long int tSeed = -1*(long int) tSeed1;
+
+    //
+    // Create random velocities
+    //
+	initialVelocities(numberOfParticles, particles, &conditions, tSeed);
+
+    //
+    // Put velocities into an array. First 3N is the linear velocites
+    // second 3N is the angular velocities
+    //
+
+/*    for(int i = 0; i < numberOfParticles; i ++)
+    {
+        velocities[i * 3] = particles[i].dx;
+        velocities[i * 3 + 1] = particles[i].dy;
+        velocities[i * 3 + 2] = particles[i].dz;
+        velocities[ (i + numberOfParticles) * 3] = particles[i].dalpha;
+        velocities[ (i + numberOfParticles) * 3 + 1] = particles[i].dbeta;
+        velocities[ (i + numberOfParticles) * 3 + 2] = particles[i].dgamma;
+    }
+*/
+
+    //
+    // Loop through time, output each time step to a file.
+    //
+    while(conditions.currentTime<=conditions.endTime)
     {
         //
         // Create diffusion matrix
         //
 
-        diffusion_matrix_creation( numberOfParticles, diffusionMatrix, stochasticWeighting, particles, temperature, viscosity, radius);
+        diffusion_matrix_creation( numberOfParticles, diffusionMatrix, stochasticWeighting, generalisedCoordinates, &conditions);
 
         //---------------------------- DEBUG------------------------------//
         //
@@ -193,8 +250,8 @@ int main(int argc, char *argv[])
         //
         if( gDebug == 1 && diffusionMatrix != NULL)
         {
-            currentTime = endTime+1;
-            FILE *matrixOutput = fopen( "matrix_output.txt","w");
+            conditions.currentTime = conditions.endTime+1;
+            FILE *matrixOutput = fopen("../bin/matrix_output.txt","w");
 
             for(int i = 0; i < 6 * numberOfParticles; i++)
             {
@@ -214,29 +271,52 @@ int main(int argc, char *argv[])
         // Create the stochastic displacement
         //
 
-		time_t tSeed;
-		time(&tSeed);
-
         stochastic_displacement_creation( numberOfParticles, stochasticWeighting, stochasticDisplacement, tSeed );
+
+		if( gDebug == 1 && stochasticWeighting != NULL)
+        {
+            conditions.currentTime = conditions.endTime+1;
+            FILE *stochasticOutput = fopen("../bin/stochastic_matrix_output.txt","w");
+
+            for(int i = 0; i < 6 * numberOfParticles; i++)
+            {
+                for(int j = 0; j < 6 * numberOfParticles; j++)
+                {
+                    fprintf(stochasticOutput, "%e\t", stochasticWeighting[i * 6 * numberOfParticles + j]);
+                }
+                fprintf(stochasticOutput, "\n");
+
+            }
+            fclose (stochasticOutput);
+		}
 
         //
         // Include additional forces
         //
 
+		// Gravity
+		#pragma omp parallel for
+		for (int i=0; i < numberOfParticles; i++)
+		{
+            additionalForces[3*i] = -(6 * gPi * conditions.viscosity * conditions.radius) * particles[i].dx ;
+            additionalForces[3*i+1]= -(6 * gPi * conditions.viscosity * conditions.radius) * particles[i].dy ;
+			additionalForces[3*i+2] = -conditions.mass * gGrav  - (6 * gPi * conditions.viscosity * conditions.radius) * particles[i].dz; // F_z = -mg
+			// This needs to be 'conditions->mass' when it's moved to another file
+		}
 
         //
         // Calculate time step.
         //
 
-        moving_on_routine(numberOfParticles, deltaTime, temperature, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates);
-        fprintf(output, "%lf\t", currentTime);
+        moving_on_routine(numberOfParticles, &conditions, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates);
+        fprintf(output, "%lf\t", conditions.currentTime);
         for(int i = 0; i < 6 * numberOfParticles; i++)
         {
             fprintf(output, "%e\t", generalisedCoordinates[i]);
         }
         fprintf(output, "\n");
 
-        currentTime+=deltaTime; // time step
+        conditions.currentTime+=conditions.deltaTime; // time step
     }
 
     //
@@ -269,6 +349,11 @@ int main(int argc, char *argv[])
     {
         free( stochasticDisplacement );
         particles = NULL;
+    }
+    if( velocities != NULL )
+    {
+        free( velocities );
+        velocities = NULL;
     }
 
     return 0;

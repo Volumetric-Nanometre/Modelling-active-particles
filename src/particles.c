@@ -11,7 +11,6 @@
 *             bring in inputs.
 **************************************/
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -28,11 +27,11 @@ int  particle_read_in(particleVariables **particles)
     //
     // Open and check input file
     //
-    FILE* particleInput=fopen("particleInput.txt","r");
+    FILE* particleInput=fopen("../bin/particleInput.txt","r");
 
     if(particleInput == NULL)
     {
-        printf("- Error %d : %s\n", errno,strerror(errno));
+        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
         numberOfParticles=-errno;
     }
     else
@@ -57,7 +56,7 @@ int  particle_read_in(particleVariables **particles)
 
             if((initParticles=calloc(numberOfParticles,sizeof(*initParticles))) == NULL)
             {
-                printf("- Error %d : %s\n", errno,strerror(errno));
+                printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
                 fclose (particleInput);
                 numberOfParticles=-errno;
             }
@@ -77,6 +76,11 @@ int  particle_read_in(particleVariables **particles)
     return numberOfParticles;
 }
 
+//
+// Takes the spatial and rotational coordinates of the particles and creates
+// a generalised coordinate to represent every particle.
+//
+
 double *generalised_coordinate_creation(int numberOfParticles, particleVariables *particles)
 {
     double *generalisedCoordinates = NULL ;
@@ -87,9 +91,13 @@ double *generalised_coordinate_creation(int numberOfParticles, particleVariables
 
     if( generalisedCoordinates == NULL )
     {
-        printf("-Error %d : %s\n", errno, strerror( errno ) );
+        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
         return NULL;
     }
+
+    //
+    // Allocate the coordinates
+    //
 
     for(int i = 0; i < numberOfParticles; i ++)
     {
@@ -102,5 +110,4 @@ double *generalised_coordinate_creation(int numberOfParticles, particleVariables
     }
 
     return generalisedCoordinates;
-
 }
