@@ -38,15 +38,15 @@ void moving_on_routine(int numberOfParticles, environmentVariables *conditions, 
         // Add the diffusion displacement to the current position and the
         // random stochastic displacement to get the final displacement.
         //
-        temp += stochasticDisplacement[i] + generalisedCoordinates[i];
+    //    temp += stochasticDisplacement[i];
         //
         // Calculate the velocity of the particle
         //
-        velocities[i] = (temp - generalisedCoordinates[i]) * conditions->deltaTime;
+        velocities[i] = temp / conditions->deltaTime;
         //
         // Replace the original generalisedCoordinates with the new coordinates
         //
-        generalisedCoordinates[i] = temp;
+        generalisedCoordinates[i] = temp + generalisedCoordinates[i];
     }
 
     //
