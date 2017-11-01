@@ -231,6 +231,7 @@ int main(int argc, char *argv[])
         velocities[ (i + numberOfParticles) * 3 + 1] =0;// particles[i].dbeta;
         velocities[ (i + numberOfParticles) * 3 + 2] =0;// particles[i].dgamma;
     }
+     
 
     //
     // Loop through time, output each time step to a file.
