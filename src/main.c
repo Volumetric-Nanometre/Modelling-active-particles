@@ -206,7 +206,7 @@ int main(int argc, char *argv[])
     conditions.currentTime = 0;
     conditions.deltaTime = 1E-3; // Seconds
     conditions.endTime = 1; // Seconds
-	conditions.mass = pow(conditions.radius,3)*19320; // kg - density of gold
+	conditions.mass = (4/3) * gPi * pow(conditions.radius,3)*19320; // kg - density of gold
 
 	time_t tSeed1;
 	time(&tSeed1);
