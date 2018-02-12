@@ -18,6 +18,11 @@ int kronecker_delta(int i, int k);
 
 int levi_civita_density(int i, int j);
 
+int linear_index_from_coordinates(int x_Max,int y_Max, int x, int y, int z);
+
+void coordinates_from_linear_index(int location,int x_Max,int y_Max, int *x, int *y, int *z);
+
+
 double randSign(long int tSeed);
 
 float ran1(long *idum);
