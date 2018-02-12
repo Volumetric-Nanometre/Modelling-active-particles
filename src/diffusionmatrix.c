@@ -170,8 +170,8 @@ void rotational_tensor_creation(double *tempMatrix, double *generalisedCoordinat
         {
             for(int m = 0; m < 3; m ++)
             {
-                tempMatrix[n * 3 + m] =( (dimensionalVector[n] * dimensionalVector [m]) / pow(absDistance,2) - kronecker_delta(n, m) )
-                                        *( 3 * stokesConstantProduct / (16 * pow( absDistance, 3) ));       //  Over 16 for interparticle interaction terms
+                tempMatrix[n * 3 + m] =( (3 * dimensionalVector[n] * dimensionalVector [m]) / pow(absDistance,2) - kronecker_delta(n, m) )
+                                        * ( stokesConstantProduct / (16 * pow( absDistance, 3) ));       //  Over 16 for interparticle interaction terms
             }
 
         }
