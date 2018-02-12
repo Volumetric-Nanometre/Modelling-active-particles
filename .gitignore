@@ -3,3 +3,4 @@ matrix_output.txt
 genCoord_output.txt
 output.txt
 stochastic_matrix_output.txt
+*.exe
