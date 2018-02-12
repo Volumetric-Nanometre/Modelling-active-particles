@@ -3,4 +3,12 @@ matrix_output.txt
 genCoord_output.txt
 output.txt
 stochastic_matrix_output.txt
+
+
+# Executables
 *.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
