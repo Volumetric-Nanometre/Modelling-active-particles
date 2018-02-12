@@ -12,7 +12,7 @@
 #include <errno.h>
 #include <string.h>
 #include <math.h>
-#include <time.h> 
+#include <time.h>
 
 #include "particles.h"
 #include "diffusionmatrix.h"
@@ -307,6 +307,8 @@ int main(int argc, char *argv[])
             printf("\n"   );
             // This needs to be 'conditions->mass' when it's moved to another file
 		}
+
+
         //
         // Calculate time step.
         //
