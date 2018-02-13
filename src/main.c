@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
     conditions.viscosity = 8.9E-4; //N m^-2 s
     conditions.radius = 1E-6; // m
     conditions.currentTime = 0;
-    conditions.deltaTime = 1E-3; // Seconds
+    conditions.deltaTime = 1E-6; // Seconds
     conditions.endTime = 1; // Seconds
 	conditions.mass = (4/3) * gPi * pow(conditions.radius,3)*19320; // kg - density of gold
 
@@ -230,7 +230,6 @@ int main(int argc, char *argv[])
         velocities[ (i + numberOfParticles) * 3 + 1] =0;// particles[i].dbeta;
         velocities[ (i + numberOfParticles) * 3 + 2] =0;// particles[i].dgamma;
     }
-
 
     //
     // Loop through time, output each time step to a file.
@@ -300,14 +299,9 @@ int main(int argc, char *argv[])
 
             additionalForces[3 * i] = -(6 * gPi * conditions.viscosity * conditions.radius) * velocities[3 * i] ;
             additionalForces[3 * i + 1]= -(6 * gPi * conditions.viscosity * conditions.radius) * velocities[3 * i + 1] ;
-			additionalForces[3 * i + 2] = -conditions.mass * gGrav  - (6 * gPi * conditions.viscosity * conditions.radius) * velocities[3 * i + 2]; // F_z = -mg
-            printf("%e\t%e\n",  velocities[i * 3] ,     additionalForces[i * 3] );
-            printf("%e\t%e\n",   velocities[i * 3 +1] ,    additionalForces[i * 3+1] );
-            printf("%e\t%e\n",    velocities[i * 3+1] ,   additionalForces[i * 3+2] );
-            printf("\n"   );
+			additionalForces[3 * i+2] = -conditions.mass * gGrav- (6 * gPi * conditions.viscosity * conditions.radius) * velocities[3 * i + 2]; // F_z = -mg
             // This needs to be 'conditions->mass' when it's moved to another file
 		}
-
 
         //
         // Calculate time step.
@@ -315,14 +309,13 @@ int main(int argc, char *argv[])
 
         moving_on_routine(numberOfParticles, &conditions, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates, velocities);
         fprintf(output, "%lf\t", conditions.currentTime);
-        for(int i = 0; i < 3 * numberOfParticles; i++)
+        for(int i = 0; i < 6 * numberOfParticles; i++)
         {
             fprintf(output, "%e\t", generalisedCoordinates[i]);
         }
         fprintf(output, "\n");
 
         conditions.currentTime+=conditions.deltaTime; // time step
-    //    getchar ();
     }
 
     //
