@@ -38,7 +38,7 @@ void diffusion_matrix_creation(int numberOfParticles, double *diffusionMatrix, d
     //
     // Scan through the particles and calculate the individual matrices
     //
-    #pragma omp parallel for private(tempTransMatrix,tempRotatMatrix,tempCouplMatrix) collapse (2)
+    //#pragma omp parallel for private(tempTransMatrix,tempRotatMatrix,tempCouplMatrix) collapse (2)
     for( int particleRow = 0; particleRow < numberOfParticles; particleRow++)
     {
         for( int particleColumn = 0 ; particleColumn < numberOfParticles; particleColumn++)
@@ -170,7 +170,7 @@ void rotational_tensor_creation(double *tempMatrix, double *generalisedCoordinat
         {
             for(int m = 0; m < 3; m ++)
             {
-                tempMatrix[n * 3 + m] =( (3 * dimensionalVector[n] * dimensionalVector [m]) / pow(absDistance,2) - kronecker_delta(n, m) )
+                tempMatrix[n * 3 + m] = ( (3 * dimensionalVector[n] * dimensionalVector [m]) / pow(absDistance,2) - kronecker_delta(n, m) )
                                         * ( stokesConstantProduct / (16 * pow( absDistance, 3) ));       //  Over 16 for interparticle interaction terms
             }
 
@@ -215,7 +215,7 @@ void translation_rotation_coupling_tensor_creation(double *tempMatrix, double *g
         {
             for(int m = 0; m < 3; m ++)
             {
-                tempMatrix[n * 3 + m] = ( dimensionalVector[n] / absDistance )*levi_civita_density(n,m)
+                tempMatrix[n * 3 + m] =  ( dimensionalVector[n] / absDistance )*levi_civita_density(n,m)
                                     *( stokesConstantProduct /( 8 * pow( absDistance, 2)) );       //  Over 8 for interparticle interaction terms
             }
 
