@@ -1,16 +1,16 @@
 IDIR =../include
 CC=gcc
-CFLAGS=-Wall -g -fopenmp -I$(IDIR)
+CFLAGS=-Wall -g -fopenmp -I$(IDIR) -IC:/GSL/include/
 
 ODIR=obj
 LDIR =../lib
 
-LIBS=-lm
+LIBS=-lm -lgsl -lgslcblas -lmsmpi -L$(LDIR) -LC:/GSL/lib/
 
 _DEPS = diffusionmatrix.h maths_functions.h particles.h stochastic_force.h moving_on.h initial_velocities.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = diffusionmatrix.o main.o maths_functions.o particles.o stochastic_force.o moving_on.o initial_velocities.o
+_OBJ = main.o diffusionmatrix.o maths_functions.o particles.o stochastic_force.o moving_on.o initial_velocities.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 

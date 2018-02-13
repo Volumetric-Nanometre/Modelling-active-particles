@@ -1,7 +1,7 @@
 # Modelling-active-particles
 MSci Project
 
-File set up (Michaels Branch)
+File set up
 
 File must be called particleInput.txt
 

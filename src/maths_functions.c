@@ -49,6 +49,23 @@ int levi_civita_density(int i, int j)
     }
 }
 
+int linear_index_from_coordinates(int x_Max,int y_Max, int x, int y, int z)
+{
+    return x+x_Max*y+x_Max*y_Max*z;
+}
+
+void coordinates_from_linear_index(int location,int x_Max,int y_Max, int *x, int *y, int *z)
+{
+     *x = location%x_Max;
+     location=(location - *x)/x_Max;
+     *y = location%y_Max;
+     location=(location-*y)/y_Max;
+     *z = location;
+}
+
+
+
+
 double randSign(long int tSeed) // Randomly generate -1 or +1
 {
 	if (ran1(&tSeed)>0.5)

@@ -13,7 +13,6 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
-#include <CL\cl.h>
 
 #include "particles.h"
 #include "diffusionmatrix.h"
@@ -204,9 +203,9 @@ int main(int argc, char *argv[])
     conditions.viscosity = 8.9E-4; //N m^-2 s
     conditions.radius = 1E-6; // m
     conditions.currentTime = 0;
-    conditions.deltaTime = 1E-3; // Seconds
-    conditions.endTime = 1E-2; // Seconds
-	conditions.mass = pow(conditions.radius,3)*19320; // kg - density of gold
+    conditions.deltaTime = 1E-6; // Seconds
+    conditions.endTime = 1; // Seconds
+	conditions.mass = (4/3) * gPi * pow(conditions.radius,3)*19320; // kg - density of gold
 
 	time_t tSeed1;
 	time(&tSeed1);
@@ -224,14 +223,13 @@ int main(int argc, char *argv[])
 
     for(int i = 0; i < numberOfParticles; i ++)
     {
-        velocities[i * 3] = particles[i].dx;
-        velocities[i * 3 + 1] = particles[i].dy;
-        velocities[i * 3 + 2] = particles[i].dz;
-        velocities[ (i + numberOfParticles) * 3] = particles[i].dalpha;
-        velocities[ (i + numberOfParticles) * 3 + 1] = particles[i].dbeta;
-        velocities[ (i + numberOfParticles) * 3 + 2] = particles[i].dgamma;
+        velocities[i * 3] =0;// particles[i].dx;
+        velocities[i * 3 + 1] =0;// particles[i].dy;
+        velocities[i * 3 + 2] =0;// particles[i].dz;
+        velocities[ (i + numberOfParticles) * 3] =0;// particles[i].dalpha;
+        velocities[ (i + numberOfParticles) * 3 + 1] =0;// particles[i].dbeta;
+        velocities[ (i + numberOfParticles) * 3 + 2] =0;// particles[i].dgamma;
     }
-
 
     //
     // Loop through time, output each time step to a file.
@@ -295,13 +293,14 @@ int main(int argc, char *argv[])
         //
 
 		// Gravity
-		#pragma omp parallel for
+		//#pragma omp parallel for
 		for (int i = 0; i < numberOfParticles; i++)
 		{
+
             additionalForces[3 * i] = -(6 * gPi * conditions.viscosity * conditions.radius) * velocities[3 * i] ;
             additionalForces[3 * i + 1]= -(6 * gPi * conditions.viscosity * conditions.radius) * velocities[3 * i + 1] ;
-			additionalForces[3 * i + 2] = -conditions.mass * gGrav  - (6 * gPi * conditions.viscosity * conditions.radius) * velocities[3 * i + 2]; // F_z = -mg
-			// This needs to be 'conditions->mass' when it's moved to another file
+			additionalForces[3 * i+2] = -conditions.mass * gGrav- (6 * gPi * conditions.viscosity * conditions.radius) * velocities[3 * i + 2]; // F_z = -mg
+            // This needs to be 'conditions->mass' when it's moved to another file
 		}
 
         //
