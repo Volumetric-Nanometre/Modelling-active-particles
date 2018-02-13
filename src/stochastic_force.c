@@ -22,20 +22,6 @@ void stochastic_displacement_creation(int numberOfParticles, double *stochasticW
 	int N = 6 * numberOfParticles; // array is a linearized (6*N) by (6*N) array
 
 
-	int M = 6*numberOfParticles;
-   gsl_matrix  *A=gsl_matrix_alloc(M,M);
-
-   for(int i =0; i<M; i++)
-   {
-       for(int j = 0; j< M; j++)
-       {
-           gsl_matrix_set( A,i,  j, stochasticWeighting[i*M+j]);
-       }
-   }
-
-   gsl_linalg_cholesky_decomp1( A);
-   getchar();
-
     for (int k = 0; k < N; k++) // iterates over diagonals
 	{
 		stochasticWeighting[k*(N+1)] = sqrt(stochasticWeighting[k*(N+1)]); // square roots diagonals
