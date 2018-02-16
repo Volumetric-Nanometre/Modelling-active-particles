@@ -297,9 +297,7 @@ int main(int argc, char *argv[])
 		for (int i = 0; i < numberOfParticles; i++)
 		{
 
-            additionalForces[3 * i] = -(6 * gPi * conditions.viscosity * conditions.radius) * velocities[3 * i] ;
-            additionalForces[3 * i + 1]= -(6 * gPi * conditions.viscosity * conditions.radius) * velocities[3 * i + 1] ;
-			additionalForces[3 * i+2] = -conditions.mass * gGrav- (6 * gPi * conditions.viscosity * conditions.radius) * velocities[3 * i + 2]; // F_z = -mg
+			additionalForces[3 * i+2] = -conditions.mass * gGrav; // F_z = -mg
             // This needs to be 'conditions->mass' when it's moved to another file
 		}
 

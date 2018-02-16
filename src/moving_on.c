@@ -48,7 +48,7 @@ void moving_on_routine(int numberOfParticles, environmentVariables *conditions, 
 
         //printf("final temp %d = %e\n",i,temp );
     //    getchar();
-        velocities[i] = temp / 2*conditions->deltaTime;
+        //velocities[i] = temp /conditions->deltaTime;
         //
         // Replace the original generalisedCoordinates with the new coordinates
         //
