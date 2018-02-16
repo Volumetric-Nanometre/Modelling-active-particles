@@ -111,87 +111,43 @@ int main(int argc, char *argv[])
     double *stochasticWeighting = NULL;
     double *additionalForces = NULL;
     double *stochasticDisplacement = NULL;
-    double *velocities = NULL;
+//    double *velocities = NULL;
 
-    if( (diffusionMatrix = calloc( pow( 6 * numberOfParticles, 2), sizeof *diffusionMatrix) ) == NULL)
+    diffusionMatrix = calloc( pow( 6 * numberOfParticles, 2), sizeof *diffusionMatrix) ;
+    stochasticWeighting = calloc( pow( 6 * numberOfParticles, 2), sizeof *stochasticWeighting);
+    stochasticDisplacement = calloc( 6 * numberOfParticles, sizeof *stochasticDisplacement);
+    additionalForces = calloc( 6 * numberOfParticles, sizeof *additionalForces);
+
+    if(  diffusionMatrix==NULL  || stochasticWeighting==NULL || stochasticDisplacement==NULL || additionalForces==NULL)
     {
         free( particles );
         particles = NULL ;
+
         free( generalisedCoordinates );
         generalisedCoordinates = NULL ;
-        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
 
-        getchar();
-        return -errno;
-    }
-
-    if( (stochasticWeighting = calloc( pow( 6 * numberOfParticles, 2), sizeof *stochasticWeighting) ) == NULL)
-    {
-        free( particles );
-        particles = NULL ;
-        free( generalisedCoordinates );
-        generalisedCoordinates = NULL ;
+        if( diffusionMatrix!=NULL)
         free( diffusionMatrix );
         diffusionMatrix = NULL;
-        printf("-Error %d : %s\n", errno, strerror( errno ) );
 
-        getchar();
-        return -errno;
-    }
-
-    if( (stochasticDisplacement = calloc( 6 * numberOfParticles, sizeof *stochasticDisplacement) ) == NULL)
-    {
-        free( particles );
-        particles = NULL ;
-        free( generalisedCoordinates );
-        generalisedCoordinates = NULL ;
-        free( diffusionMatrix );
-        diffusionMatrix = NULL;
-        free( stochasticWeighting );
-        stochasticWeighting = NULL;
-        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
-
-        getchar();
-        return -errno;
-    }
-
-    if( (additionalForces = calloc( 6 * numberOfParticles, sizeof *additionalForces) ) == NULL)
-    {
-        free( particles );
-        particles = NULL ;
-        free( generalisedCoordinates );
-        generalisedCoordinates = NULL ;
-        free( diffusionMatrix );
-        diffusionMatrix = NULL;
+        if( stochasticDisplacement!=NULL)
         free( stochasticDisplacement );
         stochasticDisplacement = NULL;
+
+        if( stochasticWeighting!=NULL)
         free( stochasticWeighting );
         stochasticWeighting = NULL;
+
+        if( additionalForces!=NULL)
+        free( additionalForces );
+        additionalForces = NULL;
+
+
         printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
 
-        getchar();
         return -errno;
     }
 
-//    if( (velocities = calloc( 6 * numberOfParticles, sizeof *velocities) ) == NULL)
-//    {
-//        free( particles );
-//        particles = NULL ;
-//        free( generalisedCoordinates );
-//        generalisedCoordinates = NULL ;
-//        free( diffusionMatrix );
-//        diffusionMatrix = NULL;
-//        free( stochasticDisplacement );
-//        stochasticDisplacement = NULL;
-//        free( stochasticWeighting );
-//        stochasticWeighting = NULL;
-//        free( additionalForces );
-//        additionalForces = NULL;
-//        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
-//
-//        getchar();
-//        return -errno;
-//    }
 
     //
     // Allocate the environmental conditions and nano particle
@@ -269,7 +225,7 @@ int main(int argc, char *argv[])
         // Create the stochastic displacement
         //
 
-        stochastic_displacement_creation( numberOfParticles, stochasticWeighting, stochasticDisplacement, tSeed );
+        stochastic_displacement_creation( numberOfParticles, stochasticWeighting, stochasticDisplacement, tSeed, conditions.deltaTime);
 
 		if( gDebug == 1 && stochasticWeighting != NULL)
         {
@@ -347,11 +303,5 @@ int main(int argc, char *argv[])
         free( stochasticDisplacement );
         particles = NULL;
     }
-    if( velocities != NULL )
-    {
-        free( velocities );
-        velocities = NULL;
-    }
-
     return 0;
 }
