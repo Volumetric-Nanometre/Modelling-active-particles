@@ -215,7 +215,14 @@ void translation_rotation_coupling_tensor_creation(double *tempMatrix, double *g
         {
             for(int m = 0; m < 3; m ++)
             {
-                tempMatrix[n * 3 + m] =  ( dimensionalVector[n] / absDistance )*levi_civita_density(n,m)
+                int k;
+                switch(n)
+                {
+                 case 0: if(m == 1){ k = 2;}else{k=1;}
+                 case 1: if(m == 0){ k = 2;}else{k=0;}
+                 case 2: if(m == 0){ k = 1;}else{k=0;}
+                }
+                tempMatrix[n * 3 + m] =  ( dimensionalVector[k] / absDistance )*levi_civita_density(n,m)
                                     *( stokesConstantProduct /( 8 * pow( absDistance, 2)) );       //  Over 8 for interparticle interaction terms
             }
 
