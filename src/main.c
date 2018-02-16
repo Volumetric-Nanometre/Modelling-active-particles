@@ -173,25 +173,25 @@ int main(int argc, char *argv[])
         return -errno;
     }
 
-    if( (velocities = calloc( 6 * numberOfParticles, sizeof *velocities) ) == NULL)
-    {
-        free( particles );
-        particles = NULL ;
-        free( generalisedCoordinates );
-        generalisedCoordinates = NULL ;
-        free( diffusionMatrix );
-        diffusionMatrix = NULL;
-        free( stochasticDisplacement );
-        stochasticDisplacement = NULL;
-        free( stochasticWeighting );
-        stochasticWeighting = NULL;
-        free( additionalForces );
-        additionalForces = NULL;
-        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
-
-        getchar();
-        return -errno;
-    }
+//    if( (velocities = calloc( 6 * numberOfParticles, sizeof *velocities) ) == NULL)
+//    {
+//        free( particles );
+//        particles = NULL ;
+//        free( generalisedCoordinates );
+//        generalisedCoordinates = NULL ;
+//        free( diffusionMatrix );
+//        diffusionMatrix = NULL;
+//        free( stochasticDisplacement );
+//        stochasticDisplacement = NULL;
+//        free( stochasticWeighting );
+//        stochasticWeighting = NULL;
+//        free( additionalForces );
+//        additionalForces = NULL;
+//        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
+//
+//        getchar();
+//        return -errno;
+//    }
 
     //
     // Allocate the environmental conditions and nano particle
@@ -214,22 +214,22 @@ int main(int argc, char *argv[])
     //
     // Create random velocities
     //
-	initialVelocities(numberOfParticles, particles, &conditions, tSeed);
+	//initialVelocities(numberOfParticles, particles, &conditions, tSeed);
 
     //
     // Put velocities into an array. First 3N is the linear velocites
     // second 3N is the angular velocities
     //
 
-    for(int i = 0; i < numberOfParticles; i ++)
-    {
-        velocities[i * 3] =0;// particles[i].dx;
-        velocities[i * 3 + 1] =0;// particles[i].dy;
-        velocities[i * 3 + 2] =0;// particles[i].dz;
-        velocities[ (i + numberOfParticles) * 3] =0;// particles[i].dalpha;
-        velocities[ (i + numberOfParticles) * 3 + 1] =0;// particles[i].dbeta;
-        velocities[ (i + numberOfParticles) * 3 + 2] =0;// particles[i].dgamma;
-    }
+//    for(int i = 0; i < numberOfParticles; i ++)
+//    {
+//        velocities[i * 3] =0;// particles[i].dx;
+//        velocities[i * 3 + 1] =0;// particles[i].dy;
+//        velocities[i * 3 + 2] =0;// particles[i].dz;
+//        velocities[ (i + numberOfParticles) * 3] =0;// particles[i].dalpha;
+//        velocities[ (i + numberOfParticles) * 3 + 1] =0;// particles[i].dbeta;
+//        velocities[ (i + numberOfParticles) * 3 + 2] =0;// particles[i].dgamma;
+//    }
 
     //
     // Loop through time, output each time step to a file.
@@ -305,7 +305,7 @@ int main(int argc, char *argv[])
         // Calculate time step.
         //
 
-        moving_on_routine(numberOfParticles, &conditions, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates, velocities);
+        moving_on_routine(numberOfParticles, &conditions, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates, NULL);
         fprintf(output, "%lf\t", conditions.currentTime);
         for(int i = 0; i < 6 * numberOfParticles; i++)
         {
