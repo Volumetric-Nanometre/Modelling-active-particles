@@ -39,7 +39,7 @@ int levi_civita_density(int i, int j)
     {
         return 0;
     }
-    else if( i < j)
+    else if( (i == 0 && j == 1) || (i == 1 && j == 2) || (i == 2 && j == 0))
     {
         return 1;
     }
