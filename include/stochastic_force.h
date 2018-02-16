@@ -15,6 +15,6 @@
 #include <stdlib.h>
 
 
-void stochastic_displacement_creation(int numberOfParticles, double *stochasticWeighting, double *stochasticDisplacement, long int tSeed);
+void stochastic_displacement_creation(int numberOfParticles, double *stochasticWeighting, double *stochasticDisplacement, long int tSeed, double timestep);
 
 #endif // _STOCHASTIC_FORCE_H
