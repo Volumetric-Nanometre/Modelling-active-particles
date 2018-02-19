@@ -3,7 +3,6 @@
 * Date of creation 17/10/2017
 * Author: Oliver Hinds
 * Contact:
-* Other Authors: N/A
 **************************************
 * History
 **************************************/
@@ -56,9 +55,8 @@ void stochastic_displacement_creation(int numberOfParticles, double *stochasticW
 	{
 		for (int j = 0; j < N; j++)
 		{
-			stochasticDisplacement[i] += stochasticWeighting[i*N + j] * guassdev(&tSeed) * 2 * timestep; // X[j] is some random gaussian
+			stochasticDisplacement[i] += stochasticWeighting[i*N + j] * guassdev(&tSeed) * sqrt(2 * timestep)*1E-6;
 
 		}
 	}
-
 }

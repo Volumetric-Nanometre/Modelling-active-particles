@@ -2,10 +2,9 @@
 * Date of creation 10/10/2017
 * Author: Michael O'Donnell
 * Contact: mo14776@my.bristol.ac.uk
-* Other Authors: N/A
 **************************************
-* History
-*
+*   History
+*   19/02/2018 -Debugged matrix, to fully working matrix
 **************************************/
 
 #include <stdlib.h>

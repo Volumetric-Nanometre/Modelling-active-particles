@@ -1,8 +1,7 @@
 /*********************
 * Date of creation 09/10/2017
-* Author: Michael O'Donnell
+* Authors: Oliver Hinds, Michael O'Donnell
 * Contact: mo14776@my.bristol.ac.uk
-* Other Authors: Oliver Hinds
 **************************************
 * Change History
 **************************************/
@@ -204,8 +203,8 @@ int main(int argc, char *argv[])
         //
         if( gDebug == 1 && diffusionMatrix != NULL)
         {
-            conditions.currentTime = conditions.endTime+1;
-            FILE *matrixOutput = fopen("../bin/matrix_output.txt","w");
+            //conditions.currentTime = conditions.endTime+1;
+            FILE *matrixOutput = fopen("../bin/matrix_output.txt","a");
 
             for(int i = 0; i < 6 * numberOfParticles; i++)
             {
@@ -229,8 +228,8 @@ int main(int argc, char *argv[])
 
 		if( gDebug == 1 && stochasticWeighting != NULL)
         {
-            conditions.currentTime = conditions.endTime+1;
-            FILE *stochasticOutput = fopen("../bin/stochastic_matrix_output.txt","w");
+        //    conditions.currentTime = conditions.endTime+1;
+            FILE *stochasticOutput = fopen("../bin/stochastic_matrix_output.txt","a");
 
             for(int i = 0; i < 6 * numberOfParticles; i++)
             {

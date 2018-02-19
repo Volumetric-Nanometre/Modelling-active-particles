@@ -3,7 +3,6 @@
 * Date of creation 17/10/2017
 * Author: MichaelO'Donnell
 * Contact: mo14776@my.bristol.ac.uk
-* Other Authors: N/A
 **************************************
 * History
 **************************************/
