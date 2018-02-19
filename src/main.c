@@ -18,7 +18,7 @@
 #include "stochastic_force.h"
 #include "moving_on.h"
 #include "initial_velocities.h"
-
+#include "forces.h"
 
 double gBoltzmannConst = 1.38064852E-23; // m^2 kg s^-2 K^-1
 double gPi = 3.14159265359;
