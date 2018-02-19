@@ -88,7 +88,7 @@ static void force_van_der_waals(double *additionalForces, double *generalisedCoo
     // Add the forces onto the preexisting values
     //
     double x,y,z,r,forceConst;
-    double hamakerCoeff=1; // This is A in the above eqn
+    double hamakerCoeff=2.5E-19; // This is A in the above eqn, constant for unretarded gold
     for(int i = 0; i < numberOfParticles; i++)
     {
         for(int j = 0; j < numberOfParticles; j++)
