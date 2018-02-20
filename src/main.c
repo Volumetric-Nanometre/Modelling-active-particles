@@ -17,7 +17,7 @@
 #include "diffusionmatrix.h"
 #include "stochastic_force.h"
 #include "moving_on.h"
-#include "initial_velocities.h"
+//#include "initial_velocities.h"
 #include "forces.h"
 
 double gBoltzmannConst = 1.38064852E-23; // m^2 kg s^-2 K^-1
@@ -110,7 +110,6 @@ int main(int argc, char *argv[])
     double *stochasticWeighting = NULL;
     double *additionalForces = NULL;
     double *stochasticDisplacement = NULL;
-//    double *velocities = NULL;
 
     diffusionMatrix = calloc( pow( 6 * numberOfParticles, 2), sizeof *diffusionMatrix) ;
     stochasticWeighting = calloc( pow( 6 * numberOfParticles, 2), sizeof *stochasticWeighting);
@@ -158,33 +157,23 @@ int main(int argc, char *argv[])
     conditions.viscosity = 8.9E-4; //N m^-2 s
     conditions.radius = 1E-6; // m
     conditions.currentTime = 0;
-    conditions.deltaTime = 1E-6; // Seconds
-    conditions.endTime = 1; // Seconds
+    conditions.deltaTime = 1E-5; // Seconds
+    conditions.endTime = 2; // Seconds
 	conditions.mass = (4/3) * gPi * pow(conditions.radius,3)*19320; // kg - density of gold
+
+    //
+    //  Choose forces to be included
+    //
+
+    int numberOfForces = 2; // must be at least 1, with the force none chosen
+
+    int forceList[2] = {0,0}; // repulsive and van der waals
+
+
 
 	time_t tSeed1;
 	time(&tSeed1);
 	long int tSeed = -1*(long int) tSeed1;
-
-    //
-    // Create random velocities
-    //
-	//initialVelocities(numberOfParticles, particles, &conditions, tSeed);
-
-    //
-    // Put velocities into an array. First 3N is the linear velocites
-    // second 3N is the angular velocities
-    //
-
-//    for(int i = 0; i < numberOfParticles; i ++)
-//    {
-//        velocities[i * 3] =0;// particles[i].dx;
-//        velocities[i * 3 + 1] =0;// particles[i].dy;
-//        velocities[i * 3 + 2] =0;// particles[i].dz;
-//        velocities[ (i + numberOfParticles) * 3] =0;// particles[i].dalpha;
-//        velocities[ (i + numberOfParticles) * 3 + 1] =0;// particles[i].dbeta;
-//        velocities[ (i + numberOfParticles) * 3 + 2] =0;// particles[i].dgamma;
-//    }
 
     //
     // Loop through time, output each time step to a file.
@@ -247,14 +236,7 @@ int main(int argc, char *argv[])
         // Include additional forces
         //
 
-		// Gravity
-		//#pragma omp parallel for
-		for (int i = 0; i < numberOfParticles; i++)
-		{
-
-			additionalForces[3 * i+2] = -conditions.mass * gGrav; // F_z = -mg
-            // This needs to be 'conditions->mass' when it's moved to another file
-		}
+        force_torque_summation(additionalForces, generalisedCoordinates, 6 * numberOfParticles, forceList, numberOfForces, conditions);
 
         //
         // Calculate time step.
@@ -262,7 +244,7 @@ int main(int argc, char *argv[])
 
         moving_on_routine(numberOfParticles, &conditions, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates, NULL);
         fprintf(output, "%lf\t", conditions.currentTime);
-        for(int i = 0; i < 6 * numberOfParticles; i++)
+        for(int i = 0; i < 3 * numberOfParticles; i++)
         {
             fprintf(output, "%e\t", generalisedCoordinates[i]);
         }
