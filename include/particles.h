@@ -23,13 +23,6 @@ typedef struct
     double alpha;
     double beta;
     double gamma;
-
-    double dx;
-    double dy;
-    double dz;
-    double dalpha;
-    double dbeta;
-    double dgamma;
 }particleVariables;
 
 typedef struct

@@ -7,10 +7,10 @@ LDIR =../lib
 
 LIBS=-lm -lgsl -lgslcblas -lmsmpi -L$(LDIR) -LC:/GSL/lib/
 
-_DEPS = diffusionmatrix.h maths_functions.h particles.h stochastic_force.h moving_on.h initial_velocities.h forces.h
+_DEPS = diffusionmatrix.h maths_functions.h particles.h stochastic_force.h moving_on.h forces.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = main.o diffusionmatrix.o maths_functions.o particles.o stochastic_force.o moving_on.o initial_velocities.o forces.o
+_OBJ = main.o diffusionmatrix.o maths_functions.o particles.o stochastic_force.o moving_on.o forces.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 
