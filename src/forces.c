@@ -93,14 +93,28 @@ static void force_van_der_waals(double *additionalForces, double *generalisedCoo
     {
         for(int j = 0; j < numberOfParticles; j++)
         {
+            //
+            // Ignore self interaction
+            //
             if(i == j)
             continue ;
+            //
+            // Calculate the vector components of r
+            //
             x = generalisedCoordinates[j * 3] - generalisedCoordinates[i * 3];
             y = generalisedCoordinates[j * 3 + 1] - generalisedCoordinates[i * 3 + 1];
             z = generalisedCoordinates[j * 3 + 2] - generalisedCoordinates[i * 3 + 2];
-
+            //
+            // Calculate |r|
+            //
             r = sqrt(x * x + y * y + z * z);
+            //
+            // Calculate  -32AR^6 / 3|r|^4(|r|^2 - 4R^2)^2
+            //
             forceConst =  -32*hamakerCoeff*pow(radius,6) / ( 3 * pow(r,4)*pow( ( r*r - 4*radius*radius) , 2) );
+            //
+            // Vectorise
+            //
             additionalForces[i * 3] += forceConst * x;
             additionalForces[i * 3 + 1] += forceConst * y;
             additionalForces[i * 3 + 2] += forceConst * z;
@@ -123,14 +137,28 @@ static void force_exp_repulsion(double *additionalForces, double *generalisedCoo
     {
         for(int j = 0; j < numberOfParticles; j++)
         {
+            //
+            // Ignore self interaction
+            //
             if(i == j)
             continue ;
+            //
+            // Calculate the vector components of r
+            //
             x = generalisedCoordinates[j * 3] - generalisedCoordinates[i * 3];
             y = generalisedCoordinates[j * 3 + 1] - generalisedCoordinates[i * 3 + 1];
             z = generalisedCoordinates[j * 3 + 2] - generalisedCoordinates[i * 3 + 2];
-
+            //
+            // Calculate |r|
+            //
             r = sqrt(x * x + y * y + z * z);
+            //
+            // Calculate 1/R * Aexp(-|r|/lamda)
+            //
             forceConst =  (gExpTuningA * exp(-r / gExpTuningLamda) ) / r;
+            //
+            // Vectorise
+            //
             additionalForces[i * 3] += forceConst * x;
             additionalForces[i * 3 + 1] += forceConst * y;
             additionalForces[i * 3 + 2] += forceConst * z;

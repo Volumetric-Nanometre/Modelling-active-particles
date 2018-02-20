@@ -33,21 +33,13 @@ void moving_on_routine(int numberOfParticles, environmentVariables *conditions, 
         for(int j = 0; j < 6 * numberOfParticles; j++)
         {
             temp += frontConst*diffusionMatrix[i * 6*numberOfParticles + j] * additionalForces[j];
-    //        printf("temp %e\t diff %e \tforce : %e     i %d j %d\n",temp,diffusionMatrix[i * 6*numberOfParticles + j],additionalForces[j], i,j );
-        //    getchar();
         }
         //
         // Add the diffusion displacement to the current position and the
         // random stochastic displacement to get the final displacement.
         //
         temp += stochasticDisplacement[i];
-        //
-        // Calculate the velocity of the particle
-        //
 
-        //printf("final temp %d = %e\n",i,temp );
-    //    getchar();
-        //velocities[i] = temp /conditions->deltaTime;
         //
         // Replace the original generalisedCoordinates with the new coordinates
         //
