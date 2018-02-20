@@ -17,10 +17,6 @@
 #include "diffusionmatrix.h"
 #include "stochastic_force.h"
 #include "moving_on.h"
-<<<<<<< HEAD
-=======
-//#include "initial_velocities.h"
->>>>>>> aa2f782f24ba8d13debbe77abecf6a3c4c54ab03
 #include "forces.h"
 
 double gBoltzmannConst = 1.38064852E-23; // m^2 kg s^-2 K^-1
