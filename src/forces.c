@@ -58,9 +58,9 @@ void force_torque_summation(double *additionalForces,double *generalisedCoordina
         switch(forceList[i])
         {
             case NONE : break;
-            case GRAVITY : force_gravity(additionalForces, numberOfCells, conditions.mass);
-            case VAN_DER_WAALS : force_van_der_waals(additionalForces, generalisedCoordinates, numberOfCells, conditions.radius);
-            case EXP_REPULSION : force_exp_repulsion(additionalForces, generalisedCoordinates, numberOfCells);
+            case GRAVITY : force_gravity(additionalForces, numberOfCells, conditions.mass); break;
+            case VAN_DER_WAALS : force_van_der_waals(additionalForces, generalisedCoordinates, numberOfCells, conditions.radius); break;
+            case EXP_REPULSION : force_exp_repulsion(additionalForces, generalisedCoordinates, numberOfCells); break;
             default : break;
         }
     }
