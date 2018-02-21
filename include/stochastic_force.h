@@ -13,7 +13,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <gsl/gsl_rng.h>
 
-void stochastic_displacement_creation(int numberOfParticles, double *stochasticWeighting, double *stochasticDisplacement, long int tSeed, double timestep);
+
+void stochastic_displacement_creation(int numberOfParticles, double *stochasticWeighting, double *stochasticDisplacement, gsl_rng *tSeed, double timestep);
 
 #endif // _STOCHASTIC_FORCE_H

@@ -36,8 +36,8 @@ extern double gGrav;
 // F = Aexp(-r/lamda)
 // r= r2 -r1
 //
-static double gExpTuningA = -1;
-static double gExpTuningLamda = 1;
+static double gExpTuningA = 7.176291667E-11 * 6E11;
+static double gExpTuningLamda = 4E5;
 //
 // Calculate the sum of the forces and torques from the forces and torques wanted
 //
@@ -58,9 +58,9 @@ void force_torque_summation(double *additionalForces,double *generalisedCoordina
         switch(forceList[i])
         {
             case NONE : break;
-            case GRAVITY : force_gravity(additionalForces, numberOfCells, conditions.mass);
-            case VAN_DER_WAALS : force_van_der_waals(additionalForces, generalisedCoordinates, numberOfCells, conditions.radius);
-            case EXP_REPULSION : force_exp_repulsion(additionalForces, generalisedCoordinates, numberOfCells);
+            case GRAVITY : force_gravity(additionalForces, numberOfCells, conditions.mass); break;
+            case VAN_DER_WAALS : force_van_der_waals(additionalForces, generalisedCoordinates, numberOfCells, conditions.radius); break;
+            case EXP_REPULSION : force_exp_repulsion(additionalForces, generalisedCoordinates, numberOfCells); break;
             default : break;
         }
     }
@@ -155,7 +155,7 @@ static void force_exp_repulsion(double *additionalForces, double *generalisedCoo
             //
             // Calculate 1/R * Aexp(-|r|/lamda)
             //
-            forceConst =  (gExpTuningA * exp(-r / gExpTuningLamda) ) / r;
+            forceConst =  gExpTuningA * exp(-gExpTuningLamda * r) / r;
             //
             // Vectorise
             //

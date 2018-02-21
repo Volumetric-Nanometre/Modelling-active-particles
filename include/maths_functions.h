@@ -26,7 +26,7 @@ double randSign(long int tSeed);
 
 float ran1(long *idum);
 
-float guassdev(long *idum);
+float gaussdev(long *idum);
 
 
 #endif  // _MATHS_FUNCTIONS_H

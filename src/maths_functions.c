@@ -126,7 +126,7 @@ float ran1(long *idum)
 
 
 
-float guassdev(long *idum)
+float gaussdev(long *idum)
 {
 	float ran1(long *idum);
 	static int iset=0;
