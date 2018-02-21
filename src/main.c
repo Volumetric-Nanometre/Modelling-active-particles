@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
 	environmentVariables conditions;
     conditions.temperature = 298; // K
     conditions.viscosity = 8.9E-4; //N m^-2 s
-    conditions.radius = 1E-6; // m
+    conditions.radius = 1E-9; // m
     conditions.currentTime = 0;
     conditions.deltaTime = 1E-5; // Seconds
     conditions.endTime = 2; // Seconds
@@ -166,14 +166,13 @@ int main(int argc, char *argv[])
 
     int numberOfForces = 2; // must be at least 1, with the force none chosen
 
-    int forceList[2] = {0,0}; // repulsive and van der waals
+    int forceList[2] = {EXP_REPULSION,VAN_DER_WAALS}; // repulsive and van der waals
 
 
 
 	time_t tSeed1;
 	time(&tSeed1);
 	long int tSeed = -1*(long int) tSeed1;
-
     //
     // Loop through time, output each time step to a file.
     //
