@@ -8,7 +8,7 @@ File must be called particleInput.txt
 ----------------------------------
 
 numberOfParticles \n
-x y z alpha beta gamma dx dy dz dalpha dbeta dgamma\n
+x y z alpha beta gamma\n
 
 ... \n
 
@@ -19,7 +19,7 @@ x y z alpha beta gamma dx dy dz dalpha dbeta dgamma\n
 This is the order the input values are read.
 The first number is the number of expected particles to allocate memory. If
 negative or zero it will fail with error 0
-Following rows must have 12 values to be read in per row in the order given above
+Following rows must have 6 values to be read in per row in the order given above
 with a newline (\n) at the end.  
 
 
