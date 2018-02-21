@@ -3,7 +3,6 @@
 * Date of creation 09/10/2017
 * Author: Michael O'Donnell
 * Contact: mo14776@my.bristol.ac.uk
-* Other Authors: N/A
 **************************************
 * History
 *
@@ -63,8 +62,8 @@ int  particle_read_in(particleVariables **particles)
 
             int i=0;
 
-            while(i<numberOfParticles && fscanf(particleInput,"%lf%lf%lf%lf%lf%lf%lf%lf%lf%lf%lf%lf\n",&initParticles[i].x,&initParticles[i].y,&initParticles[i].z,&initParticles[i].dx,&initParticles[i].dy,&initParticles[i].dz,
-                                                                &initParticles[i].alpha,&initParticles[i].beta,&initParticles[i].gamma,&initParticles[i].dalpha,&initParticles[i].dbeta,&initParticles[i].dgamma)==12)
+            while(i<numberOfParticles && fscanf(particleInput,"%lf%lf%lf%lf%lf%lf\n",&initParticles[i].x,&initParticles[i].y,&initParticles[i].z,
+                                                                                    &initParticles[i].alpha,&initParticles[i].beta,&initParticles[i].gamma)==6);
             {
                 i++;
             }

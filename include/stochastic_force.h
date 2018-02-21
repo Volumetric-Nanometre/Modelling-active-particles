@@ -2,7 +2,6 @@
 * Date of creation 17/10/2017
 * Author: Oliver Hinds
 * Contact:
-* Other Authors: N/A
 **************************************
 * History
 *
@@ -15,6 +14,6 @@
 #include <stdlib.h>
 
 
-void stochastic_displacement_creation(int numberOfParticles, double *stochasticWeighting, double *stochasticDisplacement, long int tSeed);
+void stochastic_displacement_creation(int numberOfParticles, double *stochasticWeighting, double *stochasticDisplacement, long int tSeed, double timestep);
 
 #endif // _STOCHASTIC_FORCE_H

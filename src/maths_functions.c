@@ -1,8 +1,7 @@
 /*********************
 * Date of creation 09/10/2017
-* Author: Michael O'Donnell
+* Author: Oliver Hinds, Michael O'Donnell
 * Contact: mo14776@my.bristol.ac.uk
-* Other Authors: Oliver Hinds
 **************************************
 * History
 *
@@ -39,7 +38,7 @@ int levi_civita_density(int i, int j)
     {
         return 0;
     }
-    else if( i < j)
+    else if( (i == 0 && j == 1) || (i == 1 && j == 2) || (i == 2 && j == 0))
     {
         return 1;
     }
