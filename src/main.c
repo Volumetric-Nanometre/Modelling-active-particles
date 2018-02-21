@@ -12,6 +12,7 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#include <gsl/gsl_rng.h>
 
 #include "particles.h"
 #include "diffusionmatrix.h"
@@ -168,14 +169,15 @@ int main(int argc, char *argv[])
 
     int forceList[2] = {EXP_REPULSION,VAN_DER_WAALS}; // repulsive and van der waals
 
+    /*time_t tSeed1;
+    time(&tSeed1);
+    long int tSeed = -1*(long int) tSeed1;*/
+    gsl_rng *tSeed = gsl_rng_alloc(gsl_rng_mt19937);
 
-
-	time_t tSeed1;
-	time(&tSeed1);
-	long int tSeed = -1*(long int) tSeed1;
     //
     // Loop through time, output each time step to a file.
     //
+    int loop =0;
     while(conditions.currentTime<=conditions.endTime)
     {
         //
@@ -241,14 +243,18 @@ int main(int argc, char *argv[])
         //
 
         moving_on_routine(numberOfParticles, &conditions, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates, NULL);
-        fprintf(output, "%lf\t", conditions.currentTime);
-        for(int i = 0; i < 3 * numberOfParticles; i++)
+        if(loop%10000 == 0)
         {
-            fprintf(output, "%e\t", generalisedCoordinates[i]);
+            fprintf(output, "%lf\t", conditions.currentTime);
+            for(int i = 0; i < 3 * numberOfParticles; i++)
+            {
+                fprintf(output, "%e\t", generalisedCoordinates[i]);
+            }
+            fprintf(output, "\n");
         }
-        fprintf(output, "\n");
 
         conditions.currentTime+=conditions.deltaTime; // time step
+        loop ++;
     }
 
     //

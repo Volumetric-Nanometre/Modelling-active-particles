@@ -28,8 +28,8 @@ extern double gGrav;
 // F = Aexp(-r/lamda)
 // r= r2 -r1
 //
-static double gExpTuningA = -1;
-static double gExpTuningLamda = 1;
+static double gExpTuningA = 7.176291667E-11 * 6E11;
+static double gExpTuningLamda = 4E5;
 //
 // Calculate the sum of the forces and torques from the forces and torques wanted
 //
