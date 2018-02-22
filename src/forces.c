@@ -22,14 +22,6 @@ static void force_van_der_waals(double *additionalForces, double *generalisedCoo
 
 static void force_exp_repulsion(double *additionalForces, double *generalisedCoordinates, double numberOfCells);
 
-enum forces_available
-{
-    NONE ,
-    GRAVITY ,
-    VAN_DER_WAALS ,
-    EXP_REPULSION
-};
-
 extern double gGrav;
 //
 // Tuning varibles for the exponential

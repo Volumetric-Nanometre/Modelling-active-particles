@@ -63,7 +63,7 @@ int  particle_read_in(particleVariables **particles)
             int i=0;
 
             while(i<numberOfParticles && fscanf(particleInput,"%lf%lf%lf%lf%lf%lf\n",&initParticles[i].x,&initParticles[i].y,&initParticles[i].z,
-                                                                                    &initParticles[i].alpha,&initParticles[i].beta,&initParticles[i].gamma)==6);
+                                                                                    &initParticles[i].alpha,&initParticles[i].beta,&initParticles[i].gamma)==6)
             {
                 i++;
             }
