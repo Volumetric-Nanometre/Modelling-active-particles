@@ -7,5 +7,12 @@
 
 void force_torque_summation(double *additionalForces,double *generalisedCoordinates, int numberOfCells, int *forceList, int numberOfForces,	environmentVariables conditions);
 
+enum forces_available
+{
+    NONE ,
+    GRAVITY ,
+    VAN_DER_WAALS ,
+    EXP_REPULSION
+};
 
 #endif //_FORCES_H
