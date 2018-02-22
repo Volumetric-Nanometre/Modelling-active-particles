@@ -16,11 +16,11 @@
 
 
 
-static void force_gravity(double *additionalForces, double numberOfCells, double mass);
+static void force_gravity(double *additionalForces, int numberOfCells, double mass);
 
-static void force_van_der_waals(double *additionalForces, double *generalisedCoordinates, double numberOfCells, double radius);
+static void force_van_der_waals(double *additionalForces, double *generalisedCoordinates, int numberOfCells, double radius);
 
-static void force_exp_repulsion(double *additionalForces, double *generalisedCoordinates, double numberOfCells);
+static void force_exp_repulsion(double *additionalForces, double *generalisedCoordinates, int numberOfCells);
 
 extern double gGrav;
 //
@@ -58,18 +58,19 @@ void force_torque_summation(double *additionalForces,double *generalisedCoordina
     }
 }
 
-static void force_gravity(double *additionalForces, double numberOfCells, double mass)
+static void force_gravity(double *additionalForces, int numberOfCells, double mass)
 {
     //
     // Half the number of cells to ignore torques.
     // Step 3 each time to only hit the z axis
     // Add the forces onto the preexisting values
     //
+    #pragma omp parallel for
     for(int i = 0; i < numberOfCells/2; i+=3)
     	additionalForces[i] -= mass * gGrav;
 }
 
-static void force_van_der_waals(double *additionalForces, double *generalisedCoordinates, double numberOfCells, double radius)
+static void force_van_der_waals(double *additionalForces, double *generalisedCoordinates, int numberOfCells, double radius)
 {
     //
     // get the number of particles.
@@ -81,6 +82,7 @@ static void force_van_der_waals(double *additionalForces, double *generalisedCoo
     //
     double x,y,z,r,forceConst;
     double hamakerCoeff=2.5E-19; // This is A in the above eqn, constant for unretarded gold
+    #pragma omp parallel for private(x,y,z,r,forceConst)
     for(int i = 0; i < numberOfParticles; i++)
     {
         for(int j = 0; j < numberOfParticles; j++)
@@ -114,7 +116,7 @@ static void force_van_der_waals(double *additionalForces, double *generalisedCoo
     }
 }
 
-static void force_exp_repulsion(double *additionalForces, double *generalisedCoordinates, double numberOfCells)
+static void force_exp_repulsion(double *additionalForces, double *generalisedCoordinates, int numberOfCells)
 {
     //
     // get the number of particles.
@@ -125,6 +127,7 @@ static void force_exp_repulsion(double *additionalForces, double *generalisedCoo
     // Add the forces onto the preexisting values
     //
     double x,y,z,r,forceConst;
+    #pragma omp parallel for private(x,y,z,r,forceConst)
     for(int i = 0; i < numberOfParticles; i++)
     {
         for(int j = 0; j < numberOfParticles; j++)
