@@ -166,3 +166,33 @@ static void force_exp_repulsion(double *additionalForces, double *generalisedCoo
     }
 
 }
+
+static void alignment_torque(double *additionalForces, double *generalisedCoordinates, double numberOfCells)
+{
+	double totalAlpha = 0;
+	double totalBeta = 0;
+	
+	int torqueOffset = 3*numberOfCells;
+	
+	double meanAlpha, meanBeta;
+	
+	double forceConst = 1;
+	
+	// Calculate average angles
+	for (int i=0; i<numberOfCells/2; i++)
+	{
+		totalAlpha += generalisedCoordinates[torqueOffset + 3*i + 0];
+		totalBeta += generalisedCoordinates[torqueOffset + 3*i + 1];
+	}
+	
+	meanAlpha = totalAlpha/numberOfCells;
+	meanBeta = totalBeta/numberOfCells;
+	
+	// Calculate torques on each particle according to their alignment with average angle
+	for (int i=0; i<numberOfCells/6; i++)
+	{
+		additionalForces[torqueOffset + 3*i + 0] += forceConst * sin(meanAlpha - generalisedCoordinates[torqueOffset + 3*i + 0]);
+		additionalForces[torqueOffset + 3*i + 1] += forceConst * sin(meanBeta - generalisedCoordinates[torqueOffset + 3*i + 1]);
+	}
+	
+}
