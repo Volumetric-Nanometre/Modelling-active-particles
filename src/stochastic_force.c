@@ -9,6 +9,7 @@
 
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>
@@ -17,10 +18,14 @@
 #include "maths_functions.h"
 
 
+	
+
+
 void stochastic_displacement_creation(int numberOfParticles, double *stochasticWeighting, double *stochasticDisplacement, gsl_rng *tSeed, double timestep){
 	int N = 6 * numberOfParticles; // array is a linearized (6*N) by (6*N) array
 
 	double temp[6*numberOfParticles];
+
 
     /*for (int k = 0; k < N; k++) // iterates over diagonals
 	{
@@ -50,12 +55,19 @@ void stochastic_displacement_creation(int numberOfParticles, double *stochasticW
 		}
 	}
 
+	for (int i=0; i<N; i++)
+	{
+		stochasticDisplacement[i] = 0;
+	}
+	
+	//gsl_rng *r = gsl_rng_alloc(gsl_rng_mt19937);
 
-
+	double ran_num;
 	for (int i = 0; i < N; i++)
 	{
 		for (int j = 0; j < N; j++)
 		{
+
 			stochasticDisplacement[i] += stochasticWeighting[i*N + j]*gsl_ran_gaussian()//* guassdev(&tSeed) * sqrt(2*timestep);
 
 		}
@@ -106,5 +118,55 @@ void stochastic_displacement_creation(int numberOfParticles, double *stochasticW
 			ran_num = gsl_ran_gaussian(tSeed, 1);
 			stochasticDisplacement[i] += stochasticWeighting[i*N + j] * ran_num * sqrt(2*timestep);
 		}
+		printf("%+1.5e\n\n", stochasticDisplacement[i]);
 	}
+	printf("\nNEXT\n\n");
+	
+	//gsl_rng_free(r);
+	
+	/*gsl_matrix *array_gsl = gsl_matrix_alloc(N, N);
+	
+	for (int i=0; i<N; i++)
+		for (int j=0; j<N; j++)
+		{
+			gsl_matrix_set(array_gsl, i, j, stochasticWeighting[i*N + j]);
+			if (j>i)
+			gsl_matrix_set(test, i, j, 0);
+		}
+			
+	
+	if (gsl_matrix_equal(test, array_gsl) == 1) printf("Cholesky decompositions agree!\n");
+	else
+	{
+		printf("Cholesky decompositions do not agree\n");
+		
+		printf("Decomposed array:\n");
+		for (int i=0; i<N; i++)
+		{
+			for (int j=0; j<N; j++)
+			{
+				value = stochasticWeighting[i*N + j];
+				if (value != gsl_matrix_get(array_gsl, i, j))
+				{
+					printf("Array and its GSL conversion don't match!\n");
+					return;
+				}
+				
+				printf("%+1.1e", value);
+				if (j<N-1) printf(" ");
+			}
+			printf("\n");
+		}
+		
+		printf("GSL decomposed array:\n");
+		for (int i=0; i<N; i++)
+		{
+			for (int j=0; j<N; j++)
+			{
+				printf("%+1.1e", gsl_matrix_get(test,i,j));
+				if (j<N-1) printf(" ");
+			}
+			printf("\n");
+		}
+	}*/
 }

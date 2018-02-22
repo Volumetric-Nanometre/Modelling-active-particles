@@ -20,6 +20,8 @@
 #include "moving_on.h"
 #include "forces.h"
 
+#include <gsl/gsl_rng.h>
+
 double gBoltzmannConst = 1.38064852E-23; // m^2 kg s^-2 K^-1
 double gPi = 3.14159265359;
 double gGrav = 9.80665; // m s^-2
@@ -157,22 +159,26 @@ int main(int argc, char *argv[])
     conditions.viscosity = 8.9E-4; //N m^-2 s
     conditions.radius = 1E-9; // m
     conditions.currentTime = 0;
-    conditions.deltaTime = 1E-5; // Seconds
-    conditions.endTime = 2; // Seconds
+    conditions.deltaTime = 1; // Seconds
+    conditions.endTime = 1; // Seconds
 	conditions.mass = (4/3) * gPi * pow(conditions.radius,3)*19320; // kg - density of gold
 
     //
     //  Choose forces to be included
     //
 
-    int numberOfForces = 2; // must be at least 1, with the force none chosen
+    int numberOfForces = 3; // must be at least 1, with the force none chosen
 
-    int forceList[2] = {EXP_REPULSION,VAN_DER_WAALS}; // repulsive and van der waals
 
-    /*time_t tSeed1;
-    time(&tSeed1);
-    long int tSeed = -1*(long int) tSeed1;*/
-    gsl_rng *tSeed = gsl_rng_alloc(gsl_rng_mt19937);
+    int forceList[3] = {1,2,3}; // repulsive and van der waals
+
+
+
+	/*time_t tSeed1;
+	time(&tSeed1);
+	long int tSeed = -1*(long int) tSeed1;*/
+	gsl_rng *tSeed = gsl_rng_alloc(gsl_rng_mt19937);
+
 
     //
     // Loop through time, output each time step to a file.
@@ -217,7 +223,7 @@ int main(int argc, char *argv[])
 
 		if( gDebug == 1 && stochasticWeighting != NULL)
         {
-        //    conditions.currentTime = conditions.endTime+1;
+        	//conditions.currentTime = conditions.endTime+1;
             FILE *stochasticOutput = fopen("../bin/stochastic_matrix_output.txt","a");
 
             for(int i = 0; i < 6 * numberOfParticles; i++)

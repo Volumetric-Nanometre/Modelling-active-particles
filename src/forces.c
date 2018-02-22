@@ -147,7 +147,7 @@ static void force_exp_repulsion(double *additionalForces, double *generalisedCoo
             //
             // Calculate 1/R * Aexp(-|r|/lamda)
             //
-            forceConst =  (gExpTuningA * exp(-r / gExpTuningLamda) ) / r;
+            forceConst =  gExpTuningA * exp(-gExpTuningLamda * r) / r;
             //
             // Vectorise
             //
