@@ -68,6 +68,12 @@ int main(int argc, char *argv[])
     }
 
     printf("Data read in success\n" );
+	
+	// Create driving field
+	field_t drivingField;
+	drivingField.mag = 1;
+	drivingField.alpha = 0;
+	drivingField.beta = gPi/2;
 
     //
     // Create generalised coordinates
@@ -242,7 +248,7 @@ int main(int argc, char *argv[])
         // Include additional forces
         //
 
-        force_torque_summation(additionalForces, generalisedCoordinates, 6 * numberOfParticles, forceList, numberOfForces, conditions);
+        force_torque_summation(additionalForces, generalisedCoordinates, 6 * numberOfParticles, forceList, numberOfForces, conditions, drivingField);
 
         //
         // Calculate time step.
