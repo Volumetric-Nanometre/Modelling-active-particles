@@ -21,15 +21,12 @@ static void force_gravity(double *additionalForces, int numberOfCells, double ma
 static void force_van_der_waals(double *additionalForces, double *generalisedCoordinates, int numberOfCells, double radius);
 
 static void force_exp_repulsion(double *additionalForces, double *generalisedCoordinates, int numberOfCells);
-<<<<<<< HEAD
-=======
 
 static void alignment_torque(double *additionalForces, double *generalisedCoordinates, int numberOfCells);
 
 static void driving_force(double *additionalForces, double *generalisedCoordinates, int numberOfCells, field_t drivingField);
 
 extern int gDebug;
->>>>>>> 8618aa3f4d5cd28456c7b0b7882a80d2eded7e38
 
 extern double gGrav;
 extern double gPi;
@@ -77,7 +74,7 @@ static void force_gravity(double *additionalForces, int numberOfCells, double ma
     // Step 3 each time to only hit the z axis
     // Add the forces onto the preexisting values
     //
-    #pragma omp parallel for
+//    #pragma omp parallel for
     for(int i = 0; i < numberOfCells/2; i+=3)
     	additionalForces[i] -= mass * gGrav;
 }
@@ -94,7 +91,7 @@ static void force_van_der_waals(double *additionalForces, double *generalisedCoo
     //
     double x,y,z,r,forceConst;
     double hamakerCoeff=2.5E-19; // This is A in the above eqn, constant for unretarded gold
-    #pragma omp parallel for private(x,y,z,r,forceConst)
+//    #pragma omp parallel for private(x,y,z,r,forceConst)
     for(int i = 0; i < numberOfParticles; i++)
     {
         for(int j = 0; j < numberOfParticles; j++)
@@ -139,7 +136,7 @@ static void force_exp_repulsion(double *additionalForces, double *generalisedCoo
     // Add the forces onto the preexisting values
     //
     double x,y,z,r,forceConst;
-    #pragma omp parallel for private(x,y,z,r,forceConst)
+//    #pragma omp parallel for private(x,y,z,r,forceConst)
     for(int i = 0; i < numberOfParticles; i++)
     {
         for(int j = 0; j < numberOfParticles; j++)
@@ -178,58 +175,58 @@ static void alignment_torque(double *additionalForces, double *generalisedCoordi
 {
 	int numberOfParticles = numberOfCells/6;
 	int rotOffset = numberOfCells/2;
-	
+
 	double forceConst = 1E-7;
-	
+
 	double totalX = 0;
 	double totalY = 0;
 	double totalZ = 0;
 	double totalAlpha = 0;
 	double totalBeta = 0;
-	
+
 	double meanX, meanY, meanZ;
 	double meanAlpha, meanBeta, difAlpha, difBeta;
-	
+
 	double distMul;
-	
+
 	// Calculate average position and angles
 	for (int i=0; i<numberOfParticles; i++)
 	{
 		totalX += generalisedCoordinates[3*i + 0];
 		totalY += generalisedCoordinates[3*i + 1];
 		totalZ += generalisedCoordinates[3*i + 2];
-		
+
 		totalAlpha += generalisedCoordinates[rotOffset + 3*i + 0];
 		totalBeta += generalisedCoordinates[rotOffset + 3*i + 1];
 	}
-	
+
 	meanX = totalX/numberOfParticles;
 	meanY = totalY/numberOfParticles;
 	meanZ = totalZ/numberOfParticles;
-	
+
 	meanAlpha = totalAlpha/numberOfParticles;
 	meanBeta = totalBeta/numberOfParticles;
-	
+
 	// Calculate torques on each particle according to their alignment with average angle
 	for (int i=0; i<numberOfParticles; i++)
 	{
 		distMul = 1/sqrt(pow(meanX - generalisedCoordinates[3*i + 0],2) + pow(meanY - generalisedCoordinates[3*i + 1],2) + pow(meanZ - generalisedCoordinates[3*i + 2],2));
-		
+
 		additionalForces[rotOffset + 3*i + 0] += difAlpha = distMul * forceConst * sin(meanAlpha - generalisedCoordinates[rotOffset + 3*i + 0]);
 		additionalForces[rotOffset + 3*i + 1] += difBeta = distMul * forceConst * sin(meanBeta - generalisedCoordinates[rotOffset + 3*i + 1]);
-		
+
 		printf("%e\t%e\t%e\n", distMul, difAlpha, difBeta);
 	}
-	
+
 }
 
 static void driving_force(double *additionalForces, double *generalisedCoordinates, int numberOfCells, field_t drivingField)
 {
-	
+
 	for (int i=0; i<numberOfCells/6; i++)
 	{
 		additionalForces[3*i + 0] +=  drivingField.mag * cos(drivingField.alpha - generalisedCoordinates[numberOfCells/2 + 3*i + 0]);
 		additionalForces[3*i + 1] +=  drivingField.mag * cos(drivingField.beta - generalisedCoordinates[numberOfCells/2 + 3*i + 1]);
 	}
-	
+
 }
