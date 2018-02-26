@@ -2,6 +2,7 @@ IDIR =../include
 CC=gcc
 CFLAGS=-Wall -g -fopenmp -I$(IDIR)
 
+
 ODIR=obj
 LDIR =../lib
 
@@ -13,14 +14,18 @@ DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 _OBJ = main.o diffusionmatrix.o maths_functions.o particles.o stochastic_force.o moving_on.o forces.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
+args =
 
 $(ODIR)/%.o: %.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
+	$(CC) -c -o $@ $< $(CFLAGS) ${args}
 
 ../bin/executable: $(OBJ)
-	gcc -o $@ $^ $(CFLAGS) $(LIBS)
+	gcc -o $@ $^ $(CFLAGS) $(LIBS) ${args}
 
-.PHONY: clean
+.PHONY: clean run
 
 clean:
 	rm -f $(ODIR)/*.o *~ core $(INCDIR)/*~
+
+run:
+	../bin/executable.exe ${args}
