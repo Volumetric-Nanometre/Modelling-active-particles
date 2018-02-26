@@ -16,13 +16,20 @@
 
 
 
-static void force_gravity(double *additionalForces, double numberOfCells, double mass);
+static void force_gravity(double *additionalForces, int numberOfCells, double mass);
 
-static void force_van_der_waals(double *additionalForces, double *generalisedCoordinates, double numberOfCells, double radius);
+static void force_van_der_waals(double *additionalForces, double *generalisedCoordinates, int numberOfCells, double radius);
 
-static void force_exp_repulsion(double *additionalForces, double *generalisedCoordinates, double numberOfCells);
+static void force_exp_repulsion(double *additionalForces, double *generalisedCoordinates, int numberOfCells);
+
+static void alignment_torque(double *additionalForces, double *generalisedCoordinates, int numberOfCells);
+
+static void driving_force(double *additionalForces, double *generalisedCoordinates, int numberOfCells, field_t drivingField);
+
+extern int gDebug;
 
 extern double gGrav;
+extern double gPi;
 //
 // Tuning varibles for the exponential
 // F = Aexp(-r/lamda)
@@ -33,7 +40,7 @@ static double gExpTuningLamda = 4E5;
 //
 // Calculate the sum of the forces and torques from the forces and torques wanted
 //
-void force_torque_summation(double *additionalForces,double *generalisedCoordinates, int numberOfCells, int *forceList, int numberOfForces,	environmentVariables conditions)
+void force_torque_summation(double *additionalForces,double *generalisedCoordinates, int numberOfCells, int *forceList, int numberOfForces,	environmentVariables conditions, field_t drivingField)
 {
     //
     // Set entire array to zero
@@ -53,12 +60,14 @@ void force_torque_summation(double *additionalForces,double *generalisedCoordina
             case GRAVITY : force_gravity(additionalForces, numberOfCells, conditions.mass); break;
             case VAN_DER_WAALS : force_van_der_waals(additionalForces, generalisedCoordinates, numberOfCells, conditions.radius); break;
             case EXP_REPULSION : force_exp_repulsion(additionalForces, generalisedCoordinates, numberOfCells); break;
+			case ALIGN_TORQUE : alignment_torque(additionalForces, generalisedCoordinates, numberOfCells); break;
+			case DRIVING_FIELD : driving_force(additionalForces, generalisedCoordinates, numberOfCells, drivingField); break;
             default : break;
         }
     }
 }
 
-static void force_gravity(double *additionalForces, double numberOfCells, double mass)
+static void force_gravity(double *additionalForces, int numberOfCells, double mass)
 {
     //
     // Half the number of cells to ignore torques.
@@ -69,7 +78,7 @@ static void force_gravity(double *additionalForces, double numberOfCells, double
     	additionalForces[i] -= mass * gGrav;
 }
 
-static void force_van_der_waals(double *additionalForces, double *generalisedCoordinates, double numberOfCells, double radius)
+static void force_van_der_waals(double *additionalForces, double *generalisedCoordinates, int numberOfCells, double radius)
 {
     //
     // get the number of particles.
@@ -114,7 +123,7 @@ static void force_van_der_waals(double *additionalForces, double *generalisedCoo
     }
 }
 
-static void force_exp_repulsion(double *additionalForces, double *generalisedCoordinates, double numberOfCells)
+static void force_exp_repulsion(double *additionalForces, double *generalisedCoordinates, int numberOfCells)
 {
     //
     // get the number of particles.
@@ -157,4 +166,64 @@ static void force_exp_repulsion(double *additionalForces, double *generalisedCoo
         }
     }
 
+}
+
+static void alignment_torque(double *additionalForces, double *generalisedCoordinates, int numberOfCells)
+{
+	int numberOfParticles = numberOfCells/6;
+	int rotOffset = numberOfCells/2;
+	
+	double forceConst = 1E-7;
+	
+	double totalX = 0;
+	double totalY = 0;
+	double totalZ = 0;
+	double totalAlpha = 0;
+	double totalBeta = 0;
+	
+	double meanX, meanY, meanZ;
+	double meanAlpha, meanBeta, difAlpha, difBeta;
+	
+	double distMul;
+	
+	// Calculate average position and angles
+	for (int i=0; i<numberOfParticles; i++)
+	{
+		totalX += generalisedCoordinates[3*i + 0];
+		totalY += generalisedCoordinates[3*i + 1];
+		totalZ += generalisedCoordinates[3*i + 2];
+		
+		totalAlpha += generalisedCoordinates[rotOffset + 3*i + 0];
+		totalBeta += generalisedCoordinates[rotOffset + 3*i + 1];
+	}
+	
+	meanX = totalX/numberOfParticles;
+	meanY = totalY/numberOfParticles;
+	meanZ = totalZ/numberOfParticles;
+	
+	meanAlpha = totalAlpha/numberOfParticles;
+	meanBeta = totalBeta/numberOfParticles;
+	
+	// Calculate torques on each particle according to their alignment with average angle
+	for (int i=0; i<numberOfParticles; i++)
+	{
+		distMul = 1/sqrt(pow(meanX - generalisedCoordinates[3*i + 0],2) + pow(meanY - generalisedCoordinates[3*i + 1],2) + pow(meanZ - generalisedCoordinates[3*i + 2],2));
+		
+		additionalForces[rotOffset + 3*i + 0] += difAlpha = distMul * forceConst * sin(meanAlpha - generalisedCoordinates[rotOffset + 3*i + 0]);
+		additionalForces[rotOffset + 3*i + 1] += difBeta = distMul * forceConst * sin(meanBeta - generalisedCoordinates[rotOffset + 3*i + 1]);
+		
+		printf("%e\t%e\t%e\n", distMul, difAlpha, difBeta);
+	}
+	
+}
+
+static void driving_force(double *additionalForces, double *generalisedCoordinates, int numberOfCells, field_t drivingField)
+{
+	
+	for (int i=0; i<numberOfCells/6; i++)
+	{
+		additionalForces[3*i + 0] +=  drivingField.mag * cos(drivingField.alpha - generalisedCoordinates[numberOfCells/2 + 3*i + 0]);
+		additionalForces[3*i + 1] +=  drivingField.mag * cos(drivingField.beta - generalisedCoordinates[numberOfCells/2 + 3*i + 1]);
+	}
+	
 }

@@ -5,14 +5,24 @@
 
 #include "particles.h"
 
-void force_torque_summation(double *additionalForces,double *generalisedCoordinates, int numberOfCells, int *forceList, int numberOfForces,	environmentVariables conditions);
+typedef struct
+{
+	double mag; // Magnitude
+	double alpha; // Alpha Euler angle
+	double beta; // Beta Euler angle
+}field_t;
+
+void force_torque_summation(double *additionalForces,double *generalisedCoordinates, int numberOfCells, int *forceList, int numberOfForces,	environmentVariables conditions, field_t drivingField);
 
 enum forces_available
 {
     NONE ,
     GRAVITY ,
     VAN_DER_WAALS ,
-    EXP_REPULSION
+    EXP_REPULSION ,
+	ALIGN_TORQUE ,
+	DRIVING_FIELD
 };
+
 
 #endif //_FORCES_H
