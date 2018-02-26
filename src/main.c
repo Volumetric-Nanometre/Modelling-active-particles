@@ -27,6 +27,7 @@ double gPi = 3.14159265359;
 double gGrav = 9.80665; // m s^-2
 
 int gDebug = 0;
+int gSerial = 0;
 
 int main(int argc, char *argv[])
 {
@@ -36,14 +37,28 @@ int main(int argc, char *argv[])
 
 
 
-    if(argc > 1)
+    /*if(argc > 1)
     {
         gDebug = 1;
         printf("Warning debug mode entered. Press any key to continue...\n" );
         getchar();
-    }
+    }*/
+	
+	if (argc > 1)
+	{
+		for (int i=0; i<argc; i++)
+		{
+			if(strstr(argv[i],"-debug") != NULL) gDebug = 1;
+			else if(strstr(argv[i],"-serial") != NULL)	gSerial = 1;
+		}
+		if (gDebug == 1 && gSerial == 1) printf("Debug & serial modes active\n");
+		else if (gDebug == 1 && gSerial == 0) printf("Debug mode active\n");
+		else if (gDebug == 0 && gSerial == 1) printf("Serial mode active\n");
+		
+	}
 
-    FILE *output = fopen("../bin/output.txt","w");
+    FILE *output = fopen("../bin/output.csv","w");
+    FILE *angle_output = fopen("../bin/angle_output.csv","w");
 
     if(output == NULL)
     {
@@ -71,7 +86,7 @@ int main(int argc, char *argv[])
 	
 	// Create driving field
 	field_t drivingField;
-	drivingField.mag = 1;
+	drivingField.mag = 1E-10;
 	drivingField.alpha = 0;
 	drivingField.beta = gPi/2;
 
@@ -164,9 +179,9 @@ int main(int argc, char *argv[])
     conditions.temperature = 298; // K
     conditions.viscosity = 8.9E-4; //N m^-2 s
     conditions.radius = 1E-9; // m
-    conditions.currentTime = 0;
-    conditions.deltaTime = 1; // Seconds
-    conditions.endTime = 1; // Seconds
+    conditions.currentTime = 0; // Seconds
+    conditions.deltaTime = 1E-10; // Seconds
+    conditions.endTime = 1E-7; // Seconds
 	conditions.mass = (4/3) * gPi * pow(conditions.radius,3)*19320; // kg - density of gold
 
     //
@@ -176,7 +191,7 @@ int main(int argc, char *argv[])
     int numberOfForces = 3; // must be at least 1, with the force none chosen
 
 
-    int forceList[3] = {1,2,3}; // repulsive and van der waals
+    int forceList[3] = {2,3,4};
 
 
 
@@ -189,7 +204,7 @@ int main(int argc, char *argv[])
     //
     // Loop through time, output each time step to a file.
     //
-    int loop =0;
+    int loop = 0;
     while(conditions.currentTime<=conditions.endTime)
     {
         //
@@ -205,7 +220,7 @@ int main(int argc, char *argv[])
         if( gDebug == 1 && diffusionMatrix != NULL)
         {
             //conditions.currentTime = conditions.endTime+1;
-            FILE *matrixOutput = fopen("../bin/matrix_output.txt","a");
+            FILE *matrixOutput = fopen("../bin/matrix_output.txt","w");
 
             for(int i = 0; i < 6 * numberOfParticles; i++)
             {
@@ -230,7 +245,7 @@ int main(int argc, char *argv[])
 		if( gDebug == 1 && stochasticWeighting != NULL)
         {
         	//conditions.currentTime = conditions.endTime+1;
-            FILE *stochasticOutput = fopen("../bin/stochastic_matrix_output.txt","a");
+            FILE *stochasticOutput = fopen("../bin/stochastic_matrix_output.txt","w");
 
             for(int i = 0; i < 6 * numberOfParticles; i++)
             {
@@ -255,14 +270,21 @@ int main(int argc, char *argv[])
         //
 
         moving_on_routine(numberOfParticles, &conditions, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates, NULL);
-        if(loop%10000 == 0)
+        //if(loop%10000 == 0)
         {
-            fprintf(output, "%lf\t", conditions.currentTime);
+			int angle_offset = 3*numberOfParticles;
+            fprintf(output, "%e, ", conditions.currentTime);
+            fprintf(angle_output, "%e, ", conditions.currentTime);
             for(int i = 0; i < 3 * numberOfParticles; i++)
             {
-                fprintf(output, "%e\t", generalisedCoordinates[i]);
+                fprintf(output, "%e", generalisedCoordinates[i]);
+                fprintf(angle_output, "%e", fmod(generalisedCoordinates[angle_offset + i],2*gPi));
+				if (i < 3*numberOfParticles - 1)
+	                fprintf(output, ", ");
+	                fprintf(angle_output, ", ");
             }
             fprintf(output, "\n");
+            fprintf(angle_output, "\n");
         }
 
         conditions.currentTime+=conditions.deltaTime; // time step
@@ -274,6 +296,7 @@ int main(int argc, char *argv[])
     //
 
     fclose (output);
+	fclose(angle_output);
 
     if( particles != NULL )
     {

@@ -63,7 +63,7 @@ void stochastic_displacement_creation(int numberOfParticles, double *stochasticW
 			ran_num = gsl_ran_gaussian(tSeed, 1);
 			stochasticDisplacement[i] += stochasticWeighting[i*N + j] * ran_num * sqrt(2*timestep);
 		}
-		if (gDebug == 1) printf("%+1.5e\n\n", stochasticDisplacement[i]);
+		//if (gDebug == 1) printf("%+1.5e\n\n", stochasticDisplacement[i]);
 	}
-	if (gDebug == 1) printf("\nNEXT\n\n");
+	//if (gDebug == 1) printf("\nNEXT\n\n");
 }

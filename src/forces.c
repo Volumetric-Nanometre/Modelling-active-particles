@@ -170,30 +170,49 @@ static void force_exp_repulsion(double *additionalForces, double *generalisedCoo
 
 static void alignment_torque(double *additionalForces, double *generalisedCoordinates, int numberOfCells)
 {
+	int numberOfParticles = numberOfCells/6;
+	int rotOffset = numberOfCells/2;
+	
+	double forceConst = 1E-7;
+	
+	double totalX = 0;
+	double totalY = 0;
+	double totalZ = 0;
 	double totalAlpha = 0;
 	double totalBeta = 0;
 	
-	int torqueOffset = 3*numberOfCells;
+	double meanX, meanY, meanZ;
+	double meanAlpha, meanBeta, difAlpha, difBeta;
 	
-	double meanAlpha, meanBeta;
+	double distMul;
 	
-	double forceConst = 1;
-	
-	// Calculate average angles
-	for (int i=0; i<numberOfCells/2; i++)
+	// Calculate average position and angles
+	for (int i=0; i<numberOfParticles; i++)
 	{
-		totalAlpha += generalisedCoordinates[torqueOffset + 3*i + 0];
-		totalBeta += generalisedCoordinates[torqueOffset + 3*i + 1];
+		totalX += generalisedCoordinates[3*i + 0];
+		totalY += generalisedCoordinates[3*i + 1];
+		totalZ += generalisedCoordinates[3*i + 2];
+		
+		totalAlpha += generalisedCoordinates[rotOffset + 3*i + 0];
+		totalBeta += generalisedCoordinates[rotOffset + 3*i + 1];
 	}
 	
-	meanAlpha = totalAlpha/numberOfCells;
-	meanBeta = totalBeta/numberOfCells;
+	meanX = totalX/numberOfParticles;
+	meanY = totalY/numberOfParticles;
+	meanZ = totalZ/numberOfParticles;
+	
+	meanAlpha = totalAlpha/numberOfParticles;
+	meanBeta = totalBeta/numberOfParticles;
 	
 	// Calculate torques on each particle according to their alignment with average angle
-	for (int i=0; i<numberOfCells/6; i++)
+	for (int i=0; i<numberOfParticles; i++)
 	{
-		additionalForces[torqueOffset + 3*i + 0] += forceConst * sin(meanAlpha - generalisedCoordinates[torqueOffset + 3*i + 0]);
-		additionalForces[torqueOffset + 3*i + 1] += forceConst * sin(meanBeta - generalisedCoordinates[torqueOffset + 3*i + 1]);
+		distMul = 1/sqrt(pow(meanX - generalisedCoordinates[3*i + 0],2) + pow(meanY - generalisedCoordinates[3*i + 1],2) + pow(meanZ - generalisedCoordinates[3*i + 2],2));
+		
+		additionalForces[rotOffset + 3*i + 0] += difAlpha = distMul * forceConst * sin(meanAlpha - generalisedCoordinates[rotOffset + 3*i + 0]);
+		additionalForces[rotOffset + 3*i + 1] += difBeta = distMul * forceConst * sin(meanBeta - generalisedCoordinates[rotOffset + 3*i + 1]);
+		
+		printf("%e\t%e\t%e\n", distMul, difAlpha, difBeta);
 	}
 	
 }
