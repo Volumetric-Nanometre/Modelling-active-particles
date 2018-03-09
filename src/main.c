@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
         printf("Warning debug mode entered. Press any key to continue...\n" );
         getchar();
     }*/
-	
+
 	if (argc > 1)
 	{
 		for (int i=0; i<argc; i++)
@@ -54,12 +54,12 @@ int main(int argc, char *argv[])
 		if (gDebug == 1 && gSerial == 1) printf("Debug & serial modes active\n");
 		else if (gDebug == 1 && gSerial == 0) printf("Debug mode active\n");
 		else if (gDebug == 0 && gSerial == 1) printf("Serial mode active\n");
-		
+
 	}
 
     FILE *output = fopen("../bin/output.csv","w");
     FILE *angle_output = fopen("../bin/angle_output.csv","w");
-
+	FILE *forces_output = fopen("../bin/forces_output.csv","w");
     if(output == NULL)
     {
         printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
     }
 
     printf("Data read in success\n" );
-	
+
 	// Create driving field
 	field_t drivingField;
 	drivingField.mag = 1E-10;
@@ -178,20 +178,32 @@ int main(int argc, char *argv[])
 	environmentVariables conditions;
     conditions.temperature = 298; // K
     conditions.viscosity = 8.9E-4; //N m^-2 s
-    conditions.radius = 1E-9; // m
+    conditions.radius = 100E-9; // m
     conditions.currentTime = 0; // Seconds
-    conditions.deltaTime = 1E-10; // Seconds
-    conditions.endTime = 1E-7; // Seconds
+    conditions.deltaTime = 1E-6; // Seconds
+    conditions.endTime = 1; // Seconds
 	conditions.mass = (4/3) * gPi * pow(conditions.radius,3)*19320; // kg - density of gold
 
     //
     //  Choose forces to be included
     //
 
-    int numberOfForces = 3; // must be at least 1, with the force none chosen
+    int numberOfForces = 2; // must be at least 1, with the force none chosen
+    //
+    // Copy of enum to understand force forceList
+    //
+    //enum forces_available
+    //{
+    //    NONE ,
+    //    GRAVITY ,
+    //    VAN_DER_WAALS ,
+    //    EXP_REPULSION ,
+    //	  ALIGN_TORQUE ,
+    //	  DRIVING_FIELD
+    //};
 
 
-    int forceList[3] = {2,3,4};
+    int forceList[2] = {VAN_DER_WAALS,EXP_REPULSION};
 
 
 
@@ -275,16 +287,20 @@ int main(int argc, char *argv[])
 			int angle_offset = 3*numberOfParticles;
             fprintf(output, "%e, ", conditions.currentTime);
             fprintf(angle_output, "%e, ", conditions.currentTime);
+			fprintf(forces_output, "%e,",conditions.currentTime);
             for(int i = 0; i < 3 * numberOfParticles; i++)
             {
                 fprintf(output, "%e", generalisedCoordinates[i]);
+				fprintf(forces_output, "%e", additionalForces[i]);
                 fprintf(angle_output, "%e", fmod(generalisedCoordinates[angle_offset + i],2*gPi));
 				if (i < 3*numberOfParticles - 1)
 	                fprintf(output, ", ");
 	                fprintf(angle_output, ", ");
+					fprintf(forces_output, ", ");
             }
             fprintf(output, "\n");
             fprintf(angle_output, "\n");
+			fprintf(forces_output, "\n");
         }
 
         conditions.currentTime+=conditions.deltaTime; // time step
@@ -297,6 +313,7 @@ int main(int argc, char *argv[])
 
     fclose (output);
 	fclose(angle_output);
+	fclose(forces_output);
 
     if( particles != NULL )
     {

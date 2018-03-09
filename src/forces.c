@@ -35,8 +35,10 @@ extern double gPi;
 // F = Aexp(-r/lamda)
 // r= r2 -r1
 //
-static double gExpTuningA = 7.176291667E-11 * 6E11;
-static double gExpTuningLamda = 4E5;
+static double gExpTuningA = 3E-11;
+static double gExpTuningB = 9E9;
+
+
 //
 // Calculate the sum of the forces and torques from the forces and torques wanted
 //
@@ -118,9 +120,9 @@ static void force_van_der_waals(double *additionalForces, double *generalisedCoo
             //
             // Vectorise
             //
-            additionalForces[i * 3] += forceConst * x;
-            additionalForces[i * 3 + 1] += forceConst * y;
-            additionalForces[i * 3 + 2] += forceConst * z;
+            additionalForces[j * 3] += forceConst * x;
+            additionalForces[j * 3 + 1] += forceConst * y;
+            additionalForces[j * 3 + 2] += forceConst * z;
         }
     }
 }
@@ -136,6 +138,7 @@ static void force_exp_repulsion(double *additionalForces, double *generalisedCoo
     // Add the forces onto the preexisting values
     //
     double x,y,z,r,forceConst;
+    double expTuningA_B = gExpTuningA/gExpTuningB;
 //    #pragma omp parallel for private(x,y,z,r,forceConst)
     for(int i = 0; i < numberOfParticles; i++)
     {
@@ -159,13 +162,13 @@ static void force_exp_repulsion(double *additionalForces, double *generalisedCoo
             //
             // Calculate 1/R * Aexp(-|r|/lamda)
             //
-            forceConst =  gExpTuningA * exp(-gExpTuningLamda * r) / r;
+            forceConst =  expTuningA_B* exp(-gExpTuningB * r) / r;
             //
             // Vectorise
             //
-            additionalForces[i * 3] += forceConst * x;
-            additionalForces[i * 3 + 1] += forceConst * y;
-            additionalForces[i * 3 + 2] += forceConst * z;
+            additionalForces[j * 3] += forceConst * x;
+            additionalForces[j * 3 + 1] += forceConst * y;
+            additionalForces[j * 3 + 2] += forceConst * z;
         }
     }
 
