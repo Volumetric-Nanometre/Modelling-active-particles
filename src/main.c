@@ -178,10 +178,10 @@ int main(int argc, char *argv[])
 	environmentVariables conditions;
     conditions.temperature = 298; // K
     conditions.viscosity = 8.9E-4; //N m^-2 s
-    conditions.radius = 100E-9; // m
+    conditions.radius = 50E-9; // m
     conditions.currentTime = 0; // Seconds
-    conditions.deltaTime = 1E-6; // Seconds
-    conditions.endTime = 1; // Seconds
+    conditions.deltaTime = 1E-5; // Seconds
+    conditions.endTime = 15; // Seconds
 	conditions.mass = (4/3) * gPi * pow(conditions.radius,3)*19320; // kg - density of gold
 
     //

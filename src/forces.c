@@ -35,8 +35,8 @@ extern double gPi;
 // F = Aexp(-r/lamda)
 // r= r2 -r1
 //
-static double gExpTuningA = 3E-11;
-static double gExpTuningB = 9E9;
+static double gExpTuningA = 6.29549E-12;
+static double gExpTuningB = 3.519E7;
 
 
 //
@@ -162,7 +162,7 @@ static void force_exp_repulsion(double *additionalForces, double *generalisedCoo
             //
             // Calculate 1/R * Aexp(-|r|/lamda)
             //
-            forceConst =  expTuningA_B* exp(-gExpTuningB * r) / r;
+            forceConst =  gExpTuningA* exp(-gExpTuningB * r) / r;
             //
             // Vectorise
             //
