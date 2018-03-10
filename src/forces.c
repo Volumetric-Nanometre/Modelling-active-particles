@@ -22,7 +22,7 @@ static void force_van_der_waals(double *additionalForces, double *generalisedCoo
 
 static void force_exp_repulsion(double *additionalForces, double *generalisedCoordinates, int numberOfCells);
 
-static void alignment_torque(double *additionalForces, double *generalisedCoordinates, int numberOfCells);
+static void alignment_torque(double *additionalForces, double *generalisedCoordinates, int numberOfCells, environmentVariables conditions);
 
 static void driving_force(double *additionalForces, double *generalisedCoordinates, int numberOfCells, field_t drivingField);
 
@@ -60,7 +60,7 @@ void force_torque_summation(double *additionalForces,double *generalisedCoordina
             case GRAVITY : force_gravity(additionalForces, numberOfCells, conditions.mass); break;
             case VAN_DER_WAALS : force_van_der_waals(additionalForces, generalisedCoordinates, numberOfCells, conditions.radius); break;
             case EXP_REPULSION : force_exp_repulsion(additionalForces, generalisedCoordinates, numberOfCells); break;
-			case ALIGN_TORQUE : alignment_torque(additionalForces, generalisedCoordinates, numberOfCells); break;
+			case ALIGN_TORQUE : alignment_torque(additionalForces, generalisedCoordinates, numberOfCells, conditions); break;
 			case DRIVING_FIELD : driving_force(additionalForces, generalisedCoordinates, numberOfCells, drivingField); break;
             default : break;
         }
@@ -168,12 +168,21 @@ static void force_exp_repulsion(double *additionalForces, double *generalisedCoo
 
 }
 
-static void alignment_torque(double *additionalForces, double *generalisedCoordinates, int numberOfCells)
+static void alignment_torque(double *additionalForces, double *generalisedCoordinates, int numberOfCells, environmentVariables conditions)
 {
 	int numberOfParticles = numberOfCells/6;
 	int rotOffset = numberOfCells/2;
 	
-	double forceConst = 1E-7;
+	// Calculated from rotational version of Langevin equation, substituting that the average angular displacement per timestep is pi/2
+	// Torque T= pi*I/dt^2 for change in angle ~pi/2 per timestep
+	// Moment of intertia I = (2/5)MR^2 for solid sphere of radius R and mass M
+	double forceConst = gPi * 0.4 * conditions.mass * pow(conditions.radius, 2) * conditions.radius / pow(conditions.deltaTime, 2);
+	/*															  |						  |
+															Kept separate simply for clarity, might
+														  be more comptuationally efficient to combine.
+		 The second radius multiplier comes from using the inverse distance mutliplier in the force equation
+		 	- the result is that the force is normalised based on particles separated by a distance of the same order as their radius
+	*/
 	
 	double totalX = 0;
 	double totalY = 0;
@@ -184,35 +193,50 @@ static void alignment_torque(double *additionalForces, double *generalisedCoordi
 	double meanX, meanY, meanZ;
 	double meanAlpha, meanBeta, difAlpha, difBeta;
 	
-	double distMul;
+	double dist,distMul;
 	
-	// Calculate average position and angles
+	// Sum position and angles
 	for (int i=0; i<numberOfParticles; i++)
 	{
 		totalX += generalisedCoordinates[3*i + 0];
 		totalY += generalisedCoordinates[3*i + 1];
 		totalZ += generalisedCoordinates[3*i + 2];
 		
+		// Summing only alpha and beta angles
 		totalAlpha += generalisedCoordinates[rotOffset + 3*i + 0];
 		totalBeta += generalisedCoordinates[rotOffset + 3*i + 1];
 	}
 	
+	// Calculate average positions
 	meanX = totalX/numberOfParticles;
 	meanY = totalY/numberOfParticles;
 	meanZ = totalZ/numberOfParticles;
 	
+	// Calculate average angles
 	meanAlpha = totalAlpha/numberOfParticles;
 	meanBeta = totalBeta/numberOfParticles;
 	
 	// Calculate torques on each particle according to their alignment with average angle
 	for (int i=0; i<numberOfParticles; i++)
 	{
-		distMul = 1/sqrt(pow(meanX - generalisedCoordinates[3*i + 0],2) + pow(meanY - generalisedCoordinates[3*i + 1],2) + pow(meanZ - generalisedCoordinates[3*i + 2],2));
+		// Calculate the distance between the particle and the average position
+		dist = sqrt(pow(meanX - generalisedCoordinates[3*i + 0],2) + pow(meanY - generalisedCoordinates[3*i + 1],2) + pow(meanZ - generalisedCoordinates[3*i + 2],2));
+		distMul = 1/dist; // Distance multiplier
 		
+		// Calculate torques in alpha and beta directions such that maximum torque is when the particle's axes are maximally separated from the average angle.
 		additionalForces[rotOffset + 3*i + 0] += difAlpha = distMul * forceConst * sin(meanAlpha - generalisedCoordinates[rotOffset + 3*i + 0]);
 		additionalForces[rotOffset + 3*i + 1] += difBeta = distMul * forceConst * sin(meanBeta - generalisedCoordinates[rotOffset + 3*i + 1]);
+		/* Applies inverse distance multiplier as previously mentioned, which normalises the force so that it should be producing the average ~pi/2 angular change per timestep when the
+			particle is in the order of a radius of the average position*/
 		
-		printf("%e\t%e\t%e\n", distMul, difAlpha, difBeta);
+		
+		// Print stuff for debugging
+		if (i<3) // Avoid some spam
+		{
+			printf("\ts:%e\tc:%e\tTheta:%e\tPhi:%e\n", dist, forceConst, generalisedCoordinates[rotOffset + 3*i + 0], generalisedCoordinates[rotOffset + 3*i + 1]);
+			printf("Theta:\t%e\t%e\t%e\t%e\t%e\n", fmod(generalisedCoordinates[rotOffset + 3*i + 0], 2*gPi), distMul, forceConst, sin(meanAlpha - generalisedCoordinates[rotOffset + 3*i + 0]), additionalForces[rotOffset + 3*i + 0]);
+			printf("Phi:\t%e\t%e\t%e\t%e\t%e\n", fmod(generalisedCoordinates[rotOffset + 3*i + 1], 2*gPi), distMul, forceConst, sin(meanBeta - generalisedCoordinates[rotOffset + 3*i + 1]), additionalForces[rotOffset + 3*i + 1]);
+		}
 	}
 	
 }
@@ -222,8 +246,8 @@ static void driving_force(double *additionalForces, double *generalisedCoordinat
 	
 	for (int i=0; i<numberOfCells/6; i++)
 	{
-		additionalForces[3*i + 0] +=  drivingField.mag * cos(drivingField.alpha - generalisedCoordinates[numberOfCells/2 + 3*i + 0]);
-		additionalForces[3*i + 1] +=  drivingField.mag * cos(drivingField.beta - generalisedCoordinates[numberOfCells/2 + 3*i + 1]);
+		additionalForces[3*i + 0] +=  drivingField.mag * abs(cos((drivingField.alpha - generalisedCoordinates[numberOfCells/2 + 3*i + 0])/2)) * abs(cos((drivingField.beta - generalisedCoordinates[numberOfCells/2 + 3*i + 1])/2));
+		//additionalForces[3*i + 1] +=  drivingField.mag * cos(drivingField.beta - generalisedCoordinates[numberOfCells/2 + 3*i + 1]);
 	}
 	
 }
