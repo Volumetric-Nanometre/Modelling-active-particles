@@ -35,8 +35,10 @@ extern double gPi;
 // F = Aexp(-r/lamda)
 // r= r2 -r1
 //
-static double gExpTuningA = 7.176291667E-11 * 6E11;
-static double gExpTuningLamda = 4E5;
+static double gExpTuningA = 6.29549E-12;
+static double gExpTuningB = 3.519E7;
+
+
 //
 // Calculate the sum of the forces and torques from the forces and torques wanted
 //
@@ -74,6 +76,7 @@ static void force_gravity(double *additionalForces, int numberOfCells, double ma
     // Step 3 each time to only hit the z axis
     // Add the forces onto the preexisting values
     //
+//    #pragma omp parallel for
     for(int i = 0; i < numberOfCells/2; i+=3)
     	additionalForces[i] -= mass * gGrav;
 }
@@ -90,6 +93,7 @@ static void force_van_der_waals(double *additionalForces, double *generalisedCoo
     //
     double x,y,z,r,forceConst;
     double hamakerCoeff=2.5E-19; // This is A in the above eqn, constant for unretarded gold
+//    #pragma omp parallel for private(x,y,z,r,forceConst)
     for(int i = 0; i < numberOfParticles; i++)
     {
         for(int j = 0; j < numberOfParticles; j++)
@@ -116,9 +120,9 @@ static void force_van_der_waals(double *additionalForces, double *generalisedCoo
             //
             // Vectorise
             //
-            additionalForces[i * 3] += forceConst * x;
-            additionalForces[i * 3 + 1] += forceConst * y;
-            additionalForces[i * 3 + 2] += forceConst * z;
+            additionalForces[j * 3] += forceConst * x;
+            additionalForces[j * 3 + 1] += forceConst * y;
+            additionalForces[j * 3 + 2] += forceConst * z;
         }
     }
 }
@@ -134,6 +138,8 @@ static void force_exp_repulsion(double *additionalForces, double *generalisedCoo
     // Add the forces onto the preexisting values
     //
     double x,y,z,r,forceConst;
+    double expTuningA_B = gExpTuningA/gExpTuningB;
+//    #pragma omp parallel for private(x,y,z,r,forceConst)
     for(int i = 0; i < numberOfParticles; i++)
     {
         for(int j = 0; j < numberOfParticles; j++)
@@ -156,13 +162,13 @@ static void force_exp_repulsion(double *additionalForces, double *generalisedCoo
             //
             // Calculate 1/R * Aexp(-|r|/lamda)
             //
-            forceConst =  gExpTuningA * exp(-gExpTuningLamda * r) / r;
+            forceConst =  gExpTuningA* exp(-gExpTuningB * r) / r;
             //
             // Vectorise
             //
-            additionalForces[i * 3] += forceConst * x;
-            additionalForces[i * 3 + 1] += forceConst * y;
-            additionalForces[i * 3 + 2] += forceConst * z;
+            additionalForces[j * 3] += forceConst * x;
+            additionalForces[j * 3 + 1] += forceConst * y;
+            additionalForces[j * 3 + 2] += forceConst * z;
         }
     }
 
@@ -172,6 +178,7 @@ static void alignment_torque(double *additionalForces, double *generalisedCoordi
 {
 	int numberOfParticles = numberOfCells/6;
 	int rotOffset = numberOfCells/2;
+<<<<<<< HEAD
 	
 	// Calculated from rotational version of Langevin equation, substituting that the average angular displacement per timestep is pi/2
 	// Torque T= pi*I/dt^2 for change in angle ~pi/2 per timestep
@@ -184,23 +191,36 @@ static void alignment_torque(double *additionalForces, double *generalisedCoordi
 		 	- the result is that the force is normalised based on particles separated by a distance of the same order as their radius
 	*/
 	
+=======
+
+	double forceConst = 1E-7;
+
+>>>>>>> refs/remotes/origin/Michael
 	double totalX = 0;
 	double totalY = 0;
 	double totalZ = 0;
 	double totalAlpha = 0;
 	double totalBeta = 0;
-	
+
 	double meanX, meanY, meanZ;
 	double meanAlpha, meanBeta, difAlpha, difBeta;
+<<<<<<< HEAD
 	
 	double dist,distMul;
 	
 	// Sum position and angles
+=======
+
+	double distMul;
+
+	// Calculate average position and angles
+>>>>>>> refs/remotes/origin/Michael
 	for (int i=0; i<numberOfParticles; i++)
 	{
 		totalX += generalisedCoordinates[3*i + 0];
 		totalY += generalisedCoordinates[3*i + 1];
 		totalZ += generalisedCoordinates[3*i + 2];
+<<<<<<< HEAD
 		
 		// Summing only alpha and beta angles
 		totalAlpha += generalisedCoordinates[rotOffset + 3*i + 0];
@@ -213,12 +233,24 @@ static void alignment_torque(double *additionalForces, double *generalisedCoordi
 	meanZ = totalZ/numberOfParticles;
 	
 	// Calculate average angles
+=======
+
+		totalAlpha += generalisedCoordinates[rotOffset + 3*i + 0];
+		totalBeta += generalisedCoordinates[rotOffset + 3*i + 1];
+	}
+
+	meanX = totalX/numberOfParticles;
+	meanY = totalY/numberOfParticles;
+	meanZ = totalZ/numberOfParticles;
+
+>>>>>>> refs/remotes/origin/Michael
 	meanAlpha = totalAlpha/numberOfParticles;
 	meanBeta = totalBeta/numberOfParticles;
-	
+
 	// Calculate torques on each particle according to their alignment with average angle
 	for (int i=0; i<numberOfParticles; i++)
 	{
+<<<<<<< HEAD
 		// Calculate the distance between the particle and the average position
 		dist = sqrt(pow(meanX - generalisedCoordinates[3*i + 0],2) + pow(meanY - generalisedCoordinates[3*i + 1],2) + pow(meanZ - generalisedCoordinates[3*i + 2],2));
 		distMul = 1/dist; // Distance multiplier
@@ -237,17 +269,25 @@ static void alignment_torque(double *additionalForces, double *generalisedCoordi
 			printf("Theta:\t%e\t%e\t%e\t%e\t%e\n", fmod(generalisedCoordinates[rotOffset + 3*i + 0], 2*gPi), distMul, forceConst, sin(meanAlpha - generalisedCoordinates[rotOffset + 3*i + 0]), additionalForces[rotOffset + 3*i + 0]);
 			printf("Phi:\t%e\t%e\t%e\t%e\t%e\n", fmod(generalisedCoordinates[rotOffset + 3*i + 1], 2*gPi), distMul, forceConst, sin(meanBeta - generalisedCoordinates[rotOffset + 3*i + 1]), additionalForces[rotOffset + 3*i + 1]);
 		}
+=======
+		distMul = 1/sqrt(pow(meanX - generalisedCoordinates[3*i + 0],2) + pow(meanY - generalisedCoordinates[3*i + 1],2) + pow(meanZ - generalisedCoordinates[3*i + 2],2));
+
+		additionalForces[rotOffset + 3*i + 0] += difAlpha = distMul * forceConst * sin(meanAlpha - generalisedCoordinates[rotOffset + 3*i + 0]);
+		additionalForces[rotOffset + 3*i + 1] += difBeta = distMul * forceConst * sin(meanBeta - generalisedCoordinates[rotOffset + 3*i + 1]);
+
+		printf("%e\t%e\t%e\n", distMul, difAlpha, difBeta);
+>>>>>>> refs/remotes/origin/Michael
 	}
-	
+
 }
 
 static void driving_force(double *additionalForces, double *generalisedCoordinates, int numberOfCells, field_t drivingField)
 {
-	
+
 	for (int i=0; i<numberOfCells/6; i++)
 	{
 		additionalForces[3*i + 0] +=  drivingField.mag * abs(cos((drivingField.alpha - generalisedCoordinates[numberOfCells/2 + 3*i + 0])/2)) * abs(cos((drivingField.beta - generalisedCoordinates[numberOfCells/2 + 3*i + 1])/2));
 		//additionalForces[3*i + 1] +=  drivingField.mag * cos(drivingField.beta - generalisedCoordinates[numberOfCells/2 + 3*i + 1]);
 	}
-	
+
 }
