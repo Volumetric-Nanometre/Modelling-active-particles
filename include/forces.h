@@ -21,7 +21,8 @@ enum forces_available
     VAN_DER_WAALS ,
     EXP_REPULSION ,
 	ALIGN_TORQUE ,
-	DRIVING_FIELD
+	DRIVING_FIELD,
+	POLAR_DRIVING_FORCE
 };
 
 

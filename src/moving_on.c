@@ -29,7 +29,7 @@ void moving_on_routine(int numberOfParticles, environmentVariables *conditions, 
         //
         // Calculate  D F * deltat
         //
-        //#pragma omp parallel for reduction(+ : temp)
+        #pragma omp parallel for reduction(+ : temp)
         for(int j = 0; j < 6 * numberOfParticles; j++)
         {
             temp += frontConst*diffusionMatrix[i * 6*numberOfParticles + j] * additionalForces[j];
@@ -38,7 +38,7 @@ void moving_on_routine(int numberOfParticles, environmentVariables *conditions, 
         // Add the diffusion displacement to the current position and the
         // random stochastic displacement to get the final displacement.
         //
-    //    temp += stochasticDisplacement[i];
+        temp += stochasticDisplacement[i];
 
         //
         // Replace the original generalisedCoordinates with the new coordinates
