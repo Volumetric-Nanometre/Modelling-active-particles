@@ -20,7 +20,7 @@ static void force_gravity(double *additionalForces, int numberOfCells, double ma
 
 static void force_van_der_waals(double *additionalForces, double *generalisedCoordinates, int numberOfCells, double radius);
 
-static void force_exp_repulsion(double *additionalForces, double *generalisedCoordinates, int numberOfCells,double radius);
+static void force_exp_repulsion(double *additionalForces, double *generalisedCoordinates, int numberOfCells);
 
 static void alignment_torque(double *additionalForces, double *generalisedCoordinates, int numberOfCells, environmentVariables conditions);
 
@@ -82,7 +82,7 @@ static void force_gravity(double *additionalForces, int numberOfCells, double ma
     // Step 3 each time to only hit the z axis
     // Add the forces onto the preexisting values
     //
-    #pragma omp parallel for
+//    #pragma omp parallel for
     for(int i = 0; i < numberOfCells/2; i+=3)
     	additionalForces[i] -= mass * gGrav;
 }
@@ -119,12 +119,8 @@ static void force_van_der_waals(double *additionalForces, double *generalisedCoo
             // Calculate |r|
             //
             r = sqrt(x * x + y * y + z * z);
-            if(r<radius*4.5)
-            {
-                r = radius*4.5;
-            }
             //
-            // Calculate  -32AR^6 / 3|r|^4(|    r|^2 - 4R^2)^2
+            // Calculate  -32AR^6 / 3|r|^4(|r|^2 - 4R^2)^2
             //
             forceConst = 32*gHamaker*pow(radius,6)*pow(gTuningD,6) / ( 3 * pow(gTuningC-r,3)*pow( ( pow(gTuningC -r,2) - 4*pow(radius*gTuningD,2)) , 2) );
             //
@@ -137,7 +133,7 @@ static void force_van_der_waals(double *additionalForces, double *generalisedCoo
     }
 }
 
-static void force_exp_repulsion(double *additionalForces, double *generalisedCoordinates, int numberOfCells, double radius)
+static void force_exp_repulsion(double *additionalForces, double *generalisedCoordinates, int numberOfCells)
 {
     //
     // get the number of particles.
@@ -168,11 +164,6 @@ static void force_exp_repulsion(double *additionalForces, double *generalisedCoo
             // Calculate |r|
             //
             r = sqrt(x * x + y * y + z * z);
-
-            if(r<radius*4.5)
-            {
-                r = radius*4.5;
-            }
             //
             // Calculate 1/R * Aexp(-|r|/lamda)
             //
@@ -211,10 +202,12 @@ static void alignment_torque(double *additionalForces, double *generalisedCoordi
 	double totalBeta = 0;
 
 	double meanX, meanY, meanZ;
-	double meanAlpha, meanBeta;
+	double meanAlpha, meanBeta, difAlpha, difBeta;
+
+	double dist,distMul;
 
 	// Sum position and angles
-    #pragma omp parallel for reduction( +:totalX,totalY, totalZ,totalAlpha,totalBeta)
+    //#pragma omp parallel for reduction(+:totalX, totalY,totalZ,totalAlpha,totalBeta)
 	for (int i=0; i<numberOfParticles; i++)
 	{
 		totalX += generalisedCoordinates[3*i + 0];
@@ -236,10 +229,8 @@ static void alignment_torque(double *additionalForces, double *generalisedCoordi
 	meanBeta = totalBeta/numberOfParticles;
 
 	// Calculate torques on each particle according to their alignment with average angle
-    #pragma omp parallel for
 	for (int i=0; i<numberOfParticles; i++)
 	{
-        double dist,distMul, difAlpha, difBeta;
 		// Calculate the distance between the particle and the average position
 		dist = sqrt(pow(meanX - generalisedCoordinates[3*i + 0],2) + pow(meanY - generalisedCoordinates[3*i + 1],2) + pow(meanZ - generalisedCoordinates[3*i + 2],2));
 		distMul = 1/(dist + conditions.radius); // Distance multiplier
@@ -264,7 +255,7 @@ static void alignment_torque(double *additionalForces, double *generalisedCoordi
 
 static void driving_force(double *additionalForces, double *generalisedCoordinates, int numberOfCells, field_t drivingField)
 {
-    #pragma omp parallel for
+
 	for (int i=0; i<numberOfCells/6; i++)
 	{
 		additionalForces[3*i + 0] +=  drivingField.mag * cos(drivingField.alpha - generalisedCoordinates[numberOfCells/2 + 3*i + 0]);
@@ -275,7 +266,7 @@ static void driving_force(double *additionalForces, double *generalisedCoordinat
 static void polar_driving_force(double *additionalForces, double *generalisedCoordinates, int numberOfCells)
 {
     double forceConst = 10E-12;
-    #pragma omp parallel for
+
 	for (int i=0; i<numberOfCells/6; i++)
 	{
 		additionalForces[3*i + 0] +=  forceConst * cos(generalisedCoordinates[numberOfCells/2 + 3*i + 0]) * sin (generalisedCoordinates[numberOfCells/2 + 3*i + 1]) ;
