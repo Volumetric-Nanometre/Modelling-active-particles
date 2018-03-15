@@ -99,7 +99,7 @@ static void force_van_der_waals(double *additionalForces, double *generalisedCoo
     //
     double x,y,z,r,forceConst;
 
-    #pragma omp parallel for private(x,y,z,r,forceConst)
+    //#pragma omp parallel for private(x,y,z,r,forceConst)
     for(int i = 0; i < numberOfParticles; i++)
     {
         for(int j = 0; j < numberOfParticles; j++)
@@ -144,7 +144,7 @@ static void force_exp_repulsion(double *additionalForces, double *generalisedCoo
     // Add the forces onto the preexisting values
     //
     double x,y,z,r,forceConst;
-    #pragma omp parallel for private(x,y,z,r,forceConst)
+    //#pragma omp parallel for private(x,y,z,r,forceConst)
     for(int i = 0; i < numberOfParticles; i++)
     {
         for(int j = 0; j < numberOfParticles; j++)

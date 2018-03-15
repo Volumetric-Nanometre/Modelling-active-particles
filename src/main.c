@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
     //
 
 
-	omp_set_num_threads(8);
+	//omp_set_num_threads(1);
     /*if(argc > 1)
     {
         gDebug = 1;
@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
     //  Choose forces to be included
     //
 
-    int numberOfForces = 3; // must be at least 1, with the force none chosen
+    int numberOfForces = 4; // must be at least 1, with the force none chosen
     //
     // Copy of enum to understand force forceList
     //
@@ -205,7 +205,7 @@ int main(int argc, char *argv[])
     //};
 
 
-    int forceList[4] = {VAN_DER_WAALS,EXP_REPULSION, POLAR_DRIVING_FORCE};
+    int forceList[4] = {VAN_DER_WAALS,EXP_REPULSION, POLAR_DRIVING_FORCE, ALIGN_TORQUE};
 
 
 
