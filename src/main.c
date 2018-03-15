@@ -13,6 +13,7 @@
 #include <math.h>
 #include <time.h>
 #include <gsl/gsl_rng.h>
+#include <omp.h>
 
 #include "particles.h"
 #include "diffusionmatrix.h"
@@ -31,7 +32,7 @@ int gSerial = 0;
 
 int main(int argc, char *argv[])
 {
-<<<<<<< HEAD
+  
 	int numberOfParticles = 0;
 	
 	
@@ -39,21 +40,7 @@ int main(int argc, char *argv[])
 	double yMax = 1;
 	double zMax = 1;
 	
-=======
-    //
-    // Check Debug mode
-    //
 
-
-
-    /*if(argc > 1)
-    {
-        gDebug = 1;
-        printf("Warning debug mode entered. Press any key to continue...\n" );
-        getchar();
-    }*/
-
->>>>>>> refs/remotes/origin/Michael
 	if (argc > 1)
 	{
 		for (int i=0; i<argc; i++)
@@ -120,9 +107,7 @@ int main(int argc, char *argv[])
     {
         printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
         return -errno;
-    }
-<<<<<<< HEAD
-	
+    }	
 	
 	/*time_t tSeed1;
 	time(&tSeed1);
@@ -151,28 +136,7 @@ int main(int argc, char *argv[])
 		printf("Generated particle data\n");
 	}
     
-	
-=======
 
-
-
-    int numberOfParticles = 0;
-
-
-
-    particleVariables* particles = NULL;
-    //
-    // Call function to read in particle data
-    //
-    if( ( numberOfParticles = particle_read_in( &particles ) ) <= 0)
-    {
-        getchar();
-        return numberOfParticles;
-    }
-
-    printf("Data read in success\n" );
-
->>>>>>> refs/remotes/origin/Michael
 	// Create driving field
 	field_t drivingField;
 	drivingField.mag = 1E-10;
@@ -264,28 +228,20 @@ int main(int argc, char *argv[])
     // characteristics
     //
 
-	environmentVariables conditions;
+	  environmentVariables conditions;
     conditions.temperature = 298; // K
     conditions.viscosity = 8.9E-4; //N m^-2 s
     conditions.radius = 50E-9; // m
     conditions.currentTime = 0; // Seconds
-<<<<<<< HEAD
-    conditions.deltaTime = 1E-10; // Seconds
-    conditions.endTime = 5E-9; // Seconds
-	conditions.mass = (4/3) * gPi * pow(conditions.radius,3) * 19320; // kg - density of gold
-=======
-    conditions.deltaTime = 1E-5; // Seconds
-    conditions.endTime = 15; // Seconds
-	conditions.mass = (4/3) * gPi * pow(conditions.radius,3)*19320; // kg - density of gold
->>>>>>> refs/remotes/origin/Michael
+    conditions.deltaTime = 1E-7; // Seconds
+    conditions.endTime = 0.01; // Seconds
+	  conditions.mass = (4/3) * gPi * pow(conditions.radius,3)*19320; // kg - density of gold
+
 
     //
     //  Choose forces to be included
     //
-
-    int numberOfForces = 2; // must be at least 1, with the force none chosen
-<<<<<<< HEAD
-=======
+    int numberOfForces = 4; // must be at least 1, with the force none chosen
     //
     // Copy of enum to understand force forceList
     //
@@ -296,11 +252,12 @@ int main(int argc, char *argv[])
     //    VAN_DER_WAALS ,
     //    EXP_REPULSION ,
     //	  ALIGN_TORQUE ,
-    //	  DRIVING_FIELD
+    //	  DRIVING_FIELD,
+	//	  POLAR_DRIVING_FORCE
     //};
 
 
-    int forceList[2] = {VAN_DER_WAALS,EXP_REPULSION};
+    int forceList[4] = {VAN_DER_WAALS,EXP_REPULSION, POLAR_DRIVING_FORCE, ALIGN_TORQUE};
 
 
 
@@ -308,7 +265,6 @@ int main(int argc, char *argv[])
 	time(&tSeed1);
 	long int tSeed = -1*(long int) tSeed1;*/
 	gsl_rng *tSeed = gsl_rng_alloc(gsl_rng_mt19937);
->>>>>>> refs/remotes/origin/Michael
 
     int forceList[2] = {2,4};
 
@@ -316,6 +272,8 @@ int main(int argc, char *argv[])
     // Loop through time, output each time step to a file.
     //
     int loop = 0;
+	int count = 0;
+	int maxLoop = conditions.endTime/(double)conditions.deltaTime;
     while(conditions.currentTime<=conditions.endTime)
     {
         //
@@ -381,7 +339,7 @@ int main(int argc, char *argv[])
         //
 
         moving_on_routine(numberOfParticles, &conditions, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates, NULL);
-        //if(loop%10000 == 0)
+    //    if(loop%100 == 0)
         {
 			int angle_offset = 3*numberOfParticles;
             fprintf(output, "%e, ", conditions.currentTime);
@@ -403,6 +361,11 @@ int main(int argc, char *argv[])
         }
 
         conditions.currentTime+=conditions.deltaTime; // time step
+		if((maxLoop/10)*count == loop)
+		{
+			printf("%d%%\n",count*10);
+			count++;
+		}
         loop ++;
     }
 
