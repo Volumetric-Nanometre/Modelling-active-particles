@@ -181,13 +181,8 @@ int main(int argc, char *argv[])
     conditions.viscosity = 8.9E-4; //N m^-2 s
     conditions.radius = 50E-9; // m
     conditions.currentTime = 0; // Seconds
-<<<<<<< HEAD
     conditions.deltaTime = 1E-7; // Seconds
     conditions.endTime = 0.01; // Seconds
-=======
-    conditions.deltaTime = 1E-6; // Seconds
-    conditions.endTime = 1; // Seconds
->>>>>>> 115e66ba9b2411c029a05ea496197ed1b8541560
 	conditions.mass = (4/3) * gPi * pow(conditions.radius,3)*19320; // kg - density of gold
 
     //
@@ -210,11 +205,7 @@ int main(int argc, char *argv[])
     //};
 
 
-<<<<<<< HEAD
     int forceList[4] = {VAN_DER_WAALS,EXP_REPULSION, POLAR_DRIVING_FORCE};
-=======
-    int forceList[2] = {EXP_REPULSION,VAN_DER_WAALS};
->>>>>>> 115e66ba9b2411c029a05ea496197ed1b8541560
 
 
 
@@ -228,13 +219,8 @@ int main(int argc, char *argv[])
     // Loop through time, output each time step to a file.
     //
     int loop = 0;
-<<<<<<< HEAD
 	int count = 0;
 	int maxLoop = conditions.endTime/(double)conditions.deltaTime;
-=======
-	int maxloop = conditions.endTime/(double)conditions.deltaTime;
-	int count=0;
->>>>>>> 115e66ba9b2411c029a05ea496197ed1b8541560
     while(conditions.currentTime<=conditions.endTime)
     {
         //
@@ -300,11 +286,7 @@ int main(int argc, char *argv[])
         //
 
         moving_on_routine(numberOfParticles, &conditions, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates, NULL);
-<<<<<<< HEAD
     //    if(loop%100 == 0)
-=======
-        if(loop%100 == 0)
->>>>>>> 115e66ba9b2411c029a05ea496197ed1b8541560
         {
 			int angle_offset = 3*numberOfParticles;
             fprintf(output, "%e, ", conditions.currentTime);
@@ -326,24 +308,12 @@ int main(int argc, char *argv[])
         }
 
         conditions.currentTime+=conditions.deltaTime; // time step
-<<<<<<< HEAD
 		if((maxLoop/10)*count == loop)
 		{
 			printf("%d%%\n",count*10);
 			count++;
 		}
         loop ++;
-=======
-
-
-		if((maxloop/10)*count == loop)
-		{
-
-			printf("%d%%\n",count *10);
-			count++;
-		}
-		loop ++;
->>>>>>> 115e66ba9b2411c029a05ea496197ed1b8541560
     }
 
     //
