@@ -20,7 +20,7 @@ static void force_gravity(double *additionalForces, int numberOfCells, double ma
 
 static void force_van_der_waals(double *additionalForces, double *generalisedCoordinates, int numberOfCells, double radius);
 
-static void force_exp_repulsion(double *additionalForces, double *generalisedCoordinates, int numberOfCells);
+static void force_exp_repulsion(double *additionalForces, double *generalisedCoordinates, int numberOfCells,double radius);
 
 static void alignment_torque(double *additionalForces, double *generalisedCoordinates, int numberOfCells, environmentVariables conditions);
 
@@ -66,8 +66,13 @@ void force_torque_summation(double *additionalForces,double *generalisedCoordina
             case NONE : break;
             case GRAVITY : force_gravity(additionalForces, numberOfCells, conditions.mass); break;
             case VAN_DER_WAALS : force_van_der_waals(additionalForces, generalisedCoordinates, numberOfCells, conditions.radius); break;
+<<<<<<< HEAD
             case EXP_REPULSION : force_exp_repulsion(additionalForces, generalisedCoordinates, numberOfCells); break;
 			case ALIGN_TORQUE : alignment_torque(additionalForces, generalisedCoordinates, numberOfCells, conditions); break;
+=======
+            case EXP_REPULSION : force_exp_repulsion(additionalForces, generalisedCoordinates, numberOfCells, conditions.radius); break;
+            case ALIGN_TORQUE : alignment_torque(additionalForces, generalisedCoordinates, numberOfCells, conditions); break;
+>>>>>>> 115e66ba9b2411c029a05ea496197ed1b8541560
 			case DRIVING_FIELD : driving_force(additionalForces, generalisedCoordinates, numberOfCells, drivingField); break;
             case POLAR_DRIVING_FORCE : polar_driving_force(additionalForces, generalisedCoordinates, numberOfCells);
             default : break;
@@ -119,10 +124,18 @@ static void force_van_der_waals(double *additionalForces, double *generalisedCoo
             // Calculate |r|
             //
             r = sqrt(x * x + y * y + z * z);
+            if(r<radius*4.5)
+            {
+                r = radius*4.5;
+            }
             //
-            // Calculate  -32AR^6 / 3|r|^4(|r|^2 - 4R^2)^2
+            // Calculate  -32AR^6 / 3|r|^4(|    r|^2 - 4R^2)^2
             //
+<<<<<<< HEAD
             forceConst = 32*gHamaker*pow(radius,6)*pow(gTuningD,6) / ( 3 * pow(gTuningC-r,3)*pow( ( pow(gTuningC -r,2) - 4*pow(radius*gTuningD,2)) , 2) );
+=======
+            forceConst =  -32*1E3*hamakerCoeff*pow(radius,6) / ( 3 * pow(r,4)*pow( ( r*r - 4*radius*radius) , 2) );
+>>>>>>> 115e66ba9b2411c029a05ea496197ed1b8541560
             //
             // Vectorise
             //
@@ -133,7 +146,7 @@ static void force_van_der_waals(double *additionalForces, double *generalisedCoo
     }
 }
 
-static void force_exp_repulsion(double *additionalForces, double *generalisedCoordinates, int numberOfCells)
+static void force_exp_repulsion(double *additionalForces, double *generalisedCoordinates, int numberOfCells, double radius)
 {
     //
     // get the number of particles.
@@ -164,10 +177,19 @@ static void force_exp_repulsion(double *additionalForces, double *generalisedCoo
             // Calculate |r|
             //
             r = sqrt(x * x + y * y + z * z);
+
+            if(r<radius*4.5)
+            {
+                r = radius*4.5;
+            }
             //
             // Calculate 1/R * Aexp(-|r|/lamda)
             //
+<<<<<<< HEAD
             forceConst =  gHamaker * gExpTuningA * gExpTuningB * ( 1/gTuningD)*exp(gExpTuningB * (gTuningC - r)/gTuningD);
+=======
+            forceConst =  gExpTuningA*1E3* exp(-gExpTuningB * r) / r;
+>>>>>>> 115e66ba9b2411c029a05ea496197ed1b8541560
             //
             // Vectorise
             //
@@ -202,10 +224,18 @@ static void alignment_torque(double *additionalForces, double *generalisedCoordi
 	double totalBeta = 0;
 
 	double meanX, meanY, meanZ;
+<<<<<<< HEAD
 	double meanAlpha, meanBeta;
 
 	// Sum position and angles
     #pragma omp parallel for reduction( +:totalX,totalY, totalZ,totalAlpha,totalBeta)
+=======
+	double meanAlpha, meanBeta, difAlpha, difBeta;
+
+	double dist,distMul;
+
+	// Sum position and angles
+>>>>>>> 115e66ba9b2411c029a05ea496197ed1b8541560
 	for (int i=0; i<numberOfParticles; i++)
 	{
 		totalX += generalisedCoordinates[3*i + 0];
@@ -230,7 +260,10 @@ static void alignment_torque(double *additionalForces, double *generalisedCoordi
     #pragma omp parallel for
 	for (int i=0; i<numberOfParticles; i++)
 	{
+<<<<<<< HEAD
         double dist,distMul, difAlpha, difBeta;
+=======
+>>>>>>> 115e66ba9b2411c029a05ea496197ed1b8541560
 		// Calculate the distance between the particle and the average position
 		dist = sqrt(pow(meanX - generalisedCoordinates[3*i + 0],2) + pow(meanY - generalisedCoordinates[3*i + 1],2) + pow(meanZ - generalisedCoordinates[3*i + 2],2));
 		distMul = 1/(dist + conditions.radius); // Distance multiplier
