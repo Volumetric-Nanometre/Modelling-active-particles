@@ -1,26 +1,31 @@
 IDIR =../include
 CC=gcc
-CFLAGS=-Wall -g -fopenmp -I$(IDIR) -IC:/GSL/include/
+CFLAGS=-Wall -g -fopenmp -I$(IDIR) -IC:/GSL/include
+
 
 ODIR=obj
 LDIR =../lib
 
-LIBS=-lm -lgsl -lgslcblas -lmsmpi -L$(LDIR) -LC:/GSL/lib/
+LIBS=-lm -lgsl -lgslcblas -L$(LDIR) -LC:/GSL/lib
 
-_DEPS = diffusionmatrix.h maths_functions.h particles.h stochastic_force.h moving_on.h initial_velocities.h
+_DEPS = diffusionmatrix.h maths_functions.h particles.h stochastic_force.h moving_on.h forces.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = main.o diffusionmatrix.o maths_functions.o particles.o stochastic_force.o moving_on.o initial_velocities.o
+_OBJ = main.o diffusionmatrix.o maths_functions.o particles.o stochastic_force.o moving_on.o forces.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
+args =
 
 $(ODIR)/%.o: %.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
+	$(CC) -c -o $@ $< $(CFLAGS) ${args}
 
 ../bin/executable: $(OBJ)
-	gcc -o $@ $^ $(CFLAGS) $(LIBS)
+	gcc -o $@ $^ $(CFLAGS) $(LIBS) ${args}
 
-.PHONY: clean
+.PHONY: clean run
 
 clean:
 	rm -f $(ODIR)/*.o *~ core $(INCDIR)/*~
+
+run:
+	../bin/executable.exe ${args}

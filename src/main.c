@@ -1,8 +1,7 @@
 /*********************
 * Date of creation 09/10/2017
-* Author: Michael O'Donnell
+* Authors: Oliver Hinds, Michael O'Donnell
 * Contact: mo14776@my.bristol.ac.uk
-* Other Authors: Oliver Hinds
 **************************************
 * Change History
 **************************************/
@@ -13,60 +12,136 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#include <gsl/gsl_rng.h>
+#include <omp.h>
 
 #include "particles.h"
 #include "diffusionmatrix.h"
 #include "stochastic_force.h"
 #include "moving_on.h"
-#include "initial_velocities.h"
+#include "forces.h"
 
+#include <gsl/gsl_rng.h>
 
 double gBoltzmannConst = 1.38064852E-23; // m^2 kg s^-2 K^-1
 double gPi = 3.14159265359;
 double gGrav = 9.80665; // m s^-2
 
 int gDebug = 0;
+int gSerial = 0;
 
 int main(int argc, char *argv[])
 {
-    //
-    // Check Debug mode
-    //
+
+	int numberOfParticles = 0;
 
 
+	double xMax = 1;
+	double yMax = 1;
+	double zMax = 1;
 
-    if(argc > 1)
-    {
-        gDebug = 1;
-        printf("Warning debug mode entered. Press any key to continue...\n" );
-        getchar();
-    }
 
-    FILE *output = fopen("../bin/output.txt","w");
+	if (argc > 1)
+	{
+		for (int i=0; i<argc; i++)
+		{
+			if(strstr(argv[i],"-debug") != NULL) gDebug = 1;
+			else if(strstr(argv[i],"-serial") != NULL)	gSerial = 1;
+			else if (strstr(argv[i],"-num") != NULL)
+			{
+				if (sscanf(argv[i+1],"%d", &numberOfParticles) != 1)
+				{
+					printf("Invalid number of particles\n");
+					return -1;
+				}
+			}
+			else if (strstr(argv[i],"-cube") != NULL)
+			{
+				double temp_num;
+				if (sscanf(argv[i+1],"%lf", &temp_num) != 1)
+				{
+					printf("Invalid maximum dimension values\n");
+					return -1;
+				}
+				xMax = temp_num;
+				yMax = temp_num;
+				zMax = temp_num;
+				printf("Set dimensions to %g\n", xMax);
+			}
+			else if (strstr(argv[i],"-x") != NULL)
+			{
+				if (sscanf(argv[i+1],"%lf", &xMax) != 1)
+				{
+					printf("Invalid maximum x-dimension value\n");
+					return -1;
+				}
+			}
+			else if (strstr(argv[i],"-y") != NULL)
+			{
+				if (sscanf(argv[i+1],"%lf", &yMax) != 1)
+				{
+					printf("Invalid maximum y-dimension value\n");
+					return -1;
+				}
+			}
+			else if (strstr(argv[i],"-z") != NULL)
+			{
+				if (sscanf(argv[i+1],"%lf", &zMax) != 1)
+				{
+					printf("Invalid maximum z-dimension value\n");
+					return -1;
+				}
+			}
+		}
+		if (gDebug == 1 && gSerial == 1) printf("Debug & serial modes active\n");
+		else if (gDebug == 1 && gSerial == 0) printf("Debug mode active\n");
+		else if (gDebug == 0 && gSerial == 1) printf("Serial mode active\n");
 
+	}
+
+
+    FILE *output = fopen("../bin/output.csv","w");
+    FILE *angle_output = fopen("../bin/angle_output.csv","w");
+	FILE *forces_output = fopen("../bin/forces_output.csv","w");
     if(output == NULL)
     {
         printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
         return -errno;
     }
 
+	/*time_t tSeed1;
+	time(&tSeed1);
+	long int tSeed = -1*(long int) tSeed1;*/
+	gsl_rng *tSeed = gsl_rng_alloc(gsl_rng_mt19937);
+
+	particleVariables* particles = NULL;
+
+	if (numberOfParticles == 0)
+	{
+	    //
+	    // Call function to read in particle data
+	    //
+	    if( (numberOfParticles = particle_read_in(&particles)) <= 0)
+	    {
+	        getchar();
+	        return numberOfParticles;
+	    }
+
+	    printf("Data read in success\n" );
+	}
+	else
+	{
+		generate_particle_data(numberOfParticles, &particles, tSeed, xMax, yMax, zMax);
+
+		printf("Generated particle data\n");
+	}
 
 
-    int numberOfParticles = 0;
-
-
-
-    particleVariables* particles = NULL;
-    //
-    // Call function to read in particle data
-    //
-    if( ( numberOfParticles = particle_read_in( &particles ) ) <= 0)
-    {
-        getchar();
-        return numberOfParticles;
-    }
-
-    printf("Data read in success\n" );
+	// Create driving field
+	field_t drivingField;
+	drivingField.mag = 1E-10;
+	drivingField.alpha = 0;
+	drivingField.beta = gPi/2;
 
     //
     // Create generalised coordinates
@@ -111,87 +186,42 @@ int main(int argc, char *argv[])
     double *stochasticWeighting = NULL;
     double *additionalForces = NULL;
     double *stochasticDisplacement = NULL;
-    double *velocities = NULL;
 
-    if( (diffusionMatrix = calloc( pow( 6 * numberOfParticles, 2), sizeof *diffusionMatrix) ) == NULL)
+    diffusionMatrix = calloc( pow( 6 * numberOfParticles, 2), sizeof *diffusionMatrix) ;
+    stochasticWeighting = calloc( pow( 6 * numberOfParticles, 2), sizeof *stochasticWeighting);
+    stochasticDisplacement = calloc( 6 * numberOfParticles, sizeof *stochasticDisplacement);
+    additionalForces = calloc( 6 * numberOfParticles, sizeof *additionalForces);
+
+    if(  diffusionMatrix==NULL  || stochasticWeighting==NULL || stochasticDisplacement==NULL || additionalForces==NULL)
     {
         free( particles );
         particles = NULL ;
+
         free( generalisedCoordinates );
         generalisedCoordinates = NULL ;
-        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
 
-        getchar();
-        return -errno;
-    }
-
-    if( (stochasticWeighting = calloc( pow( 6 * numberOfParticles, 2), sizeof *stochasticWeighting) ) == NULL)
-    {
-        free( particles );
-        particles = NULL ;
-        free( generalisedCoordinates );
-        generalisedCoordinates = NULL ;
+        if( diffusionMatrix!=NULL)
         free( diffusionMatrix );
         diffusionMatrix = NULL;
-        printf("-Error %d : %s\n", errno, strerror( errno ) );
 
-        getchar();
-        return -errno;
-    }
-
-    if( (stochasticDisplacement = calloc( 6 * numberOfParticles, sizeof *stochasticDisplacement) ) == NULL)
-    {
-        free( particles );
-        particles = NULL ;
-        free( generalisedCoordinates );
-        generalisedCoordinates = NULL ;
-        free( diffusionMatrix );
-        diffusionMatrix = NULL;
-        free( stochasticWeighting );
-        stochasticWeighting = NULL;
-        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
-
-        getchar();
-        return -errno;
-    }
-
-    if( (additionalForces = calloc( 6 * numberOfParticles, sizeof *additionalForces) ) == NULL)
-    {
-        free( particles );
-        particles = NULL ;
-        free( generalisedCoordinates );
-        generalisedCoordinates = NULL ;
-        free( diffusionMatrix );
-        diffusionMatrix = NULL;
+        if( stochasticDisplacement!=NULL)
         free( stochasticDisplacement );
         stochasticDisplacement = NULL;
+
+        if( stochasticWeighting!=NULL)
         free( stochasticWeighting );
         stochasticWeighting = NULL;
-        printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
 
-        getchar();
-        return -errno;
-    }
-
-    if( (velocities = calloc( 6 * numberOfParticles, sizeof *velocities) ) == NULL)
-    {
-        free( particles );
-        particles = NULL ;
-        free( generalisedCoordinates );
-        generalisedCoordinates = NULL ;
-        free( diffusionMatrix );
-        diffusionMatrix = NULL;
-        free( stochasticDisplacement );
-        stochasticDisplacement = NULL;
-        free( stochasticWeighting );
-        stochasticWeighting = NULL;
+        if( additionalForces!=NULL)
         free( additionalForces );
         additionalForces = NULL;
+
+
         printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
 
-        getchar();
         return -errno;
     }
+
 
     //
     // Allocate the environmental conditions and nano particle
@@ -201,39 +231,39 @@ int main(int argc, char *argv[])
 	environmentVariables conditions;
     conditions.temperature = 298; // K
     conditions.viscosity = 8.9E-4; //N m^-2 s
-    conditions.radius = 1E-6; // m
-    conditions.currentTime = 0;
-    conditions.deltaTime = 1E-6; // Seconds
-    conditions.endTime = 1; // Seconds
-	conditions.mass = (4/3) * gPi * pow(conditions.radius,3)*19320; // kg - density of gold
+    conditions.radius = 50E-9; // m
+    conditions.currentTime = 0; // Seconds
+    conditions.deltaTime = 1E-7; // Seconds
+    conditions.endTime = 0.01; // Seconds
+ 	conditions.mass = (4/3) * gPi * pow(conditions.radius,3)*19320; // kg - density of gold
 
-	time_t tSeed1;
-	time(&tSeed1);
-	long int tSeed = -1*(long int) tSeed1;
 
     //
-    // Create random velocities
+    //  Choose forces to be included
     //
-	initialVelocities(numberOfParticles, particles, &conditions, tSeed);
-
+    int numberOfForces = 4; // must be at least 1, with the force none chosen
     //
-    // Put velocities into an array. First 3N is the linear velocites
-    // second 3N is the angular velocities
+    // Copy of enum to understand force forceList
     //
+    //enum forces_available
+    //{
+    //    NONE ,
+    //    GRAVITY ,
+    //    VAN_DER_WAALS ,
+    //    EXP_REPULSION ,
+    //	  ALIGN_TORQUE ,
+    //	  DRIVING_FIELD,
+	//	  POLAR_DRIVING_FORCE
+    //};
 
-    for(int i = 0; i < numberOfParticles; i ++)
-    {
-        velocities[i * 3] =0;// particles[i].dx;
-        velocities[i * 3 + 1] =0;// particles[i].dy;
-        velocities[i * 3 + 2] =0;// particles[i].dz;
-        velocities[ (i + numberOfParticles) * 3] =0;// particles[i].dalpha;
-        velocities[ (i + numberOfParticles) * 3 + 1] =0;// particles[i].dbeta;
-        velocities[ (i + numberOfParticles) * 3 + 2] =0;// particles[i].dgamma;
-    }
 
+    int forceList[4] = {VAN_DER_WAALS,EXP_REPULSION, POLAR_DRIVING_FORCE, ALIGN_TORQUE};
     //
     // Loop through time, output each time step to a file.
     //
+    int loop = 0;
+	int count = 0;
+	int maxLoop = conditions.endTime/(double)conditions.deltaTime;
     while(conditions.currentTime<=conditions.endTime)
     {
         //
@@ -248,7 +278,7 @@ int main(int argc, char *argv[])
         //
         if( gDebug == 1 && diffusionMatrix != NULL)
         {
-            conditions.currentTime = conditions.endTime+1;
+            //conditions.currentTime = conditions.endTime+1;
             FILE *matrixOutput = fopen("../bin/matrix_output.txt","w");
 
             for(int i = 0; i < 6 * numberOfParticles; i++)
@@ -269,11 +299,11 @@ int main(int argc, char *argv[])
         // Create the stochastic displacement
         //
 
-        stochastic_displacement_creation( numberOfParticles, stochasticWeighting, stochasticDisplacement, tSeed );
+        stochastic_displacement_creation( numberOfParticles, stochasticWeighting, stochasticDisplacement, tSeed, conditions.deltaTime);
 
 		if( gDebug == 1 && stochasticWeighting != NULL)
         {
-            conditions.currentTime = conditions.endTime+1;
+        	//conditions.currentTime = conditions.endTime+1;
             FILE *stochasticOutput = fopen("../bin/stochastic_matrix_output.txt","w");
 
             for(int i = 0; i < 6 * numberOfParticles; i++)
@@ -292,30 +322,41 @@ int main(int argc, char *argv[])
         // Include additional forces
         //
 
-		// Gravity
-		//#pragma omp parallel for
-		for (int i = 0; i < numberOfParticles; i++)
-		{
-
-            additionalForces[3 * i] = -(6 * gPi * conditions.viscosity * conditions.radius) * velocities[3 * i] ;
-            additionalForces[3 * i + 1]= -(6 * gPi * conditions.viscosity * conditions.radius) * velocities[3 * i + 1] ;
-			additionalForces[3 * i+2] = -conditions.mass * gGrav- (6 * gPi * conditions.viscosity * conditions.radius) * velocities[3 * i + 2]; // F_z = -mg
-            // This needs to be 'conditions->mass' when it's moved to another file
-		}
+        force_torque_summation(additionalForces, generalisedCoordinates, 6 * numberOfParticles, forceList, numberOfForces, conditions, drivingField);
 
         //
         // Calculate time step.
         //
 
-        moving_on_routine(numberOfParticles, &conditions, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates, velocities);
-        fprintf(output, "%lf\t", conditions.currentTime);
-        for(int i = 0; i < 6 * numberOfParticles; i++)
+        moving_on_routine(numberOfParticles, &conditions, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates, NULL);
+    //    if(loop%100 == 0)
         {
-            fprintf(output, "%e\t", generalisedCoordinates[i]);
+			int angle_offset = 3*numberOfParticles;
+            fprintf(output, "%e, ", conditions.currentTime);
+            fprintf(angle_output, "%e, ", conditions.currentTime);
+			fprintf(forces_output, "%e,",conditions.currentTime);
+            for(int i = 0; i < 3 * numberOfParticles; i++)
+            {
+                fprintf(output, "%e", generalisedCoordinates[i]);
+				fprintf(forces_output, "%e", additionalForces[i]);
+                fprintf(angle_output, "%e", fmod(generalisedCoordinates[angle_offset + i],2*gPi));
+				if (i < 3*numberOfParticles - 1)
+	                fprintf(output, ", ");
+	                fprintf(angle_output, ", ");
+					fprintf(forces_output, ", ");
+            }
+            fprintf(output, "\n");
+            fprintf(angle_output, "\n");
+			fprintf(forces_output, "\n");
         }
-        fprintf(output, "\n");
 
         conditions.currentTime+=conditions.deltaTime; // time step
+		if((maxLoop/10)*count == loop)
+		{
+			printf("%d%%\n",count*10);
+			count++;
+		}
+        loop ++;
     }
 
     //
@@ -323,6 +364,8 @@ int main(int argc, char *argv[])
     //
 
     fclose (output);
+	fclose(angle_output);
+	fclose(forces_output);
 
     if( particles != NULL )
     {
@@ -349,11 +392,5 @@ int main(int argc, char *argv[])
         free( stochasticDisplacement );
         particles = NULL;
     }
-    if( velocities != NULL )
-    {
-        free( velocities );
-        velocities = NULL;
-    }
-
     return 0;
 }

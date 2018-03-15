@@ -1,8 +1,7 @@
 /*********************
 * Date of creation 09/10/2017
-* Author: Michael O'Donnell
+* Authors:Oliver Hinds, Michael O'Donnell
 * Contact: mo14776@my.bristol.ac.uk
-* Other Authors: Oliver Hinds
 **************************************
 * History
 *
@@ -27,7 +26,7 @@ double randSign(long int tSeed);
 
 float ran1(long *idum);
 
-float guassdev(long *idum);
+float gaussdev(long *idum);
 
 
 #endif  // _MATHS_FUNCTIONS_H

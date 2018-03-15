@@ -2,10 +2,9 @@
 * Date of creation 10/10/2017
 * Author: Michael O'Donnell
 * Contact: mo14776@my.bristol.ac.uk
-* Other Authors: N/A
 **************************************
-* History
-*
+*   History
+*   19/02/2018 -Debugged matrix, to fully working matrix
 **************************************/
 
 #include <stdlib.h>
@@ -38,7 +37,7 @@ void diffusion_matrix_creation(int numberOfParticles, double *diffusionMatrix, d
     //
     // Scan through the particles and calculate the individual matrices
     //
-    //#pragma omp parallel for private(tempTransMatrix,tempRotatMatrix,tempCouplMatrix) collapse (2)
+    #pragma omp parallel for private(tempTransMatrix,tempRotatMatrix,tempCouplMatrix) collapse (2)
     for( int particleRow = 0; particleRow < numberOfParticles; particleRow++)
     {
         for( int particleColumn = 0 ; particleColumn < numberOfParticles; particleColumn++)
@@ -215,7 +214,7 @@ void translation_rotation_coupling_tensor_creation(double *tempMatrix, double *g
         {
             for(int m = 0; m < 3; m ++)
             {
-                tempMatrix[n * 3 + m] =  ( dimensionalVector[n] / absDistance )*levi_civita_density(n,m)
+                tempMatrix[n * 3 + m] =  ( dimensionalVector[(2*(i+j))%3] / absDistance )*levi_civita_density(n,m)
                                     *( stokesConstantProduct /( 8 * pow( absDistance, 2)) );       //  Over 8 for interparticle interaction terms
             }
 
