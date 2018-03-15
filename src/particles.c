@@ -14,10 +14,15 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
 
 #include "particles.h"
+#include "maths_functions.h"
 
-int  particle_read_in(particleVariables **particles)
+extern double gPi;
+
+int particle_read_in(particleVariables **particles)
 {
     int numberOfParticles=0;
 
@@ -73,6 +78,25 @@ int  particle_read_in(particleVariables **particles)
     fclose(particleInput);
     *particles=initParticles;
     return numberOfParticles;
+}
+
+int generate_particle_data(int numberOfParticles, particleVariables **particles, gsl_rng *tSeed, double xMax, double yMax, double zMax)
+{
+	particleVariables *initParticles = calloc(numberOfParticles, sizeof(*initParticles));
+	
+	for (int i=0; i<numberOfParticles; i++)
+	{
+		initParticles[i].x = xMax * gsl_rng_uniform(tSeed);
+		initParticles[i].y = yMax * gsl_rng_uniform(tSeed);
+		initParticles[i].z = zMax * gsl_rng_uniform(tSeed);
+		initParticles[i].alpha = 2*gPi * gsl_rng_uniform(tSeed);
+		initParticles[i].beta = 2*gPi * gsl_rng_uniform(tSeed);
+		initParticles[i].gamma = 2*gPi * gsl_rng_uniform(tSeed);
+	}
+	
+	*particles = initParticles;
+	
+	return 0;
 }
 
 //

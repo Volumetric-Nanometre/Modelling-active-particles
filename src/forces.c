@@ -184,6 +184,7 @@ static void alignment_torque(double *additionalForces, double *generalisedCoordi
 	int numberOfParticles = numberOfCells/6;
 	int rotOffset = numberOfCells/2;
 
+
 	// Calculated from rotational version of Langevin equation, substituting that the average angular displacement per timestep is pi/2
 	// Torque T= pi*I/dt^2 for change in angle ~pi/2 per timestep
 	// Moment of intertia I = (2/5)MR^2 for solid sphere of radius R and mass M
@@ -194,7 +195,7 @@ static void alignment_torque(double *additionalForces, double *generalisedCoordi
 		 The second radius multiplier comes from using the inverse distance mutliplier in the force equation
 		 	- the result is that the force is normalised based on particles separated by a distance of the same order as their radius
 	*/
-
+  
 	double totalX = 0;
 	double totalY = 0;
 	double totalZ = 0;
@@ -206,25 +207,30 @@ static void alignment_torque(double *additionalForces, double *generalisedCoordi
 
 	double dist,distMul;
 
+
+
 	// Sum position and angles
     //#pragma omp parallel for reduction(+:totalX, totalY,totalZ,totalAlpha,totalBeta)
+
 	for (int i=0; i<numberOfParticles; i++)
 	{
 		totalX += generalisedCoordinates[3*i + 0];
 		totalY += generalisedCoordinates[3*i + 1];
 		totalZ += generalisedCoordinates[3*i + 2];
 
+		
 		// Summing only alpha and beta angles
 		totalAlpha += generalisedCoordinates[rotOffset + 3*i + 0];
 		totalBeta += generalisedCoordinates[rotOffset + 3*i + 1];
 	}
-
+	
 	// Calculate average positions
 	meanX = totalX/numberOfParticles;
 	meanY = totalY/numberOfParticles;
 	meanZ = totalZ/numberOfParticles;
-
+	
 	// Calculate average angles
+
 	meanAlpha = totalAlpha/numberOfParticles;
 	meanBeta = totalBeta/numberOfParticles;
 
@@ -258,8 +264,8 @@ static void driving_force(double *additionalForces, double *generalisedCoordinat
 
 	for (int i=0; i<numberOfCells/6; i++)
 	{
-		additionalForces[3*i + 0] +=  drivingField.mag * cos(drivingField.alpha - generalisedCoordinates[numberOfCells/2 + 3*i + 0]);
-		additionalForces[3*i + 1] +=  drivingField.mag * cos(drivingField.beta - generalisedCoordinates[numberOfCells/2 + 3*i + 1]);
+		additionalForces[3*i + 0] +=  drivingField.mag * abs(cos((drivingField.alpha - generalisedCoordinates[numberOfCells/2 + 3*i + 0])/2)) * abs(cos((drivingField.beta - generalisedCoordinates[numberOfCells/2 + 3*i + 1])/2));
+		//additionalForces[3*i + 1] +=  drivingField.mag * cos(drivingField.beta - generalisedCoordinates[numberOfCells/2 + 3*i + 1]);
 	}
 
 }

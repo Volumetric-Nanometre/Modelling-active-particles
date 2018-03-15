@@ -14,6 +14,8 @@
 #define _PARTICLES_H
 
 #include <stdio.h>
+#include <gsl/gsl_randist.h>
+#include <gsl/gsl_rng.h>
 
 typedef struct
 {
@@ -38,6 +40,8 @@ typedef struct
 
 
 int  particle_read_in(particleVariables **particles);
+
+int generate_particle_data(int numberOfParticles, particleVariables **particles, gsl_rng *tSeed, double xMax, double yMax, double zMax);
 
 double *generalised_coordinate_creation(int numberOfParticles, particleVariables *particles);
 

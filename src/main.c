@@ -32,18 +32,14 @@ int gSerial = 0;
 
 int main(int argc, char *argv[])
 {
-    //
-    // Check Debug mode
-    //
-
-
-	//omp_set_num_threads(1);
-    /*if(argc > 1)
-    {
-        gDebug = 1;
-        printf("Warning debug mode entered. Press any key to continue...\n" );
-        getchar();
-    }*/
+  
+	int numberOfParticles = 0;
+	
+	
+	double xMax = 1;
+	double yMax = 1;
+	double zMax = 1;
+	
 
 	if (argc > 1)
 	{
@@ -51,12 +47,58 @@ int main(int argc, char *argv[])
 		{
 			if(strstr(argv[i],"-debug") != NULL) gDebug = 1;
 			else if(strstr(argv[i],"-serial") != NULL)	gSerial = 1;
+			else if (strstr(argv[i],"-num") != NULL)
+			{
+				if (sscanf(argv[i+1],"%d", &numberOfParticles) != 1)
+				{
+					printf("Invalid number of particles\n");
+					return -1;
+				}
+			}
+			else if (strstr(argv[i],"-cube") != NULL)
+			{
+				double temp_num;
+				if (sscanf(argv[i+1],"%lf", &temp_num) != 1)
+				{
+					printf("Invalid maximum dimension values\n");
+					return -1;
+				}
+				xMax = temp_num;
+				yMax = temp_num;
+				zMax = temp_num;
+				printf("Set dimensions to %g\n", xMax);
+			}
+			else if (strstr(argv[i],"-x") != NULL)
+			{
+				if (sscanf(argv[i+1],"%lf", &xMax) != 1)
+				{
+					printf("Invalid maximum x-dimension value\n");
+					return -1;
+				}
+			}
+			else if (strstr(argv[i],"-y") != NULL)
+			{
+				if (sscanf(argv[i+1],"%lf", &yMax) != 1)
+				{
+					printf("Invalid maximum y-dimension value\n");
+					return -1;
+				}
+			}
+			else if (strstr(argv[i],"-z") != NULL)
+			{
+				if (sscanf(argv[i+1],"%lf", &zMax) != 1)
+				{
+					printf("Invalid maximum z-dimension value\n");
+					return -1;
+				}
+			}
 		}
 		if (gDebug == 1 && gSerial == 1) printf("Debug & serial modes active\n");
 		else if (gDebug == 1 && gSerial == 0) printf("Debug mode active\n");
 		else if (gDebug == 0 && gSerial == 1) printf("Serial mode active\n");
 
 	}
+	
 
     FILE *output = fopen("../bin/output.csv","w");
     FILE *angle_output = fopen("../bin/angle_output.csv","w");
@@ -65,25 +107,35 @@ int main(int argc, char *argv[])
     {
         printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
         return -errno;
-    }
-
-
-
-    int numberOfParticles = 0;
-
-
-
-    particleVariables* particles = NULL;
-    //
-    // Call function to read in particle data
-    //
-    if( ( numberOfParticles = particle_read_in( &particles ) ) <= 0)
-    {
-        getchar();
-        return numberOfParticles;
-    }
-
-    printf("Data read in success\n" );
+    }	
+	
+	/*time_t tSeed1;
+	time(&tSeed1);
+	long int tSeed = -1*(long int) tSeed1;*/
+	gsl_rng *tSeed = gsl_rng_alloc(gsl_rng_mt19937);
+	
+	particleVariables* particles = NULL;
+	
+	if (numberOfParticles == 0)
+	{
+	    //
+	    // Call function to read in particle data
+	    //
+	    if( (numberOfParticles = particle_read_in(&particles)) <= 0)
+	    {
+	        getchar();
+	        return numberOfParticles;
+	    }
+	
+	    printf("Data read in success\n" );
+	}
+	else
+	{
+		generate_particle_data(numberOfParticles, &particles, tSeed, xMax, yMax, zMax);
+		
+		printf("Generated particle data\n");
+	}
+    
 
 	// Create driving field
 	field_t drivingField;
@@ -176,19 +228,19 @@ int main(int argc, char *argv[])
     // characteristics
     //
 
-	environmentVariables conditions;
+	  environmentVariables conditions;
     conditions.temperature = 298; // K
     conditions.viscosity = 8.9E-4; //N m^-2 s
     conditions.radius = 50E-9; // m
     conditions.currentTime = 0; // Seconds
     conditions.deltaTime = 1E-7; // Seconds
     conditions.endTime = 0.01; // Seconds
-	conditions.mass = (4/3) * gPi * pow(conditions.radius,3)*19320; // kg - density of gold
+	  conditions.mass = (4/3) * gPi * pow(conditions.radius,3)*19320; // kg - density of gold
+
 
     //
     //  Choose forces to be included
     //
-
     int numberOfForces = 4; // must be at least 1, with the force none chosen
     //
     // Copy of enum to understand force forceList
@@ -214,6 +266,7 @@ int main(int argc, char *argv[])
 	long int tSeed = -1*(long int) tSeed1;*/
 	gsl_rng *tSeed = gsl_rng_alloc(gsl_rng_mt19937);
 
+    int forceList[2] = {2,4};
 
     //
     // Loop through time, output each time step to a file.
