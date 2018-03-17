@@ -29,24 +29,31 @@ double gGrav = 9.80665; // m s^-2
 
 int gDebug = 0;
 int gSerial = 0;
+int gNumOfthreads;
 
 int main(int argc, char *argv[])
 {
 
 	int numberOfParticles = 0;
-
-
 	double xMax = 1;
 	double yMax = 1;
 	double zMax = 1;
 
-
+	gNumOfthreads =omp_get_max_threads();
 	if (argc > 1)
 	{
 		for (int i=0; i<argc; i++)
 		{
 			if(strstr(argv[i],"-debug") != NULL) gDebug = 1;
 			else if(strstr(argv[i],"-serial") != NULL)	gSerial = 1;
+			else if (strstr(argv[i],"-numthreads") != NULL)
+			{
+				if (sscanf(argv[i+1],"%d", &gNumOfthreads) != 1)
+				{
+					printf("Invalid number of threads\n");
+					return -1;
+				}
+			}
 			else if (strstr(argv[i],"-num") != NULL)
 			{
 				if (sscanf(argv[i+1],"%d", &numberOfParticles) != 1)
@@ -66,7 +73,7 @@ int main(int argc, char *argv[])
 				xMax = temp_num;
 				yMax = temp_num;
 				zMax = temp_num;
-				printf("Set dimensions to %g\n", xMax);
+	//			printf("Set dimensions to %g\n", xMax);
 			}
 			else if (strstr(argv[i],"-x") != NULL)
 			{
@@ -98,7 +105,7 @@ int main(int argc, char *argv[])
 		else if (gDebug == 0 && gSerial == 1) printf("Serial mode active\n");
 
 	}
-
+	omp_set_num_threads(gNumOfthreads);
 
     FILE *output = fopen("../bin/output.csv","w");
     FILE *angle_output = fopen("../bin/angle_output.csv","w");
@@ -112,7 +119,14 @@ int main(int argc, char *argv[])
 	/*time_t tSeed1;
 	time(&tSeed1);
 	long int tSeed = -1*(long int) tSeed1;*/
-	gsl_rng *tSeed = gsl_rng_alloc(gsl_rng_mt19937);
+
+	gsl_rng **rndarray = calloc(gNumOfthreads,sizeof(*rndarray));
+
+	for(int i = 0; i<gNumOfthreads; i++)
+	{
+		rndarray[i] = gsl_rng_alloc(gsl_rng_mt19937);
+		gsl_rng_set(rndarray[i], i);
+	}
 
 	particleVariables* particles = NULL;
 
@@ -133,7 +147,7 @@ int main(int argc, char *argv[])
 	{
 		generate_particle_data(numberOfParticles, &particles, tSeed, xMax, yMax, zMax);
 
-		printf("Generated particle data\n");
+	//	printf("Generated particle data\n");
 	}
 
 
@@ -234,7 +248,7 @@ int main(int argc, char *argv[])
     conditions.radius = 50E-9; // m
     conditions.currentTime = 0; // Seconds
     conditions.deltaTime = 1E-7; // Seconds
-    conditions.endTime = 0.01; // Seconds
+    conditions.endTime = 1E-3; // Seconds
  	conditions.mass = (4/3) * gPi * pow(conditions.radius,3)*19320; // kg - density of gold
 
 
@@ -264,72 +278,75 @@ int main(int argc, char *argv[])
     int loop = 0;
 	int count = 0;
 	int maxLoop = conditions.endTime/(double)conditions.deltaTime;
+
+	double progTime = omp_get_wtime();
+
     while(conditions.currentTime<=conditions.endTime)
     {
         //
         // Create diffusion matrix
         //
 
-        diffusion_matrix_creation( numberOfParticles, diffusionMatrix, stochasticWeighting, generalisedCoordinates, &conditions);
+	    diffusion_matrix_creation( numberOfParticles, diffusionMatrix, stochasticWeighting, generalisedCoordinates, &conditions);
 
-        //---------------------------- DEBUG------------------------------//
-        //
-        // Prints the diffusionMatrix to a file for inspection
-        //
-        if( gDebug == 1 && diffusionMatrix != NULL)
-        {
-            //conditions.currentTime = conditions.endTime+1;
-            FILE *matrixOutput = fopen("../bin/matrix_output.txt","w");
+	    //---------------------------- DEBUG------------------------------//
+	    //
+	    // Prints the diffusionMatrix to a file for inspection
+	    //
+	    if( gDebug == 1 && diffusionMatrix != NULL)
+	    {
+	        //conditions.currentTime = conditions.endTime+1;
+	        FILE *matrixOutput = fopen("../bin/matrix_output.txt","w");
 
-            for(int i = 0; i < 6 * numberOfParticles; i++)
-            {
-                for(int j = 0; j < 6 * numberOfParticles; j++)
-                {
-                    fprintf(matrixOutput, "%e\t", diffusionMatrix[i * 6 * numberOfParticles + j]);
-                }
-                fprintf(matrixOutput, "\n");
+	        for(int i = 0; i < 6 * numberOfParticles; i++)
+	        {
+	            for(int j = 0; j < 6 * numberOfParticles; j++)
+	            {
+	                fprintf(matrixOutput, "%e\t", diffusionMatrix[i * 6 * numberOfParticles + j]);
+	            }
+	            fprintf(matrixOutput, "\n");
 
-            }
-            fclose (matrixOutput);
-        }
-        //---------------------------END---------------------------------//
+	        }
+	        fclose (matrixOutput);
+	    }
+	    //---------------------------END---------------------------------//
 
 
-        //
-        // Create the stochastic displacement
-        //
+	    //
+	    // Create the stochastic displacement
+	    //
 
-        stochastic_displacement_creation( numberOfParticles, stochasticWeighting, stochasticDisplacement, tSeed, conditions.deltaTime);
+	    stochastic_displacement_creation( numberOfParticles, stochasticWeighting, stochasticDisplacement, rndarray, conditions.deltaTime);
 
 		if( gDebug == 1 && stochasticWeighting != NULL)
-        {
-        	//conditions.currentTime = conditions.endTime+1;
-            FILE *stochasticOutput = fopen("../bin/stochastic_matrix_output.txt","w");
+	    {
+	    	//conditions.currentTime = conditions.endTime+1;
+	        FILE *stochasticOutput = fopen("../bin/stochastic_matrix_output.txt","w");
 
-            for(int i = 0; i < 6 * numberOfParticles; i++)
-            {
-                for(int j = 0; j < 6 * numberOfParticles; j++)
-                {
-                    fprintf(stochasticOutput, "%e\t", stochasticWeighting[i * 6 * numberOfParticles + j]);
-                }
-                fprintf(stochasticOutput, "\n");
-
-            }
-            fclose (stochasticOutput);
+	        for(int i = 0; i < 6 * numberOfParticles; i++)
+	        {
+	            for(int j = 0; j < 6 * numberOfParticles; j++)
+	            {
+	                fprintf(stochasticOutput, "%e\t", stochasticWeighting[i * 6 * numberOfParticles + j]);
+	            }
+	            fprintf(stochasticOutput, "\n");
+	        }
+	        fclose (stochasticOutput);
 		}
 
-        //
-        // Include additional forces
-        //
 
-        force_torque_summation(additionalForces, generalisedCoordinates, 6 * numberOfParticles, forceList, numberOfForces, conditions, drivingField);
+		//
+		// Include additional forces
+		//
+
+    	force_torque_summation(additionalForces, generalisedCoordinates, 6 * numberOfParticles, forceList, numberOfForces, conditions, drivingField);
+
 
         //
         // Calculate time step.
         //
-
         moving_on_routine(numberOfParticles, &conditions, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates, NULL);
-    //    if(loop%100 == 0)
+        if(loop%100 == 0)
         {
 			int angle_offset = 3*numberOfParticles;
             fprintf(output, "%e, ", conditions.currentTime);
@@ -353,11 +370,14 @@ int main(int argc, char *argv[])
         conditions.currentTime+=conditions.deltaTime; // time step
 		if((maxLoop/10)*count == loop)
 		{
-			printf("%d%%\n",count*10);
+			//printf("%d%%\n",count*10);
 			count++;
 		}
         loop ++;
     }
+	progTime = omp_get_wtime() - progTime;
+
+	printf("Run time %lf s\n",progTime);
 
     //
     // Free memory
