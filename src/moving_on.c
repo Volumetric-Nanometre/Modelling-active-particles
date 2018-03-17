@@ -21,7 +21,7 @@ void moving_on_routine(int numberOfParticles, environmentVariables *conditions, 
 {
     double frontConst = conditions->deltaTime / ( conditions->temperature * gBoltzmannConst);
     //printf("front const %e\n", frontConst);
-
+    #pragma omp parallel for
     for(int i = 0; i < 6 * numberOfParticles; i++)
     {
 
