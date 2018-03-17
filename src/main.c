@@ -128,6 +128,8 @@ int main(int argc, char *argv[])
 		gsl_rng_set(rndarray[i], i);
 	}
 
+	gsl_rng *tSeed = gsl_rng_alloc(gsl_rng_mt19937);
+
 	particleVariables* particles = NULL;
 
 	if (numberOfParticles == 0)
