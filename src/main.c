@@ -13,6 +13,7 @@
 #include <math.h>
 #include <time.h>
 #include <gsl/gsl_rng.h>
+#include <omp.h>
 
 #include "particles.h"
 #include "diffusionmatrix.h"
@@ -155,7 +156,6 @@ int main(int argc, char *argv[])
         return -errno;
     }
 	
-	
 	/*time_t tSeed1;
 	time(&tSeed1);
 	long int tSeed = -1*(long int) tSeed1;*/
@@ -289,6 +289,8 @@ int main(int argc, char *argv[])
     // Loop through time, output each time step to a file.
     //
     int loop = 0;
+	int count = 0;
+	int maxLoop = conditions.endTime/(double)conditions.deltaTime;
     while(conditions.currentTime<=conditions.endTime)
     {
         //
@@ -354,7 +356,7 @@ int main(int argc, char *argv[])
         //
 
         moving_on_routine(numberOfParticles, &conditions, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates, NULL);
-        //if(loop%10000 == 0)
+    //    if(loop%100 == 0)
         {
 			int angle_offset = 3*numberOfParticles;
             fprintf(output, "%e, ", conditions.currentTime);
@@ -377,6 +379,12 @@ int main(int argc, char *argv[])
 		
 		loop ++;
         conditions.currentTime+=conditions.deltaTime; // time step
+		if((maxLoop/10)*count == loop)
+		{
+			printf("%d%%\n",count*10);
+			count++;
+		}
+        loop ++;
     }
 
     //
