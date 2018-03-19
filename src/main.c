@@ -39,6 +39,21 @@ int main(int argc, char *argv[])
 	double yMax = 1;
 	double zMax = 1;
 
+	//
+	// Allocate the environmental conditions and nano particle
+	// characteristics
+	//
+
+	environmentVariables conditions;
+	conditions.temperature = 298; // K
+	conditions.viscosity = 8.9E-4; //N m^-2 s
+	conditions.radius = 50E-9; // m
+	conditions.currentTime = 0; // Seconds
+	conditions.deltaTime = 1E-7; // Seconds
+	conditions.endTime = 1E-2; // Seconds
+	conditions.mass = (4/3) * gPi * pow(conditions.radius,3)*19320; // kg - density of gold
+
+
 	gNumOfthreads =omp_get_max_threads();
 	if (argc > 1)
 	{
@@ -47,6 +62,14 @@ int main(int argc, char *argv[])
 			if(strstr(argv[i],"-debug") != NULL) gDebug = 1;
 			else if(strstr(argv[i],"-serial") != NULL)	gSerial = 1;
 			else if (strstr(argv[i],"-numthreads") != NULL)
+			{
+				if (sscanf(argv[i+1],"%d", &gNumOfthreads) != 1)
+				{
+					printf("Invalid number of threads\n");
+					return -1;
+				}
+			}
+			else if (strstr(argv[i],"-threads") != NULL)
 			{
 				if (sscanf(argv[i+1],"%d", &gNumOfthreads) != 1)
 				{
@@ -239,25 +262,12 @@ int main(int argc, char *argv[])
     }
 
 
-    //
-    // Allocate the environmental conditions and nano particle
-    // characteristics
-    //
-
-	environmentVariables conditions;
-    conditions.temperature = 298; // K
-    conditions.viscosity = 8.9E-4; //N m^-2 s
-    conditions.radius = 50E-9; // m
-    conditions.currentTime = 0; // Seconds
-    conditions.deltaTime = 1E-7; // Seconds
-    conditions.endTime = 1E-3; // Seconds
- 	conditions.mass = (4/3) * gPi * pow(conditions.radius,3)*19320; // kg - density of gold
 
 
     //
     //  Choose forces to be included
     //
-    int numberOfForces = 4; // must be at least 1, with the force none chosen
+    int numberOfForces = 2; // must be at least 1, with the force none chosen
     //
     // Copy of enum to understand force forceList
     //
