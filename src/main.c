@@ -29,17 +29,34 @@ double gGrav = 9.80665; // m s^-2
 
 int gDebug = 0;
 int gSerial = 0;
+int gNumOfthreads;
 
 int main(int argc, char *argv[])
 {
 
 	int numberOfParticles = 0;
+	
+	double xMax = 1E-7;
+	double yMax = 1E-7;
+	double zMax = 1E-7;
+	
+
+	//
+	// Allocate the environmental conditions and nano particle
+	// characteristics
+	//
+
+	environmentVariables conditions;
+	conditions.temperature = 298; // K
+	conditions.viscosity = 8.9E-4; //N m^-2 s
+	conditions.radius = 50E-9; // m
+	conditions.currentTime = 0; // Seconds
+	conditions.deltaTime = 1E-7; // Seconds
+	conditions.endTime = 1E-2; // Seconds
+	conditions.mass = (4/3) * gPi * pow(conditions.radius,3)*19320; // kg - density of gold
 
 
-	double xMax = 1;
-	double yMax = 1;
-	double zMax = 1;
-
+	gNumOfthreads =omp_get_max_threads();
 
 	if (argc > 1)
 	{
@@ -47,7 +64,9 @@ int main(int argc, char *argv[])
 		{
 			if(strstr(argv[i],"-debug") != NULL) gDebug = 1;
 			else if(strstr(argv[i],"-serial") != NULL)	gSerial = 1;
-			else if (strstr(argv[i],"-num") != NULL)
+
+			else if (strstr(argv[i],"-num") != NULL || strstr(argv[i],"-n") != NULL)
+
 			{
 				if (sscanf(argv[i+1],"%d", &numberOfParticles) != 1)
 				{
@@ -55,18 +74,53 @@ int main(int argc, char *argv[])
 					return -1;
 				}
 			}
+      else if (strstr(argv[i],"-numthreads") != NULL)
+			{
+				if (sscanf(argv[i+1],"%d", &gNumOfthreads) != 1)
+				{
+					printf("Invalid number of threads\n");
+					return -1;
+				}
+			}
+			else if (strstr(argv[i],"-threads") != NULL)
+			{
+				if (sscanf(argv[i+1],"%d", &gNumOfthreads) != 1)
+				{
+					printf("Invalid number of threads\n");
+					return -1;
+				}
+			}
 			else if (strstr(argv[i],"-cube") != NULL)
 			{
 				double temp_num;
-				if (sscanf(argv[i+1],"%lf", &temp_num) != 1)
+				if (strstr(argv[i+1],"R") != NULL)
+				{
+					if (sscanf(argv[i+1],"%lfR", &temp_num) != 2)
+					{
+						xMax = temp_num * conditions.radius;
+						yMax = temp_num * conditions.radius;
+						zMax = temp_num * conditions.radius;
+					}
+					else
+					{
+						printf("Invalid maximum dimension values\n");
+						return -1;
+					}
+				}
+				else if (sscanf(argv[i+1],"%lf", &temp_num) == 1)
+				{
+					xMax = temp_num;
+					yMax = temp_num;
+					zMax = temp_num;
+				}
+				else
 				{
 					printf("Invalid maximum dimension values\n");
 					return -1;
 				}
-				xMax = temp_num;
-				yMax = temp_num;
-				zMax = temp_num;
-				printf("Set dimensions to %g\n", xMax);
+
+				printf("Set dimensions to %1.1em\n", xMax);
+
 			}
 			else if (strstr(argv[i],"-x") != NULL)
 			{
@@ -92,13 +146,31 @@ int main(int argc, char *argv[])
 					return -1;
 				}
 			}
+			else if (strstr(argv[i],"-t") != NULL)
+			{
+				if (sscanf(argv[i+1],"%lf", &conditions.endTime) != 1)
+				{
+					printf("Invalid duration\n");
+					return -1;
+				}
+				else printf("Simulation duration set to %1.1e seconds\n", conditions.endTime);
+			}
+			else if (strstr(argv[i],"-dt") != NULL)
+			{
+				if (sscanf(argv[i+1],"%lf", &conditions.deltaTime) != 1)
+				{
+					printf("Invalid timestep\n");
+					return -1;
+				}
+				else printf("Simulation timestep set to %1.1e seconds\n", conditions.deltaTime);
+			}
 		}
 		if (gDebug == 1 && gSerial == 1) printf("Debug & serial modes active\n");
 		else if (gDebug == 1 && gSerial == 0) printf("Debug mode active\n");
 		else if (gDebug == 0 && gSerial == 1) printf("Serial mode active\n");
 
 	}
-
+	omp_set_num_threads(gNumOfthreads);
 
     FILE *output = fopen("../bin/output.csv","w");
     FILE *angle_output = fopen("../bin/angle_output.csv","w");
@@ -112,6 +184,15 @@ int main(int argc, char *argv[])
 	/*time_t tSeed1;
 	time(&tSeed1);
 	long int tSeed = -1*(long int) tSeed1;*/
+
+	gsl_rng **rndarray = calloc(gNumOfthreads,sizeof(*rndarray));
+
+	for(int i = 0; i<gNumOfthreads; i++)
+	{
+		rndarray[i] = gsl_rng_alloc(gsl_rng_mt19937);
+		gsl_rng_set(rndarray[i], i);
+	}
+
 	gsl_rng *tSeed = gsl_rng_alloc(gsl_rng_mt19937);
 
 	particleVariables* particles = NULL;
@@ -133,9 +214,8 @@ int main(int argc, char *argv[])
 	{
 		generate_particle_data(numberOfParticles, &particles, tSeed, xMax, yMax, zMax);
 
-		printf("Generated particle data\n");
+	//	printf("Generated particle data\n");
 	}
-
 
 	// Create driving field
 	field_t drivingField;
@@ -222,26 +302,10 @@ int main(int argc, char *argv[])
         return -errno;
     }
 
-
-    //
-    // Allocate the environmental conditions and nano particle
-    // characteristics
-    //
-
-	environmentVariables conditions;
-    conditions.temperature = 298; // K
-    conditions.viscosity = 8.9E-4; //N m^-2 s
-    conditions.radius = 50E-9; // m
-    conditions.currentTime = 0; // Seconds
-    conditions.deltaTime = 1E-7; // Seconds
-    conditions.endTime = 0.01; // Seconds
- 	conditions.mass = (4/3) * gPi * pow(conditions.radius,3)*19320; // kg - density of gold
-
-
     //
     //  Choose forces to be included
     //
-    int numberOfForces = 4; // must be at least 1, with the force none chosen
+    int numberOfForces = 2; // must be at least 1, with the force none chosen
     //
     // Copy of enum to understand force forceList
     //
@@ -253,83 +317,87 @@ int main(int argc, char *argv[])
     //    EXP_REPULSION ,
     //	  ALIGN_TORQUE ,
     //	  DRIVING_FIELD,
-	//	  POLAR_DRIVING_FORCE
+	  //	  POLAR_DRIVING_FORCE
     //};
 
 
     int forceList[4] = {VAN_DER_WAALS,EXP_REPULSION, POLAR_DRIVING_FORCE, ALIGN_TORQUE};
+
     //
     // Loop through time, output each time step to a file.
     //
     int loop = 0;
-	int count = 0;
-	int maxLoop = conditions.endTime/(double)conditions.deltaTime;
+    int count = 0;
+    int maxLoop = conditions.endTime/(double)conditions.deltaTime;
+
+    double progTime = omp_get_wtime();
+
     while(conditions.currentTime<=conditions.endTime)
     {
         //
         // Create diffusion matrix
         //
 
-        diffusion_matrix_creation( numberOfParticles, diffusionMatrix, stochasticWeighting, generalisedCoordinates, &conditions);
+	    diffusion_matrix_creation( numberOfParticles, diffusionMatrix, stochasticWeighting, generalisedCoordinates, &conditions);
 
-        //---------------------------- DEBUG------------------------------//
-        //
-        // Prints the diffusionMatrix to a file for inspection
-        //
-        if( gDebug == 1 && diffusionMatrix != NULL)
-        {
-            //conditions.currentTime = conditions.endTime+1;
-            FILE *matrixOutput = fopen("../bin/matrix_output.txt","w");
+	    //---------------------------- DEBUG------------------------------//
+	    //
+	    // Prints the diffusionMatrix to a file for inspection
+	    //
+	    if( gDebug == 1 && diffusionMatrix != NULL)
+	    {
+	        //conditions.currentTime = conditions.endTime+1;
+	        FILE *matrixOutput = fopen("../bin/matrix_output.txt","w");
 
-            for(int i = 0; i < 6 * numberOfParticles; i++)
-            {
-                for(int j = 0; j < 6 * numberOfParticles; j++)
-                {
-                    fprintf(matrixOutput, "%e\t", diffusionMatrix[i * 6 * numberOfParticles + j]);
-                }
-                fprintf(matrixOutput, "\n");
+	        for(int i = 0; i < 6 * numberOfParticles; i++)
+	        {
+	            for(int j = 0; j < 6 * numberOfParticles; j++)
+	            {
+	                fprintf(matrixOutput, "%e\t", diffusionMatrix[i * 6 * numberOfParticles + j]);
+	            }
+	            fprintf(matrixOutput, "\n");
 
-            }
-            fclose (matrixOutput);
-        }
-        //---------------------------END---------------------------------//
+	        }
+	        fclose (matrixOutput);
+	    }
+	    //---------------------------END---------------------------------//
 
 
-        //
-        // Create the stochastic displacement
-        //
+	    //
+	    // Create the stochastic displacement
+	    //
 
-        stochastic_displacement_creation( numberOfParticles, stochasticWeighting, stochasticDisplacement, tSeed, conditions.deltaTime);
+	    stochastic_displacement_creation( numberOfParticles, stochasticWeighting, stochasticDisplacement, rndarray, conditions.deltaTime);
 
 		if( gDebug == 1 && stochasticWeighting != NULL)
-        {
-        	//conditions.currentTime = conditions.endTime+1;
-            FILE *stochasticOutput = fopen("../bin/stochastic_matrix_output.txt","w");
+	    {
+	    	//conditions.currentTime = conditions.endTime+1;
+	        FILE *stochasticOutput = fopen("../bin/stochastic_matrix_output.txt","w");
 
-            for(int i = 0; i < 6 * numberOfParticles; i++)
-            {
-                for(int j = 0; j < 6 * numberOfParticles; j++)
-                {
-                    fprintf(stochasticOutput, "%e\t", stochasticWeighting[i * 6 * numberOfParticles + j]);
-                }
-                fprintf(stochasticOutput, "\n");
-
-            }
-            fclose (stochasticOutput);
+	        for(int i = 0; i < 6 * numberOfParticles; i++)
+	        {
+	            for(int j = 0; j < 6 * numberOfParticles; j++)
+	            {
+	                fprintf(stochasticOutput, "%e\t", stochasticWeighting[i * 6 * numberOfParticles + j]);
+	            }
+	            fprintf(stochasticOutput, "\n");
+	        }
+	        fclose (stochasticOutput);
 		}
 
-        //
-        // Include additional forces
-        //
 
-        force_torque_summation(additionalForces, generalisedCoordinates, 6 * numberOfParticles, forceList, numberOfForces, conditions, drivingField);
+		//
+		// Include additional forces
+		//
+
+    	force_torque_summation(additionalForces, generalisedCoordinates, 6 * numberOfParticles, forceList, numberOfForces, conditions, drivingField);
+
 
         //
         // Calculate time step.
         //
-
         moving_on_routine(numberOfParticles, &conditions, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates, NULL);
-    //    if(loop%100 == 0)
+        if(loop%100 == 0)
         {
 			int angle_offset = 3*numberOfParticles;
             fprintf(output, "%e, ", conditions.currentTime);
@@ -349,15 +417,19 @@ int main(int argc, char *argv[])
             fprintf(angle_output, "\n");
 			fprintf(forces_output, "\n");
         }
-
+		
+		loop ++;
         conditions.currentTime+=conditions.deltaTime; // time step
 		if((maxLoop/10)*count == loop)
 		{
-			printf("%d%%\n",count*10);
+			//printf("%d%%\n",count*10);
 			count++;
 		}
         loop ++;
     }
+	progTime = omp_get_wtime() - progTime;
+
+	printf("Run time %lf s\n",progTime);
 
     //
     // Free memory

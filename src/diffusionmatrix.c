@@ -30,18 +30,19 @@ extern double gPi;
 
 void diffusion_matrix_creation(int numberOfParticles, double *diffusionMatrix, double *stochasticWeighting, double *generalisedCoordinates, environmentVariables *conditions)
 {
-    double tempTransMatrix[9] = {0} ;
-    double tempRotatMatrix[9] = {0} ;
-    double tempCouplMatrix[9] = {0} ;
+
 
     //
     // Scan through the particles and calculate the individual matrices
     //
-    #pragma omp parallel for private(tempTransMatrix,tempRotatMatrix,tempCouplMatrix) collapse (2)
+    #pragma omp parallel for
     for( int particleRow = 0; particleRow < numberOfParticles; particleRow++)
     {
         for( int particleColumn = 0 ; particleColumn < numberOfParticles; particleColumn++)
         {
+            double tempTransMatrix[9] = {0} ;
+            double tempRotatMatrix[9] = {0} ;
+            double tempCouplMatrix[9] = {0} ;
 
             //
             // Create translational submatrix
