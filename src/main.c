@@ -71,7 +71,6 @@ int main(int argc, char *argv[])
 				double temp_num;
 				if (strstr(argv[i+1],"R") != NULL)
 				{
-					printf("R detected\n");
 					if (sscanf(argv[i+1],"%lfR", &temp_num) != 2)
 					{
 						xMax = temp_num * conditions.radius;
