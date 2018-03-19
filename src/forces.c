@@ -138,7 +138,7 @@ static void force_exp_repulsion(double *additionalForces, double *generalisedCoo
     // Add the forces onto the preexisting values
     //
     double x,y,z,r,forceConst;
-    double expTuningA_B = gExpTuningA/gExpTuningB;
+    //double expTuningA_B = gExpTuningA/gExpTuningB;
 //    #pragma omp parallel for private(x,y,z,r,forceConst)
     for(int i = 0; i < numberOfParticles; i++)
     {
@@ -178,7 +178,6 @@ static void alignment_torque(double *additionalForces, double *generalisedCoordi
 {
 	int numberOfParticles = numberOfCells/6;
 	int rotOffset = numberOfCells/2;
-<<<<<<< HEAD
 	
 	// Calculated from rotational version of Langevin equation, substituting that the average angular displacement per timestep is pi/2
 	// Torque T= pi*I/dt^2 for change in angle ~pi/2 per timestep
@@ -191,11 +190,6 @@ static void alignment_torque(double *additionalForces, double *generalisedCoordi
 		 	- the result is that the force is normalised based on particles separated by a distance of the same order as their radius
 	*/
 	
-=======
-
-	double forceConst = 1E-7;
-
->>>>>>> refs/remotes/origin/Michael
 	double totalX = 0;
 	double totalY = 0;
 	double totalZ = 0;
@@ -204,23 +198,15 @@ static void alignment_torque(double *additionalForces, double *generalisedCoordi
 
 	double meanX, meanY, meanZ;
 	double meanAlpha, meanBeta, difAlpha, difBeta;
-<<<<<<< HEAD
 	
 	double dist,distMul;
 	
 	// Sum position and angles
-=======
-
-	double distMul;
-
-	// Calculate average position and angles
->>>>>>> refs/remotes/origin/Michael
 	for (int i=0; i<numberOfParticles; i++)
 	{
 		totalX += generalisedCoordinates[3*i + 0];
 		totalY += generalisedCoordinates[3*i + 1];
 		totalZ += generalisedCoordinates[3*i + 2];
-<<<<<<< HEAD
 		
 		// Summing only alpha and beta angles
 		totalAlpha += generalisedCoordinates[rotOffset + 3*i + 0];
@@ -233,24 +219,12 @@ static void alignment_torque(double *additionalForces, double *generalisedCoordi
 	meanZ = totalZ/numberOfParticles;
 	
 	// Calculate average angles
-=======
-
-		totalAlpha += generalisedCoordinates[rotOffset + 3*i + 0];
-		totalBeta += generalisedCoordinates[rotOffset + 3*i + 1];
-	}
-
-	meanX = totalX/numberOfParticles;
-	meanY = totalY/numberOfParticles;
-	meanZ = totalZ/numberOfParticles;
-
->>>>>>> refs/remotes/origin/Michael
 	meanAlpha = totalAlpha/numberOfParticles;
 	meanBeta = totalBeta/numberOfParticles;
 
 	// Calculate torques on each particle according to their alignment with average angle
 	for (int i=0; i<numberOfParticles; i++)
 	{
-<<<<<<< HEAD
 		// Calculate the distance between the particle and the average position
 		dist = sqrt(pow(meanX - generalisedCoordinates[3*i + 0],2) + pow(meanY - generalisedCoordinates[3*i + 1],2) + pow(meanZ - generalisedCoordinates[3*i + 2],2));
 		distMul = 1/dist; // Distance multiplier
@@ -269,14 +243,6 @@ static void alignment_torque(double *additionalForces, double *generalisedCoordi
 			printf("Theta:\t%e\t%e\t%e\t%e\t%e\n", fmod(generalisedCoordinates[rotOffset + 3*i + 0], 2*gPi), distMul, forceConst, sin(meanAlpha - generalisedCoordinates[rotOffset + 3*i + 0]), additionalForces[rotOffset + 3*i + 0]);
 			printf("Phi:\t%e\t%e\t%e\t%e\t%e\n", fmod(generalisedCoordinates[rotOffset + 3*i + 1], 2*gPi), distMul, forceConst, sin(meanBeta - generalisedCoordinates[rotOffset + 3*i + 1]), additionalForces[rotOffset + 3*i + 1]);
 		}
-=======
-		distMul = 1/sqrt(pow(meanX - generalisedCoordinates[3*i + 0],2) + pow(meanY - generalisedCoordinates[3*i + 1],2) + pow(meanZ - generalisedCoordinates[3*i + 2],2));
-
-		additionalForces[rotOffset + 3*i + 0] += difAlpha = distMul * forceConst * sin(meanAlpha - generalisedCoordinates[rotOffset + 3*i + 0]);
-		additionalForces[rotOffset + 3*i + 1] += difBeta = distMul * forceConst * sin(meanBeta - generalisedCoordinates[rotOffset + 3*i + 1]);
-
-		printf("%e\t%e\t%e\n", distMul, difAlpha, difBeta);
->>>>>>> refs/remotes/origin/Michael
 	}
 
 }

@@ -31,36 +31,33 @@ int gSerial = 0;
 
 int main(int argc, char *argv[])
 {
-<<<<<<< HEAD
 	int numberOfParticles = 0;
 	
+	double xMax = 1E-7;
+	double yMax = 1E-7;
+	double zMax = 1E-7;
 	
-	double xMax = 1;
-	double yMax = 1;
-	double zMax = 1;
+	//
+    // Allocate the environmental conditions and nano particle
+    // characteristics
+    //
+
+	environmentVariables conditions;
+    conditions.temperature = 298; // K
+    conditions.viscosity = 8.9E-4; //N m^-2 s
+    conditions.radius = 50E-9; // m
+    conditions.currentTime = 0; // Seconds
+    conditions.deltaTime = 1E-5; // Seconds
+    conditions.endTime = 15; // Seconds
+	conditions.mass = (4/3) * gPi * pow(conditions.radius,3)*19320; // kg - density of gold
 	
-=======
-    //
-    // Check Debug mode
-    //
-
-
-
-    /*if(argc > 1)
-    {
-        gDebug = 1;
-        printf("Warning debug mode entered. Press any key to continue...\n" );
-        getchar();
-    }*/
-
->>>>>>> refs/remotes/origin/Michael
 	if (argc > 1)
 	{
 		for (int i=0; i<argc; i++)
 		{
 			if(strstr(argv[i],"-debug") != NULL) gDebug = 1;
 			else if(strstr(argv[i],"-serial") != NULL)	gSerial = 1;
-			else if (strstr(argv[i],"-num") != NULL)
+			else if (strstr(argv[i],"-num") != NULL || strstr(argv[i],"-n") != NULL)
 			{
 				if (sscanf(argv[i+1],"%d", &numberOfParticles) != 1)
 				{
@@ -71,15 +68,33 @@ int main(int argc, char *argv[])
 			else if (strstr(argv[i],"-cube") != NULL)
 			{
 				double temp_num;
-				if (sscanf(argv[i+1],"%lf", &temp_num) != 1)
+				if (strstr(argv[i+1],"R") != NULL)
+				{
+					printf("R detected\n");
+					if (sscanf(argv[i+1],"%lfR", &temp_num) != 2)
+					{
+						xMax = temp_num * conditions.radius;
+						yMax = temp_num * conditions.radius;
+						zMax = temp_num * conditions.radius;
+					}
+					else
+					{
+						printf("Invalid maximum dimension values\n");
+						return -1;
+					}
+				}
+				else if (sscanf(argv[i+1],"%lf", &temp_num) == 1)
+				{
+					xMax = temp_num;
+					yMax = temp_num;
+					zMax = temp_num;
+				}
+				else
 				{
 					printf("Invalid maximum dimension values\n");
 					return -1;
 				}
-				xMax = temp_num;
-				yMax = temp_num;
-				zMax = temp_num;
-				printf("Set dimensions to %g\n", xMax);
+				printf("Set dimensions to %1.1em\n", xMax);
 			}
 			else if (strstr(argv[i],"-x") != NULL)
 			{
@@ -105,6 +120,24 @@ int main(int argc, char *argv[])
 					return -1;
 				}
 			}
+			else if (strstr(argv[i],"-t") != NULL)
+			{
+				if (sscanf(argv[i+1],"%lf", &conditions.endTime) != 1)
+				{
+					printf("Invalid duration\n");
+					return -1;
+				}
+				else printf("Simulation duration set to %1.1e seconds\n", conditions.endTime);
+			}
+			else if (strstr(argv[i],"-dt") != NULL)
+			{
+				if (sscanf(argv[i+1],"%lf", &conditions.deltaTime) != 1)
+				{
+					printf("Invalid timestep\n");
+					return -1;
+				}
+				else printf("Simulation timestep set to %1.1e seconds\n", conditions.deltaTime);
+			}
 		}
 		if (gDebug == 1 && gSerial == 1) printf("Debug & serial modes active\n");
 		else if (gDebug == 1 && gSerial == 0) printf("Debug mode active\n");
@@ -121,7 +154,6 @@ int main(int argc, char *argv[])
         printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
         return -errno;
     }
-<<<<<<< HEAD
 	
 	
 	/*time_t tSeed1;
@@ -152,27 +184,6 @@ int main(int argc, char *argv[])
 	}
     
 	
-=======
-
-
-
-    int numberOfParticles = 0;
-
-
-
-    particleVariables* particles = NULL;
-    //
-    // Call function to read in particle data
-    //
-    if( ( numberOfParticles = particle_read_in( &particles ) ) <= 0)
-    {
-        getchar();
-        return numberOfParticles;
-    }
-
-    printf("Data read in success\n" );
-
->>>>>>> refs/remotes/origin/Michael
 	// Create driving field
 	field_t drivingField;
 	drivingField.mag = 1E-10;
@@ -258,59 +269,21 @@ int main(int argc, char *argv[])
         return -errno;
     }
 
-
-    //
-    // Allocate the environmental conditions and nano particle
-    // characteristics
-    //
-
-	environmentVariables conditions;
-    conditions.temperature = 298; // K
-    conditions.viscosity = 8.9E-4; //N m^-2 s
-    conditions.radius = 50E-9; // m
-    conditions.currentTime = 0; // Seconds
-<<<<<<< HEAD
-    conditions.deltaTime = 1E-10; // Seconds
-    conditions.endTime = 5E-9; // Seconds
-	conditions.mass = (4/3) * gPi * pow(conditions.radius,3) * 19320; // kg - density of gold
-=======
-    conditions.deltaTime = 1E-5; // Seconds
-    conditions.endTime = 15; // Seconds
-	conditions.mass = (4/3) * gPi * pow(conditions.radius,3)*19320; // kg - density of gold
->>>>>>> refs/remotes/origin/Michael
-
     //
     //  Choose forces to be included
     //
 
     int numberOfForces = 2; // must be at least 1, with the force none chosen
-<<<<<<< HEAD
-=======
-    //
-    // Copy of enum to understand force forceList
-    //
-    //enum forces_available
-    //{
-    //    NONE ,
-    //    GRAVITY ,
-    //    VAN_DER_WAALS ,
-    //    EXP_REPULSION ,
-    //	  ALIGN_TORQUE ,
-    //	  DRIVING_FIELD
-    //};
 
-
-    int forceList[2] = {VAN_DER_WAALS,EXP_REPULSION};
-
-
-
-	/*time_t tSeed1;
-	time(&tSeed1);
-	long int tSeed = -1*(long int) tSeed1;*/
-	gsl_rng *tSeed = gsl_rng_alloc(gsl_rng_mt19937);
->>>>>>> refs/remotes/origin/Michael
-
-    int forceList[2] = {2,4};
+	/* Forces available:
+		NONE,
+		GRAVITY,
+		VAN_DER_WAALS,
+		EXP_REPULSION,
+		ALIGN_TORQUE,
+		DRIVING_FIELD
+	*/
+    int forceList[2] = {VAN_DER_WAALS, EXP_REPULSION,};
 
     //
     // Loop through time, output each time step to a file.
@@ -401,9 +374,9 @@ int main(int argc, char *argv[])
             fprintf(angle_output, "\n");
 			fprintf(forces_output, "\n");
         }
-
+		
+		loop ++;
         conditions.currentTime+=conditions.deltaTime; // time step
-        loop ++;
     }
 
     //
