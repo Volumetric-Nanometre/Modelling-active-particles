@@ -37,11 +37,11 @@ extern double gPi;
 // F = Aexp(-r/lamda)
 // r= r2 -r1
 //
-static double gHamaker =3.7E-19;
-static double gExpTuningA = 5.34704E24;
-static double gExpTuningB = 5.2010E8;
-static double gTuningC = -250E-9;
-static double gTuningD = 4;
+static double gHamaker =2*3.7E-19;
+static double gExpTuningA = 1.0E23;
+static double gExpTuningB = 4.8E8;
+static double gTuningC = -550E-9;
+static double gTuningD = 7;
 
 
 //
@@ -99,7 +99,7 @@ static void force_van_der_waals(double *additionalForces, double *generalisedCoo
     //
 
 
-    #pragma omp parallel for 
+    #pragma omp parallel for
     for(int i = 0; i < numberOfParticles; i++)
     {
         for(int j = 0; j < numberOfParticles; j++)
