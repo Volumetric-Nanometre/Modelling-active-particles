@@ -185,8 +185,7 @@ static void alignment_torque(double *additionalForces, double *generalisedCoordi
 {
 	int numberOfParticles = numberOfCells/6;
 	int rotOffset = numberOfCells/2;
-
-
+	
 	// Calculated from rotational version of Langevin equation, substituting that the average angular displacement per timestep is pi/2
 	// Torque T= pi*I/dt^2 for change in angle ~pi/2 per timestep
 	// Moment of intertia I = (2/5)MR^2 for solid sphere of radius R and mass M
@@ -197,7 +196,6 @@ static void alignment_torque(double *additionalForces, double *generalisedCoordi
 		 The second radius multiplier comes from using the inverse distance mutliplier in the force equation
 		 	- the result is that the force is normalised based on particles separated by a distance of the same order as their radius
 	*/
-
 	double totalX = 0;
 	double totalY = 0;
 	double totalZ = 0;

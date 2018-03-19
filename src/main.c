@@ -35,9 +35,11 @@ int main(int argc, char *argv[])
 {
 
 	int numberOfParticles = 0;
-	double xMax = 1;
-	double yMax = 1;
-	double zMax = 1;
+	
+	double xMax = 1E-7;
+	double yMax = 1E-7;
+	double zMax = 1E-7;
+	
 
 	//
 	// Allocate the environmental conditions and nano particle
@@ -55,13 +57,24 @@ int main(int argc, char *argv[])
 
 
 	gNumOfthreads =omp_get_max_threads();
+
 	if (argc > 1)
 	{
 		for (int i=0; i<argc; i++)
 		{
 			if(strstr(argv[i],"-debug") != NULL) gDebug = 1;
 			else if(strstr(argv[i],"-serial") != NULL)	gSerial = 1;
-			else if (strstr(argv[i],"-numthreads") != NULL)
+
+			else if (strstr(argv[i],"-num") != NULL || strstr(argv[i],"-n") != NULL)
+
+			{
+				if (sscanf(argv[i+1],"%d", &numberOfParticles) != 1)
+				{
+					printf("Invalid number of particles\n");
+					return -1;
+				}
+			}
+      else if (strstr(argv[i],"-numthreads") != NULL)
 			{
 				if (sscanf(argv[i+1],"%d", &gNumOfthreads) != 1)
 				{
@@ -77,26 +90,37 @@ int main(int argc, char *argv[])
 					return -1;
 				}
 			}
-			else if (strstr(argv[i],"-num") != NULL)
-			{
-				if (sscanf(argv[i+1],"%d", &numberOfParticles) != 1)
-				{
-					printf("Invalid number of particles\n");
-					return -1;
-				}
-			}
 			else if (strstr(argv[i],"-cube") != NULL)
 			{
 				double temp_num;
-				if (sscanf(argv[i+1],"%lf", &temp_num) != 1)
+				if (strstr(argv[i+1],"R") != NULL)
+				{
+					if (sscanf(argv[i+1],"%lfR", &temp_num) != 2)
+					{
+						xMax = temp_num * conditions.radius;
+						yMax = temp_num * conditions.radius;
+						zMax = temp_num * conditions.radius;
+					}
+					else
+					{
+						printf("Invalid maximum dimension values\n");
+						return -1;
+					}
+				}
+				else if (sscanf(argv[i+1],"%lf", &temp_num) == 1)
+				{
+					xMax = temp_num;
+					yMax = temp_num;
+					zMax = temp_num;
+				}
+				else
 				{
 					printf("Invalid maximum dimension values\n");
 					return -1;
 				}
-				xMax = temp_num;
-				yMax = temp_num;
-				zMax = temp_num;
-	//			printf("Set dimensions to %g\n", xMax);
+
+				printf("Set dimensions to %1.1em\n", xMax);
+
 			}
 			else if (strstr(argv[i],"-x") != NULL)
 			{
@@ -121,6 +145,24 @@ int main(int argc, char *argv[])
 					printf("Invalid maximum z-dimension value\n");
 					return -1;
 				}
+			}
+			else if (strstr(argv[i],"-t") != NULL)
+			{
+				if (sscanf(argv[i+1],"%lf", &conditions.endTime) != 1)
+				{
+					printf("Invalid duration\n");
+					return -1;
+				}
+				else printf("Simulation duration set to %1.1e seconds\n", conditions.endTime);
+			}
+			else if (strstr(argv[i],"-dt") != NULL)
+			{
+				if (sscanf(argv[i+1],"%lf", &conditions.deltaTime) != 1)
+				{
+					printf("Invalid timestep\n");
+					return -1;
+				}
+				else printf("Simulation timestep set to %1.1e seconds\n", conditions.deltaTime);
 			}
 		}
 		if (gDebug == 1 && gSerial == 1) printf("Debug & serial modes active\n");
@@ -174,7 +216,6 @@ int main(int argc, char *argv[])
 
 	//	printf("Generated particle data\n");
 	}
-
 
 	// Create driving field
 	field_t drivingField;
@@ -261,9 +302,6 @@ int main(int argc, char *argv[])
         return -errno;
     }
 
-
-
-
     //
     //  Choose forces to be included
     //
@@ -279,19 +317,20 @@ int main(int argc, char *argv[])
     //    EXP_REPULSION ,
     //	  ALIGN_TORQUE ,
     //	  DRIVING_FIELD,
-	//	  POLAR_DRIVING_FORCE
+	  //	  POLAR_DRIVING_FORCE
     //};
 
 
     int forceList[4] = {VAN_DER_WAALS,EXP_REPULSION, POLAR_DRIVING_FORCE, ALIGN_TORQUE};
+
     //
     // Loop through time, output each time step to a file.
     //
     int loop = 0;
-	int count = 0;
-	int maxLoop = conditions.endTime/(double)conditions.deltaTime;
+    int count = 0;
+    int maxLoop = conditions.endTime/(double)conditions.deltaTime;
 
-	double progTime = omp_get_wtime();
+    double progTime = omp_get_wtime();
 
     while(conditions.currentTime<=conditions.endTime)
     {
@@ -378,7 +417,8 @@ int main(int argc, char *argv[])
             fprintf(angle_output, "\n");
 			fprintf(forces_output, "\n");
         }
-
+		
+		loop ++;
         conditions.currentTime+=conditions.deltaTime; // time step
 		if((maxLoop/10)*count == loop)
 		{
