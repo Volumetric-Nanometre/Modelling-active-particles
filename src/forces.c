@@ -37,11 +37,11 @@ extern double gPi;
 // F = Aexp(-r/lamda)
 // r= r2 -r1
 //
-static double gHamaker =3.7E-17;
-static double gExpTuningA = 5.34704E24;
-static double gExpTuningB = 5.2010E8;
-static double gTuningC = -250E-9;
-static double gTuningD = 4;
+static double gHamaker =2*3.7E-19;
+static double gExpTuningA = 1.0E23;
+static double gExpTuningB = 4.8E8;
+static double gTuningC = -550E-9;
+static double gTuningD = 7;
 
 
 //
@@ -52,7 +52,7 @@ void force_torque_summation(double *additionalForces,double *generalisedCoordina
     //
     // Set entire array to zero
     //
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for(int i = 0; i < numberOfCells; i++)
     {
         additionalForces[i] = 0;
@@ -82,7 +82,7 @@ static void force_gravity(double *additionalForces, int numberOfCells, double ma
     // Step 3 each time to only hit the z axis
     // Add the forces onto the preexisting values
     //
-//    #pragma omp parallel for
+    #pragma omp parallel for
     for(int i = 0; i < numberOfCells/2; i+=3)
     	additionalForces[i] -= mass * gGrav;
 }
@@ -97,13 +97,14 @@ static void force_van_der_waals(double *additionalForces, double *generalisedCoo
     // r = r2-r1
     // Add the forces onto the preexisting values
     //
-    double x,y,z,r,forceConst;
 
-    //#pragma omp parallel for private(x,y,z,r,forceConst)
+
+    #pragma omp parallel for
     for(int i = 0; i < numberOfParticles; i++)
     {
         for(int j = 0; j < numberOfParticles; j++)
         {
+            double x,y,z,r,forceConst;
             //
             // Ignore self interaction
             //
@@ -143,12 +144,13 @@ static void force_exp_repulsion(double *additionalForces, double *generalisedCoo
     // r = r2-r1
     // Add the forces onto the preexisting values
     //
-    double x,y,z,r,forceConst;
-    //#pragma omp parallel for private(x,y,z,r,forceConst)
+
+    #pragma omp parallel for
     for(int i = 0; i < numberOfParticles; i++)
     {
         for(int j = 0; j < numberOfParticles; j++)
         {
+            double x,y,z,r,forceConst;
             //
             // Ignore self interaction
             //
@@ -194,7 +196,6 @@ static void alignment_torque(double *additionalForces, double *generalisedCoordi
 		 The second radius multiplier comes from using the inverse distance mutliplier in the force equation
 		 	- the result is that the force is normalised based on particles separated by a distance of the same order as their radius
 	*/
-	
 	double totalX = 0;
 	double totalY = 0;
 	double totalZ = 0;
@@ -204,63 +205,68 @@ static void alignment_torque(double *additionalForces, double *generalisedCoordi
 	double meanX, meanY, meanZ;
 	double meanAlpha, meanBeta, difAlpha, difBeta;
 
-	double dist,distMul;
 
 
 
+    #pragma omp parallel
+    {
 	// Sum position and angles
-    //#pragma omp parallel for reduction(+:totalX, totalY,totalZ,totalAlpha,totalBeta)
-
-	for (int i=0; i<numberOfParticles; i++)
-	{
-		totalX += generalisedCoordinates[3*i + 0];
-		totalY += generalisedCoordinates[3*i + 1];
-		totalZ += generalisedCoordinates[3*i + 2];
-
-		
-		// Summing only alpha and beta angles
-		totalAlpha += generalisedCoordinates[rotOffset + 3*i + 0];
-		totalBeta += generalisedCoordinates[rotOffset + 3*i + 1];
-	}
-	
-	// Calculate average positions
-	meanX = totalX/numberOfParticles;
-	meanY = totalY/numberOfParticles;
-	meanZ = totalZ/numberOfParticles;
-	
-	// Calculate average angles
-
-	meanAlpha = totalAlpha/numberOfParticles;
-	meanBeta = totalBeta/numberOfParticles;
-
-	// Calculate torques on each particle according to their alignment with average angle
-	for (int i=0; i<numberOfParticles; i++)
-	{
-		// Calculate the distance between the particle and the average position
-		dist = sqrt(pow(meanX - generalisedCoordinates[3*i + 0],2) + pow(meanY - generalisedCoordinates[3*i + 1],2) + pow(meanZ - generalisedCoordinates[3*i + 2],2));
-		distMul = 1/(dist + conditions.radius); // Distance multiplier
-
-		// Calculate torques in alpha and beta directions such that maximum torque is when the particle's axes are maximally separated from the average angle.
-		additionalForces[rotOffset + 3*i + 0] += difAlpha = distMul * forceConst * sin(meanAlpha - generalisedCoordinates[rotOffset + 3*i + 0]);
-		additionalForces[rotOffset + 3*i + 1] += difBeta = distMul * forceConst * sin(meanBeta - generalisedCoordinates[rotOffset + 3*i + 1]);
-		/* Applies inverse distance multiplier as previously mentioned, which normalises the force so that it should be producing the average ~pi/2 angular change per timestep when the
-			particle is in the order of a radius of the average position*/
+        #pragma omp for reduction(+:totalX, totalY,totalZ,totalAlpha,totalBeta)
+    	for (int i=0; i<numberOfParticles; i++)
+    	{
+    		totalX += generalisedCoordinates[3*i + 0];
+    		totalY += generalisedCoordinates[3*i + 1];
+    		totalZ += generalisedCoordinates[3*i + 2];
 
 
-		// Print stuff for debugging
-		if (i<3 && gDebug==1) // Avoid some spam
-		{
-			printf("\ts:%e\tc:%e\tTheta:%e\tPhi:%e\n", dist, forceConst, generalisedCoordinates[rotOffset + 3*i + 0], generalisedCoordinates[rotOffset + 3*i + 1]);
-			printf("Theta:\t%e\t%e\t%e\t%e\t%e\n", fmod(generalisedCoordinates[rotOffset + 3*i + 0], 2*gPi), distMul, forceConst, sin(meanAlpha - generalisedCoordinates[rotOffset + 3*i + 0]), additionalForces[rotOffset + 3*i + 0]);
-			printf("Phi:\t%e\t%e\t%e\t%e\t%e\n", fmod(generalisedCoordinates[rotOffset + 3*i + 1], 2*gPi), distMul, forceConst, sin(meanBeta - generalisedCoordinates[rotOffset + 3*i + 1]), additionalForces[rotOffset + 3*i + 1]);
-		}
-	}
+    		// Summing only alpha and beta angles
+    		totalAlpha += generalisedCoordinates[rotOffset + 3*i + 0];
+    		totalBeta += generalisedCoordinates[rotOffset + 3*i + 1];
+    	}
+
+    	// Calculate average positions
+        #pragma omp single
+        {
+        	meanX = totalX/numberOfParticles;
+        	meanY = totalY/numberOfParticles;
+        	meanZ = totalZ/numberOfParticles;
+
+        	// Calculate average angles
+
+        	meanAlpha = totalAlpha/numberOfParticles;
+        	meanBeta = totalBeta/numberOfParticles;
+        }
+    	// Calculate torques on each particle according to their alignment with average angle
+        #pragma omp for
+    	for (int i=0; i<numberOfParticles; i++)
+    	{
+            double dist,distMul;
+    		// Calculate the distance between the particle and the average position
+    		dist = sqrt(pow(meanX - generalisedCoordinates[3*i + 0],2) + pow(meanY - generalisedCoordinates[3*i + 1],2) + pow(meanZ - generalisedCoordinates[3*i + 2],2));
+    		distMul = 1/(dist + conditions.radius); // Distance multiplier
+
+    		// Calculate torques in alpha and beta directions such that maximum torque is when the particle's axes are maximally separated from the average angle.
+    		additionalForces[rotOffset + 3*i + 0] += difAlpha = distMul * forceConst * sin(meanAlpha - generalisedCoordinates[rotOffset + 3*i + 0]);
+    		additionalForces[rotOffset + 3*i + 1] += difBeta = distMul * forceConst * sin(meanBeta - generalisedCoordinates[rotOffset + 3*i + 1]);
+    		/* Applies inverse distance multiplier as previously mentioned, which normalises the force so that it should be producing the average ~pi/2 angular change per timestep when the
+    			particle is in the order of a radius of the average position*/
+
+
+    		// Print stuff for debugging
+    		if (i<3 && gDebug==1) // Avoid some spam
+    		{
+    			printf("\ts:%e\tc:%e\tTheta:%e\tPhi:%e\n", dist, forceConst, generalisedCoordinates[rotOffset + 3*i + 0], generalisedCoordinates[rotOffset + 3*i + 1]);
+    			printf("Theta:\t%e\t%e\t%e\t%e\t%e\n", fmod(generalisedCoordinates[rotOffset + 3*i + 0], 2*gPi), distMul, forceConst, sin(meanAlpha - generalisedCoordinates[rotOffset + 3*i + 0]), additionalForces[rotOffset + 3*i + 0]);
+    			printf("Phi:\t%e\t%e\t%e\t%e\t%e\n", fmod(generalisedCoordinates[rotOffset + 3*i + 1], 2*gPi), distMul, forceConst, sin(meanBeta - generalisedCoordinates[rotOffset + 3*i + 1]), additionalForces[rotOffset + 3*i + 1]);
+    		}
+    	}
+    }
 
 }
 
 static void driving_force(double *additionalForces, double *generalisedCoordinates, int numberOfCells, field_t drivingField)
 {
-
+    #pragma omp parallel for
 	for (int i=0; i<numberOfCells/6; i++)
 	{
 		additionalForces[3*i + 0] +=  drivingField.mag * abs(cos((drivingField.alpha - generalisedCoordinates[numberOfCells/2 + 3*i + 0])/2)) * abs(cos((drivingField.beta - generalisedCoordinates[numberOfCells/2 + 3*i + 1])/2));
@@ -271,7 +277,7 @@ static void driving_force(double *additionalForces, double *generalisedCoordinat
 static void polar_driving_force(double *additionalForces, double *generalisedCoordinates, int numberOfCells)
 {
     double forceConst = 10E-12;
-
+    #pragma omp parallel for
 	for (int i=0; i<numberOfCells/6; i++)
 	{
 		additionalForces[3*i + 0] +=  forceConst * cos(generalisedCoordinates[numberOfCells/2 + 3*i + 0]) * sin (generalisedCoordinates[numberOfCells/2 + 3*i + 1]) ;

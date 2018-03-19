@@ -1,6 +1,6 @@
 IDIR =../include
 CC=gcc
-CFLAGS=-Wall -g -fopenmp -I$(IDIR) -IC:/GSL/include
+CFLAGS=-Wall -fopenmp -O3 -I$(IDIR) -IC:/GSL/include
 
 
 ODIR=obj
