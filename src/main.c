@@ -35,11 +35,11 @@ int main(int argc, char *argv[])
 {
 
 	int numberOfParticles = 0;
-	
+
 	double xMax = 1E-7;
 	double yMax = 1E-7;
 	double zMax = 1E-7;
-	
+
 
 	//
 	// Allocate the environmental conditions and nano particle
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 					return -1;
 				}
 			}
-      else if (strstr(argv[i],"-numthreads") != NULL)
+      		else if (strstr(argv[i],"-numthreads") != NULL)
 			{
 				if (sscanf(argv[i+1],"%d", &gNumOfthreads) != 1)
 				{
@@ -170,7 +170,9 @@ int main(int argc, char *argv[])
 		else if (gDebug == 0 && gSerial == 1) printf("Serial mode active\n");
 
 	}
+
 	omp_set_num_threads(gNumOfthreads);
+
 
     FILE *output = fopen("../bin/output.csv","w");
     FILE *angle_output = fopen("../bin/angle_output.csv","w");
@@ -417,7 +419,7 @@ int main(int argc, char *argv[])
             fprintf(angle_output, "\n");
 			fprintf(forces_output, "\n");
         }
-		
+
 		loop ++;
         conditions.currentTime+=conditions.deltaTime; // time step
 		if((maxLoop/10)*count == loop)
@@ -464,5 +466,6 @@ int main(int argc, char *argv[])
         free( stochasticDisplacement );
         particles = NULL;
     }
+
     return 0;
 }
