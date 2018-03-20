@@ -182,6 +182,7 @@ int main(int argc, char *argv[])
 	}
 
 	omp_set_num_threads(gNumOfthreads);
+
 	if(MASTER == 0)
 	{
 	    FILE *output = fopen("../bin/output.csv","w");
@@ -476,6 +477,24 @@ int main(int argc, char *argv[])
 	        free( stochasticDisplacement );
 	        particles = NULL;
 	    }
+	}
+
+
+
+
+
+	//
+	//
+	//
+	// SLAVE PROCESS INSTRUCTION SET
+	//
+	//
+
+
+
+	if(MASTER != 0)
+	{
+
 	}
     return 0;
 }
