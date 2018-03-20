@@ -31,16 +31,11 @@ int gDebug = 0;
 int gSerial = 0;
 int gNumOfthreads;
 
+
+int cmd_line_read_in(int argc, char *argv[], environmentVariables *conditions);
+
 int main(int argc, char *argv[])
 {
-
-	int numberOfParticles = 0;
-
-	double xMax = 1E-7;
-	double yMax = 1E-7;
-	double zMax = 1E-7;
-
-
 	//
 	// Allocate the environmental conditions and nano particle
 	// characteristics
@@ -54,122 +49,15 @@ int main(int argc, char *argv[])
 	conditions.deltaTime = 1E-7; // Seconds
 	conditions.endTime = 1E-2; // Seconds
 	conditions.mass = (4/3) * gPi * pow(conditions.radius,3)*19320; // kg - density of gold
+	conditions.xMax = 1E-7;
+	conditions.yMax = 1E-7;
+	conditions.zMax = 1E-7;
+	conditions.numberOfParticles = 0;
 
 
 	gNumOfthreads =omp_get_max_threads();
 
-	if (argc > 1)
-	{
-		for (int i=0; i<argc; i++)
-		{
-			if(strstr(argv[i],"-debug") != NULL) gDebug = 1;
-			else if(strstr(argv[i],"-serial") != NULL)	gSerial = 1;
-
-			else if (strstr(argv[i],"-num") != NULL || strstr(argv[i],"-n") != NULL)
-
-			{
-				if (sscanf(argv[i+1],"%d", &numberOfParticles) != 1)
-				{
-					printf("Invalid number of particles\n");
-					return -1;
-				}
-			}
-      		else if (strstr(argv[i],"-numthreads") != NULL)
-			{
-				if (sscanf(argv[i+1],"%d", &gNumOfthreads) != 1)
-				{
-					printf("Invalid number of threads\n");
-					return -1;
-				}
-			}
-			else if (strstr(argv[i],"-threads") != NULL)
-			{
-				if (sscanf(argv[i+1],"%d", &gNumOfthreads) != 1)
-				{
-					printf("Invalid number of threads\n");
-					return -1;
-				}
-			}
-			else if (strstr(argv[i],"-cube") != NULL)
-			{
-				double temp_num;
-				if (strstr(argv[i+1],"R") != NULL)
-				{
-					if (sscanf(argv[i+1],"%lfR", &temp_num) != 2)
-					{
-						xMax = temp_num * conditions.radius;
-						yMax = temp_num * conditions.radius;
-						zMax = temp_num * conditions.radius;
-					}
-					else
-					{
-						printf("Invalid maximum dimension values\n");
-						return -1;
-					}
-				}
-				else if (sscanf(argv[i+1],"%lf", &temp_num) == 1)
-				{
-					xMax = temp_num;
-					yMax = temp_num;
-					zMax = temp_num;
-				}
-				else
-				{
-					printf("Invalid maximum dimension values\n");
-					return -1;
-				}
-
-				printf("Set dimensions to %1.1em\n", xMax);
-
-			}
-			else if (strstr(argv[i],"-x") != NULL)
-			{
-				if (sscanf(argv[i+1],"%lf", &xMax) != 1)
-				{
-					printf("Invalid maximum x-dimension value\n");
-					return -1;
-				}
-			}
-			else if (strstr(argv[i],"-y") != NULL)
-			{
-				if (sscanf(argv[i+1],"%lf", &yMax) != 1)
-				{
-					printf("Invalid maximum y-dimension value\n");
-					return -1;
-				}
-			}
-			else if (strstr(argv[i],"-z") != NULL)
-			{
-				if (sscanf(argv[i+1],"%lf", &zMax) != 1)
-				{
-					printf("Invalid maximum z-dimension value\n");
-					return -1;
-				}
-			}
-			else if (strstr(argv[i],"-t") != NULL)
-			{
-				if (sscanf(argv[i+1],"%lf", &conditions.endTime) != 1)
-				{
-					printf("Invalid duration\n");
-					return -1;
-				}
-				else printf("Simulation duration set to %1.1e seconds\n", conditions.endTime);
-			}
-			else if (strstr(argv[i],"-dt") != NULL)
-			{
-				if (sscanf(argv[i+1],"%lf", &conditions.deltaTime) != 1)
-				{
-					printf("Invalid timestep\n");
-					return -1;
-				}
-				else printf("Simulation timestep set to %1.1e seconds\n", conditions.deltaTime);
-			}
-		}
-		if (gDebug == 1 && gSerial == 1) printf("Debug & serial modes active\n");
-		else if (gDebug == 1 && gSerial == 0) printf("Debug mode active\n");
-		else if (gDebug == 0 && gSerial == 1) printf("Serial mode active\n");
-
-	}
+	cmd_line_read_in(argc, argv, &conditions);
 
 	omp_set_num_threads(gNumOfthreads);
 
@@ -199,22 +87,22 @@ int main(int argc, char *argv[])
 
 	particleVariables* particles = NULL;
 
-	if (numberOfParticles == 0)
+	if (conditions.numberOfParticles == 0)
 	{
 	    //
 	    // Call function to read in particle data
 	    //
-	    if( (numberOfParticles = particle_read_in(&particles)) <= 0)
+	    if( (conditions.numberOfParticles = particle_read_in(&particles)) <= 0)
 	    {
 	        getchar();
-	        return numberOfParticles;
+	        return conditions.numberOfParticles;
 	    }
 
 	    printf("Data read in success\n" );
 	}
 	else
 	{
-		generate_particle_data(numberOfParticles, &particles, tSeed, xMax, yMax, zMax);
+		generate_particle_data(conditions.numberOfParticles, &particles, tSeed, conditions.xMax, conditions.yMax, conditions.zMax);
 
 	//	printf("Generated particle data\n");
 	}
@@ -231,7 +119,7 @@ int main(int argc, char *argv[])
 
     double *generalisedCoordinates = NULL ;
 
-    if( (generalisedCoordinates = generalised_coordinate_creation( numberOfParticles, particles) ) == NULL )
+    if( (generalisedCoordinates = generalised_coordinate_creation( conditions.numberOfParticles, particles) ) == NULL )
     {
         free( particles );
         particles = NULL ;
@@ -247,7 +135,7 @@ int main(int argc, char *argv[])
     {
         FILE *genCoordOutput = fopen("../bin/genCoord_output.txt","w");
 
-        for(int i = 0; i < 6 * numberOfParticles; i++)
+        for(int i = 0; i < 6 * conditions.numberOfParticles; i++)
         {
             fprintf(genCoordOutput, "%e\n", generalisedCoordinates[i]);
         }
@@ -269,10 +157,10 @@ int main(int argc, char *argv[])
     double *additionalForces = NULL;
     double *stochasticDisplacement = NULL;
 
-    diffusionMatrix = calloc( pow( 6 * numberOfParticles, 2), sizeof *diffusionMatrix) ;
-    stochasticWeighting = calloc( pow( 6 * numberOfParticles, 2), sizeof *stochasticWeighting);
-    stochasticDisplacement = calloc( 6 * numberOfParticles, sizeof *stochasticDisplacement);
-    additionalForces = calloc( 6 * numberOfParticles, sizeof *additionalForces);
+    diffusionMatrix = calloc( pow( 6 * conditions.numberOfParticles, 2), sizeof *diffusionMatrix) ;
+    stochasticWeighting = calloc( pow( 6 * conditions.numberOfParticles, 2), sizeof *stochasticWeighting);
+    stochasticDisplacement = calloc( 6 * conditions.numberOfParticles, sizeof *stochasticDisplacement);
+    additionalForces = calloc( 6 * conditions.numberOfParticles, sizeof *additionalForces);
 
     if(  diffusionMatrix==NULL  || stochasticWeighting==NULL || stochasticDisplacement==NULL || additionalForces==NULL)
     {
@@ -340,7 +228,7 @@ int main(int argc, char *argv[])
         // Create diffusion matrix
         //
 
-	    diffusion_matrix_creation( numberOfParticles, diffusionMatrix, stochasticWeighting, generalisedCoordinates, &conditions);
+	    diffusion_matrix_creation( conditions.numberOfParticles, diffusionMatrix, stochasticWeighting, generalisedCoordinates, &conditions);
 
 	    //---------------------------- DEBUG------------------------------//
 	    //
@@ -351,11 +239,11 @@ int main(int argc, char *argv[])
 	        //conditions.currentTime = conditions.endTime+1;
 	        FILE *matrixOutput = fopen("../bin/matrix_output.txt","w");
 
-	        for(int i = 0; i < 6 * numberOfParticles; i++)
+	        for(int i = 0; i < 6 * conditions.numberOfParticles; i++)
 	        {
-	            for(int j = 0; j < 6 * numberOfParticles; j++)
+	            for(int j = 0; j < 6 * conditions.numberOfParticles; j++)
 	            {
-	                fprintf(matrixOutput, "%e\t", diffusionMatrix[i * 6 * numberOfParticles + j]);
+	                fprintf(matrixOutput, "%e\t", diffusionMatrix[i * 6 * conditions.numberOfParticles + j]);
 	            }
 	            fprintf(matrixOutput, "\n");
 
@@ -369,18 +257,18 @@ int main(int argc, char *argv[])
 	    // Create the stochastic displacement
 	    //
 
-	    stochastic_displacement_creation( numberOfParticles, stochasticWeighting, stochasticDisplacement, rndarray, conditions.deltaTime);
+	    stochastic_displacement_creation( conditions.numberOfParticles, stochasticWeighting, stochasticDisplacement, rndarray, conditions.deltaTime);
 
 		if( gDebug == 1 && stochasticWeighting != NULL)
 	    {
 	    	//conditions.currentTime = conditions.endTime+1;
 	        FILE *stochasticOutput = fopen("../bin/stochastic_matrix_output.txt","w");
 
-	        for(int i = 0; i < 6 * numberOfParticles; i++)
+	        for(int i = 0; i < 6 * conditions.numberOfParticles; i++)
 	        {
-	            for(int j = 0; j < 6 * numberOfParticles; j++)
+	            for(int j = 0; j < 6 * conditions.numberOfParticles; j++)
 	            {
-	                fprintf(stochasticOutput, "%e\t", stochasticWeighting[i * 6 * numberOfParticles + j]);
+	                fprintf(stochasticOutput, "%e\t", stochasticWeighting[i * 6 * conditions.numberOfParticles + j]);
 	            }
 	            fprintf(stochasticOutput, "\n");
 	        }
@@ -392,25 +280,25 @@ int main(int argc, char *argv[])
 		// Include additional forces
 		//
 
-    	force_torque_summation(additionalForces, generalisedCoordinates, 6 * numberOfParticles, forceList, numberOfForces, conditions, drivingField);
+    	force_torque_summation(additionalForces, generalisedCoordinates, 6 * conditions.numberOfParticles, forceList, numberOfForces, conditions, drivingField);
 
 
         //
         // Calculate time step.
         //
-        moving_on_routine(numberOfParticles, &conditions, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates, NULL);
+        moving_on_routine(conditions.numberOfParticles, &conditions, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates, NULL);
         if(loop%100 == 0)
         {
-			int angle_offset = 3*numberOfParticles;
+			int angle_offset = 3*conditions.numberOfParticles;
             fprintf(output, "%e, ", conditions.currentTime);
             fprintf(angle_output, "%e, ", conditions.currentTime);
 			fprintf(forces_output, "%e,",conditions.currentTime);
-            for(int i = 0; i < 3 * numberOfParticles; i++)
+            for(int i = 0; i < 3 * conditions.numberOfParticles; i++)
             {
                 fprintf(output, "%e", generalisedCoordinates[i]);
 				fprintf(forces_output, "%e", additionalForces[i]);
                 fprintf(angle_output, "%e", fmod(generalisedCoordinates[angle_offset + i],2*gPi));
-				if (i < 3*numberOfParticles - 1)
+				if (i < 3*conditions.numberOfParticles - 1)
 	                fprintf(output, ", ");
 	                fprintf(angle_output, ", ");
 					fprintf(forces_output, ", ");
@@ -468,4 +356,123 @@ int main(int argc, char *argv[])
     }
 
     return 0;
+}
+
+
+
+int cmd_line_read_in(int argc, char *argv[], environmentVariables *conditions)
+{
+	if (argc > 1)
+	{
+		for (int i=0; i<argc; i++)
+		{
+			if(strstr(argv[i],"-debug") != NULL) gDebug = 1;
+			else if(strstr(argv[i],"-serial") != NULL)	gSerial = 1;
+
+			else if (strstr(argv[i],"-num") != NULL || strstr(argv[i],"-n") != NULL)
+
+			{
+				if (sscanf(argv[i+1],"%d", &conditions->numberOfParticles) != 1)
+				{
+					printf("Invalid number of particles\n");
+					return -1;
+				}
+			}
+      		else if (strstr(argv[i],"-numthreads") != NULL)
+			{
+				if (sscanf(argv[i+1],"%d", &gNumOfthreads) != 1)
+				{
+					printf("Invalid number of threads\n");
+					return -1;
+				}
+			}
+			else if (strstr(argv[i],"-threads") != NULL)
+			{
+				if (sscanf(argv[i+1],"%d", &gNumOfthreads) != 1)
+				{
+					printf("Invalid number of threads\n");
+					return -1;
+				}
+			}
+			else if (strstr(argv[i],"-cube") != NULL)
+			{
+				double temp_num;
+				if (strstr(argv[i+1],"R") != NULL)
+				{
+					if (sscanf(argv[i+1],"%lfR", &temp_num) != 2)
+					{
+						conditions->xMax = temp_num * conditions->radius;
+						conditions->yMax = temp_num * conditions->radius;
+						conditions->zMax = temp_num * conditions->radius;
+					}
+					else
+					{
+						printf("Invalid maximum dimension values\n");
+						return -1;
+					}
+				}
+				else if (sscanf(argv[i+1],"%lf", &temp_num) == 1)
+				{
+					conditions->xMax = temp_num;
+					conditions->yMax = temp_num;
+					conditions->zMax = temp_num;
+				}
+				else
+				{
+					printf("Invalid maximum dimension values\n");
+					return -1;
+				}
+
+				printf("Set dimensions to %1.1em\n", conditions->xMax);
+
+			}
+			else if (strstr(argv[i],"-x") != NULL)
+			{
+				if (sscanf(argv[i+1],"%lf", &conditions->xMax) != 1)
+				{
+					printf("Invalid maximum x-dimension value\n");
+					return -1;
+				}
+			}
+			else if (strstr(argv[i],"-y") != NULL)
+			{
+				if (sscanf(argv[i+1],"%lf", &conditions->yMax) != 1)
+				{
+					printf("Invalid maximum y-dimension value\n");
+					return -1;
+				}
+			}
+			else if (strstr(argv[i],"-z") != NULL)
+			{
+				if (sscanf(argv[i+1],"%lf", &conditions->zMax) != 1)
+				{
+					printf("Invalid maximum z-dimension value\n");
+					return -1;
+				}
+			}
+			else if (strstr(argv[i],"-t") != NULL)
+			{
+				if (sscanf(argv[i+1],"%lf", &conditions->endTime) != 1)
+				{
+					printf("Invalid duration\n");
+					return -1;
+				}
+				else printf("Simulation duration set to %1.1e seconds\n", conditions->endTime);
+			}
+			else if (strstr(argv[i],"-dt") != NULL)
+			{
+				if (sscanf(argv[i+1],"%lf", &conditions->deltaTime) != 1)
+				{
+					printf("Invalid timestep\n");
+					return -1;
+				}
+				else printf("Simulation timestep set to %1.1e seconds\n", conditions->deltaTime);
+			}
+		}
+		if (gDebug == 1 && gSerial == 1) printf("Debug & serial modes active\n");
+		else if (gDebug == 1 && gSerial == 0) printf("Debug mode active\n");
+		else if (gDebug == 0 && gSerial == 1) printf("Serial mode active\n");
+
+	}
+	return 1;
 }

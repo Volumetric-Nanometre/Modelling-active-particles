@@ -36,6 +36,10 @@ typedef struct
     double deltaTime; // Seconds
     double endTime; // Seconds
 	double mass; // kg
+    double xMax; //m
+    double yMax; //m
+    double zMax; //m
+    int numberOfParticles;
 }environmentVariables;
 
 
