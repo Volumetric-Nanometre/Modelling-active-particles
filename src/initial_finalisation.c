@@ -2,12 +2,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <omp.h>
+#include <math.h>
 
 #include "initial_finalisation.h"
 
 extern int gDebug;
 extern int gSerial;
 extern int gNumOfthreads;
+extern double gPi;
 
 
 int cmd_line_read_in(int argc, char *argv[], environmentVariables *conditions)
@@ -125,4 +128,23 @@ int cmd_line_read_in(int argc, char *argv[], environmentVariables *conditions)
 
 	}
 	return 1;
+}
+
+
+void boilerplate_variables(environmentVariables *conditions)
+{
+    conditions->temperature = 298; // K
+	conditions->viscosity = 8.9E-4; //N m^-2 s
+	conditions->radius = 50E-9; // m
+	conditions->currentTime = 0; // Seconds
+	conditions->deltaTime = 1E-7; // Seconds
+	conditions->endTime = 1E-2; // Seconds
+	conditions->mass = (4/3) * gPi * pow(conditions->radius,3)*19320; // kg - density of gold
+	conditions->xMax = 1E-7;
+	conditions->yMax = 1E-7;
+	conditions->zMax = 1E-7;
+	conditions->numberOfParticles = 0;
+
+
+	gNumOfthreads =omp_get_max_threads();
 }

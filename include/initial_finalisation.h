@@ -21,5 +21,7 @@ typedef struct
 
 int cmd_line_read_in(int argc, char *argv[], environmentVariables *conditions);
 
+void boilerplate_variables(environmentVariables *conditions);
+
 
 #endif //_INITIAL_FINALISATION_H
