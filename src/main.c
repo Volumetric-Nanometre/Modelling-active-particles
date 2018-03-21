@@ -22,7 +22,7 @@
 #include "forces.h"
 #include "initial_finalisation.h"
 
-#include <gsl/gsl_rng.h>
+
 
 double gBoltzmannConst = 1.38064852E-23; // m^2 kg s^-2 K^-1
 double gPi = 3.14159265359;
@@ -48,52 +48,25 @@ int main(int argc, char *argv[])
 	// Read in cmd line arguments and adjust conditions as neccessary
 	//
 	cmd_line_read_in(argc, argv, &conditions);
-
-
-
+	//
+	//Open files for output
+	//
     FILE *output = fopen("../bin/output.csv","w");
     FILE *angle_output = fopen("../bin/angle_output.csv","w");
 	FILE *forces_output = fopen("../bin/forces_output.csv","w");
-    if(output == NULL)
+    if(output == NULL || angle_output == NULL || forces_output == NULL)
     {
         printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
         return -errno;
     }
+	//
+	// Initilise random variables
+	//
+	gsl_rng **rndarray=rand_array_allocation();
 
-	/*time_t tSeed1;
-	time(&tSeed1);
-	long int tSeed = -1*(long int) tSeed1;*/
-
-	gsl_rng **rndarray = calloc(gNumOfthreads,sizeof(*rndarray));
-
-	for(int i = 0; i<gNumOfthreads; i++)
+	if(rndarray == NULL)
 	{
-		rndarray[i] = gsl_rng_alloc(gsl_rng_mt19937);
-		gsl_rng_set(rndarray[i], i);
-	}
-
-	gsl_rng *tSeed = gsl_rng_alloc(gsl_rng_mt19937);
-
-	particleVariables* particles = NULL;
-
-	if (conditions.numberOfParticles == 0)
-	{
-	    //
-	    // Call function to read in particle data
-	    //
-	    if( (conditions.numberOfParticles = particle_read_in(&particles)) <= 0)
-	    {
-	        getchar();
-	        return conditions.numberOfParticles;
-	    }
-
-	    printf("Data read in success\n" );
-	}
-	else
-	{
-		generate_particle_data(conditions.numberOfParticles, &particles, tSeed, conditions.xMax, conditions.yMax, conditions.zMax);
-
-	//	printf("Generated particle data\n");
+		return -1;
 	}
 
 	// Create driving field
@@ -102,21 +75,15 @@ int main(int argc, char *argv[])
 	drivingField.alpha = 0;
 	drivingField.beta = gPi/2;
 
-    //
-    // Create generalised coordinates
-    //
 
-    double *generalisedCoordinates = NULL ;
+	double *generalisedCoordinates = generalised_coordinate_initilisation(conditions,rndarray);
 
-    if( (generalisedCoordinates = generalised_coordinate_creation( conditions.numberOfParticles, particles) ) == NULL )
-    {
-        free( particles );
-        particles = NULL ;
-        getchar();
-        return errno;
-    }
+	if(generalisedCoordinates == NULL)
+	{
+		return -1;
+	}
 
-    //---------------------------- DEBUG------------------------------//
+    //---------------------------- DEBUG ------------------------------//
     //
     // Prints the generalisedCoordinates to a file for inspection
     //
@@ -130,7 +97,7 @@ int main(int argc, char *argv[])
         }
         fclose (genCoordOutput);
     }
-    //---------------------------END---------------------------------//
+    //--------------------------- END ---------------------------------//
 
 
     //
@@ -153,31 +120,9 @@ int main(int argc, char *argv[])
 
     if(  diffusionMatrix==NULL  || stochasticWeighting==NULL || stochasticDisplacement==NULL || additionalForces==NULL)
     {
-        free( particles );
-        particles = NULL ;
-
-        free( generalisedCoordinates );
-        generalisedCoordinates = NULL ;
-
-        if( diffusionMatrix!=NULL)
-        free( diffusionMatrix );
-        diffusionMatrix = NULL;
-
-        if( stochasticDisplacement!=NULL)
-        free( stochasticDisplacement );
-        stochasticDisplacement = NULL;
-
-        if( stochasticWeighting!=NULL)
-        free( stochasticWeighting );
-        stochasticWeighting = NULL;
-
-        if( additionalForces!=NULL)
-        free( additionalForces );
-        additionalForces = NULL;
-
-
+		free_memory(6,diffusionMatrix, generalisedCoordinates, stochasticWeighting, stochasticDisplacement,additionalForces);
+		diffusionMatrix = generalisedCoordinates = stochasticWeighting = stochasticDisplacement = additionalForces = NULL ;
         printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
-
         return -errno;
     }
 
@@ -314,35 +259,12 @@ int main(int argc, char *argv[])
     // Free memory
     //
 
-    fclose (output);
+    fclose(output);
 	fclose(angle_output);
 	fclose(forces_output);
 
-    if( particles != NULL )
-    {
-        free( particles );
-        particles = NULL;
-    }
-    if( diffusionMatrix != NULL )
-    {
-        free( diffusionMatrix );
-        particles = NULL;
-    }
-    if( generalisedCoordinates != NULL )
-    {
-        free( generalisedCoordinates );
-        particles = NULL;
-    }
-    if( stochasticWeighting != NULL )
-    {
-        free( stochasticWeighting );
-        particles = NULL;
-    }
-    if( stochasticDisplacement != NULL )
-    {
-        free( stochasticDisplacement );
-        particles = NULL;
-    }
+	free_memory(5,diffusionMatrix, generalisedCoordinates, stochasticWeighting, stochasticDisplacement, additionalForces);
+	diffusionMatrix = generalisedCoordinates = stochasticWeighting = stochasticDisplacement = additionalForces = NULL ;
 
     return 0;
 }

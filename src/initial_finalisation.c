@@ -4,6 +4,8 @@
 #include <string.h>
 #include <omp.h>
 #include <math.h>
+#include <stdarg.h>
+#include <gsl/gsl_rng.h>
 
 #include "initial_finalisation.h"
 
@@ -12,7 +14,9 @@ extern int gSerial;
 extern int gNumOfthreads;
 extern double gPi;
 
-
+//
+// Read in cmd line arguments and handle them
+//
 int cmd_line_read_in(int argc, char *argv[], environmentVariables *conditions)
 {
 	if (argc > 1)
@@ -130,7 +134,9 @@ int cmd_line_read_in(int argc, char *argv[], environmentVariables *conditions)
 	return 1;
 }
 
-
+//
+// Set default values of environmental variables
+//
 void boilerplate_variables(environmentVariables *conditions)
 {
     conditions->temperature = 298; // K
@@ -138,7 +144,7 @@ void boilerplate_variables(environmentVariables *conditions)
 	conditions->radius = 50E-9; // m
 	conditions->currentTime = 0; // Seconds
 	conditions->deltaTime = 1E-7; // Seconds
-	conditions->endTime = 1E-2; // Seconds
+	conditions->endTime = 1E-3; // Seconds
 	conditions->mass = (4/3) * gPi * pow(conditions->radius,3)*19320; // kg - density of gold
 	conditions->xMax = 1E-7;
 	conditions->yMax = 1E-7;
@@ -147,4 +153,66 @@ void boilerplate_variables(environmentVariables *conditions)
 
 
 	gNumOfthreads =omp_get_max_threads();
+}
+
+//
+// Allocate an array of random number generators
+//
+gsl_rng** rand_array_allocation()
+{
+	gsl_rng **rndarray = calloc(gNumOfthreads,sizeof(*rndarray));
+	for(int i = 0; i<gNumOfthreads; i++)
+	{
+		rndarray[i] = gsl_rng_alloc(gsl_rng_mt19937);
+		gsl_rng_set(rndarray[i], i);
+	}
+	return rndarray;
+}
+
+//
+// Generate generalised coordinate data from either file or randomly
+//
+double* generalised_coordinate_initilisation(environmentVariables conditions, gsl_rng *rndarray[])
+{
+	particleVariables* particles = NULL;
+
+	if (conditions.numberOfParticles == 0)
+	{
+	    //
+	    // Call function to read in particle data
+	    //
+	    if( (conditions.numberOfParticles = particle_read_in(&particles)) <= 0)
+	    {
+	        return NULL;
+	    }
+
+	    printf("Data read in success\n" );
+	}
+	else
+	{
+		generate_particle_data(conditions.numberOfParticles, &particles, rndarray[0], conditions.xMax, conditions.yMax, conditions.zMax);
+	}
+
+    double *generalisedCoordinates = generalised_coordinate_creation( conditions.numberOfParticles, particles);
+
+    free( particles );
+
+    particles = NULL ;
+
+	return generalisedCoordinates;
+
+}
+
+void free_memory(int listSize, ...)
+{
+	va_list args;
+	va_start(args, listSize);
+	for(int i = 0; i<listSize; i++)
+	{
+		void *ptr = va_arg(args,void*);
+
+		if(ptr!=NULL)
+		free(ptr);
+	}
+	va_end(args);
 }
