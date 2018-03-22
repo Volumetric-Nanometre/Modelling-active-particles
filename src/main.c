@@ -42,6 +42,7 @@ int gNumOfNodes = 1;
 
 enum MESSAGE_TAGS
 {
+    NUM_OF_PARTICLES,
     NUM_OF_FORCES ,         // Number of forces to expect
     FORCE_LIST,             // Which forces to use
     COORDINATES ,           // Corordinates to use
@@ -83,7 +84,6 @@ int main(int argc, char *argv[])
     drivingField.alpha = 0;
     drivingField.beta = gPi/2;
 
-    double vectorSize = 6 * conditions.numberOfParticles;
 
     //
     //  Choose forces to be included
@@ -131,15 +131,26 @@ int main(int argc, char *argv[])
     		return -1;
     	}
 
+        //
+        // Initilise generalised coordinates
+        //
 
-
-    	double *generalisedCoordinates = generalised_coordinate_initilisation(conditions,rndarray);
+    	double *generalisedCoordinates = generalised_coordinate_initilisation(&conditions,rndarray);
 
     	if(generalisedCoordinates == NULL)
     	{
             MPI_Abort(MPI_COMM_WORLD, MPI_error);
     		return -1;
     	}
+
+        int vectorSize = 6 * conditions.numberOfParticles;
+        //
+        // Send number of particles to slaves
+        //
+        if(gNumOfNodes > 1)
+        {
+            MPI_Send(&conditions.numberOfParticles, 1, MPI_INT, TOP_SLAVE, NUM_OF_PARTICLES, MPI_COMM_WORLD);
+        }
 
         //---------------------------- DEBUG ------------------------------//
         //
@@ -331,6 +342,13 @@ int main(int argc, char *argv[])
 
     if( TOP_SLAVE == taskid )
     {
+        //
+        // Recieve number of particles and update conditions
+        //
+        MPI_Recv(&conditions.numberOfParticles, 1, MPI_INT, MASTER, NUM_OF_PARTICLES, MPI_COMM_WORLD, &status);
+
+        int vectorSize = 6 * conditions.numberOfParticles;
+
         //
         // Allocate memory required for the program.
         // Requires: additional forces, generalised coordinates
