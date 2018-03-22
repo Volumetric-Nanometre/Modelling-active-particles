@@ -12,7 +12,7 @@
 #include <math.h>
 
 #include "forces.h"
-#include "particles.h"
+#include "initial_finalisation.h"
 
 
 
@@ -185,7 +185,7 @@ static void alignment_torque(double *additionalForces, double *generalisedCoordi
 {
 	int numberOfParticles = numberOfCells/6;
 	int rotOffset = numberOfCells/2;
-	
+
 	// Calculated from rotational version of Langevin equation, substituting that the average angular displacement per timestep is pi/2
 	// Torque T= pi*I/dt^2 for change in angle ~pi/2 per timestep
 	// Moment of intertia I = (2/5)MR^2 for solid sphere of radius R and mass M
