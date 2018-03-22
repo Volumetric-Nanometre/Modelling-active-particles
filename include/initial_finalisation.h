@@ -27,7 +27,7 @@ void boilerplate_variables(environmentVariables *conditions);
 
 gsl_rng** rand_array_allocation();
 
-double* generalised_coordinate_initilisation(environmentVariables conditions, gsl_rng *rndarray[]);
+double* generalised_coordinate_initilisation(environmentVariables *conditions, gsl_rng *rndarray[]);
 
 void free_memory(int listSize, ...);
 

@@ -172,16 +172,16 @@ gsl_rng** rand_array_allocation()
 //
 // Generate generalised coordinate data from either file or randomly
 //
-double* generalised_coordinate_initilisation(environmentVariables conditions, gsl_rng *rndarray[])
+double* generalised_coordinate_initilisation(environmentVariables *conditions, gsl_rng *rndarray[])
 {
 	particleVariables* particles = NULL;
 
-	if (conditions.numberOfParticles == 0)
+	if (conditions->numberOfParticles == 0)
 	{
 	    //
 	    // Call function to read in particle data
 	    //
-	    if( (conditions.numberOfParticles = particle_read_in(&particles)) <= 0)
+	    if( (conditions->numberOfParticles = particle_read_in(&particles)) <= 0)
 	    {
 	        return NULL;
 	    }
@@ -190,10 +190,10 @@ double* generalised_coordinate_initilisation(environmentVariables conditions, gs
 	}
 	else
 	{
-		generate_particle_data(conditions.numberOfParticles, &particles, rndarray[0], conditions.xMax, conditions.yMax, conditions.zMax);
+		generate_particle_data(conditions->numberOfParticles, &particles, rndarray[0], conditions->xMax, conditions->yMax, conditions->zMax);
 	}
 
-    double *generalisedCoordinates = generalised_coordinate_creation( conditions.numberOfParticles, particles);
+    double *generalisedCoordinates = generalised_coordinate_creation( conditions->numberOfParticles, particles);
 
     free( particles );
 
