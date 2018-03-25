@@ -276,7 +276,7 @@ static void driving_force(double *additionalForces, double *generalisedCoordinat
 }
 static void polar_driving_force(double *additionalForces, double *generalisedCoordinates, int numberOfCells)
 {
-    double forceConst = 10E-12;
+    double forceConst = 1E-12;
     #pragma omp parallel for
 	for (int i=0; i<numberOfCells/6; i++)
 	{
