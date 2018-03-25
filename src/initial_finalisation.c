@@ -35,14 +35,6 @@ int cmd_line_read_in(int argc, char *argv[], environmentVariables *conditions)
 					return -1;
 				}
 			}
-      		else if (strstr(argv[i],"-numthreads") != NULL)
-			{
-				if (sscanf(argv[i+1],"%d", &gNumOfthreads) != 1)
-				{
-					printf("Invalid number of threads\n");
-					return -1;
-				}
-			}
 			else if (strstr(argv[i],"-threads") != NULL)
 			{
 				if (sscanf(argv[i+1],"%d", &gNumOfthreads) != 1)
@@ -143,7 +135,7 @@ void boilerplate_variables(environmentVariables *conditions)
 	conditions->viscosity = 8.9E-4; //N m^-2 s
 	conditions->radius = 50E-9; // m
 	conditions->currentTime = 0; // Seconds
-	conditions->deltaTime = 1E-7; // Seconds
+	conditions->deltaTime = 1E-6; // Seconds
 	conditions->endTime = 1E-3; // Seconds
 	conditions->mass = (4/3) * gPi * pow(conditions->radius,3)*19320; // kg - density of gold
 	conditions->xMax = 1E-7;
