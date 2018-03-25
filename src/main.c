@@ -75,9 +75,8 @@ int main(int argc, char *argv[])
 	// Read in cmd line arguments and adjust conditions as neccessary
 	//
 	cmd_line_read_in(argc, argv, &conditions);
-    //
-    // Master process environment
-    //
+
+    omp_set_num_threads(gNumOfthreads);
     // Create driving field
     field_t drivingField;
     drivingField.mag = 1E-10;
@@ -88,7 +87,7 @@ int main(int argc, char *argv[])
     //
     //  Choose forces to be included
     //
-    int numberOfForces = 2; // must be at least 1, with the force none chosen
+    int numberOfForces = 4; // must be at least 1, with the force none chosen
     //
     // Copy of enum to understand force forceList
     //
@@ -105,7 +104,9 @@ int main(int argc, char *argv[])
 
 
     int forceList[4] = {VAN_DER_WAALS,EXP_REPULSION, POLAR_DRIVING_FORCE, ALIGN_TORQUE};
-
+    //
+    // Master process environment
+    //
     if( MASTER == taskid )
     {
         //
