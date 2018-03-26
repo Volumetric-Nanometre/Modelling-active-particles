@@ -17,6 +17,7 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
+#include "initial_finalisation.h"
 #include "particles.h"
 #include "maths_functions.h"
 
@@ -83,7 +84,7 @@ int particle_read_in(particleVariables **particles)
 int generate_particle_data(int numberOfParticles, particleVariables **particles, gsl_rng *tSeed, double xMax, double yMax, double zMax)
 {
 	particleVariables *initParticles = calloc(numberOfParticles, sizeof(*initParticles));
-	
+
 	for (int i=0; i<numberOfParticles; i++)
 	{
 		initParticles[i].x = xMax * gsl_rng_uniform(tSeed);
@@ -93,9 +94,9 @@ int generate_particle_data(int numberOfParticles, particleVariables **particles,
 		initParticles[i].beta = 2*gPi * gsl_rng_uniform(tSeed);
 		initParticles[i].gamma = 2*gPi * gsl_rng_uniform(tSeed);
 	}
-	
+
 	*particles = initParticles;
-	
+
 	return 0;
 }
 
