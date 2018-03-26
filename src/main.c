@@ -112,15 +112,25 @@ int main(int argc, char *argv[])
         //
     	//Open files for output
     	//
-        FILE *output = fopen("../bin/output.csv","w");
-        FILE *angle_output = fopen("../bin/angle_output.csv","w");
-    	FILE *forces_output = fopen("../bin/forces_output.csv","w");
+        char filename1[sizeof "../results/output10000.csv"];
+        char filename2[sizeof "../results/angle_output10000.csv"];
+        char filename3[sizeof "../results/forces_output10000.csv"];
+
+        sprintf(filename1, "../results/output%05d.csv", conditions.fileNum);
+        sprintf(filename2, "../results/angle_output%05d.csv", conditions.fileNum);
+        sprintf(filename3, "../results/forces_output%05d.csv", conditions.fileNum);
+
+
+        FILE *output = fopen(filename1,"w");
+        FILE *angle_output = fopen(filename2,"w");
+    	FILE *forces_output = fopen(filename3,"w");
         if(output == NULL || angle_output == NULL || forces_output == NULL)
         {
             printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
             MPI_Abort(MPI_COMM_WORLD, MPI_error);
             return -errno;
         }
+
     	//
     	// Initilise random variables
     	//
@@ -204,6 +214,10 @@ int main(int argc, char *argv[])
         int loop = 0;
         int count = 0;
         int maxLoop = conditions.endTime/(double)conditions.deltaTime;
+
+        fprintf(output, "Particles %d,\n ", conditions.numberOfParticles);
+        fprintf(angle_output, "Particles %d\n ", conditions.numberOfParticles);
+        fprintf(forces_output, "Particles %d\n",conditions.numberOfParticles);
 
         double progTime = omp_get_wtime();
 
@@ -294,7 +308,12 @@ int main(int argc, char *argv[])
                 {
                     fprintf(output, "%e", generalisedCoordinates[i]);
     				fprintf(forces_output, "%e", additionalForces[i]);
-                    fprintf(angle_output, "%e", fmod(generalisedCoordinates[angle_offset + i],2*gPi));
+                    double temp =fmod(generalisedCoordinates[angle_offset + i],2*gPi);
+                    if(temp < 0)
+                    {
+                        temp = 2*gPi + temp;
+                    }
+                    fprintf(angle_output, "%e", temp);
                     fflush(output);
                     fflush(angle_output);
                     fflush(forces_output);

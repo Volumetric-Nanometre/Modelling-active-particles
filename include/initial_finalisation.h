@@ -19,6 +19,7 @@ typedef struct
     double yMax; //m
     double zMax; //m
     int numberOfParticles;
+	int fileNum;
 }environmentVariables;
 
 int cmd_line_read_in(int argc, char *argv[], environmentVariables *conditions);

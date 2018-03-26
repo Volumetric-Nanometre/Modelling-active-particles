@@ -14,6 +14,7 @@ extern int gSerial;
 extern int gNumOfthreads;
 extern double gPi;
 
+
 //
 // Read in cmd line arguments and handle them
 //
@@ -27,11 +28,19 @@ int cmd_line_read_in(int argc, char *argv[], environmentVariables *conditions)
 			else if(strstr(argv[i],"-serial") != NULL)	gSerial = 1;
 
 			else if (strstr(argv[i],"-num") != NULL || strstr(argv[i],"-n") != NULL)
-
 			{
 				if (sscanf(argv[i+1],"%d", &conditions->numberOfParticles) != 1)
 				{
 					printf("Invalid number of particles\n");
+					return -1;
+				}
+			}
+			else if (strstr(argv[i],"-filenum") != NULL)
+
+			{
+				if (sscanf(argv[i+1],"%d", &conditions->fileNum) != 1)
+				{
+					printf("Invalid file number\n");
 					return -1;
 				}
 			}
@@ -142,6 +151,7 @@ void boilerplate_variables(environmentVariables *conditions)
 	conditions->yMax = 1E-7;
 	conditions->zMax = 1E-7;
 	conditions->numberOfParticles = 0;
+	conditions->fileNum = 0;
 
 
 	gNumOfthreads =omp_get_max_threads();
