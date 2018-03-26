@@ -14,6 +14,7 @@ extern int gSerial;
 extern int gNumOfthreads;
 extern double gPi;
 
+
 //
 // Read in cmd line arguments and handle them
 //
@@ -27,7 +28,6 @@ int cmd_line_read_in(int argc, char *argv[], environmentVariables *conditions)
 			else if(strstr(argv[i],"-serial") != NULL)	gSerial = 1;
 
 			else if (strstr(argv[i],"-num") != NULL || strstr(argv[i],"-n") != NULL)
-
 			{
 				if (sscanf(argv[i+1],"%d", &conditions->numberOfParticles) != 1)
 				{
@@ -35,11 +35,12 @@ int cmd_line_read_in(int argc, char *argv[], environmentVariables *conditions)
 					return -1;
 				}
 			}
-      		else if (strstr(argv[i],"-numthreads") != NULL)
+			else if (strstr(argv[i],"-filenum") != NULL)
+
 			{
-				if (sscanf(argv[i+1],"%d", &gNumOfthreads) != 1)
+				if (sscanf(argv[i+1],"%d", &conditions->fileNum) != 1)
 				{
-					printf("Invalid number of threads\n");
+					printf("Invalid file number\n");
 					return -1;
 				}
 			}
@@ -143,13 +144,14 @@ void boilerplate_variables(environmentVariables *conditions)
 	conditions->viscosity = 8.9E-4; //N m^-2 s
 	conditions->radius = 50E-9; // m
 	conditions->currentTime = 0; // Seconds
-	conditions->deltaTime = 1E-7; // Seconds
+	conditions->deltaTime = 1E-6; // Seconds
 	conditions->endTime = 1E-3; // Seconds
 	conditions->mass = (4/3) * gPi * pow(conditions->radius,3)*19320; // kg - density of gold
 	conditions->xMax = 1E-7;
 	conditions->yMax = 1E-7;
 	conditions->zMax = 1E-7;
 	conditions->numberOfParticles = 0;
+	conditions->fileNum = 0;
 
 
 	gNumOfthreads =omp_get_max_threads();
@@ -172,16 +174,16 @@ gsl_rng** rand_array_allocation()
 //
 // Generate generalised coordinate data from either file or randomly
 //
-double* generalised_coordinate_initilisation(environmentVariables conditions, gsl_rng *rndarray[])
+double* generalised_coordinate_initilisation(environmentVariables *conditions, gsl_rng *rndarray[])
 {
 	particleVariables* particles = NULL;
 
-	if (conditions.numberOfParticles == 0)
+	if (conditions->numberOfParticles == 0)
 	{
 	    //
 	    // Call function to read in particle data
 	    //
-	    if( (conditions.numberOfParticles = particle_read_in(&particles)) <= 0)
+	    if( (conditions->numberOfParticles = particle_read_in(&particles)) <= 0)
 	    {
 	        return NULL;
 	    }
@@ -190,10 +192,10 @@ double* generalised_coordinate_initilisation(environmentVariables conditions, gs
 	}
 	else
 	{
-		generate_particle_data(conditions.numberOfParticles, &particles, rndarray[0], conditions.xMax, conditions.yMax, conditions.zMax);
+		generate_particle_data(conditions->numberOfParticles, &particles, rndarray[0], conditions->xMax, conditions->yMax, conditions->zMax);
 	}
 
-    double *generalisedCoordinates = generalised_coordinate_creation( conditions.numberOfParticles, particles);
+    double *generalisedCoordinates = generalised_coordinate_creation( conditions->numberOfParticles, particles);
 
     free( particles );
 
