@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 	conditions.mass = (4/3) * gPi * pow(conditions.radius,3)*19320; // kg - density of gold
 
 
-	gNumOfthreads =omp_get_max_threads();
+	gNumOfthreads = omp_get_max_threads();
 
 	if (argc > 1)
 	{
