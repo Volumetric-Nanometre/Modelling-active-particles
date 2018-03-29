@@ -17,6 +17,7 @@
 #include <gsl/gsl_randist.h>
 #include <gsl/gsl_rng.h>
 
+#include "initial_finalisation.h"
 typedef struct
 {
     double x;
@@ -26,18 +27,6 @@ typedef struct
     double beta;
     double gamma;
 }particleVariables;
-
-typedef struct
-{
-	double temperature; // K
-    double viscosity; //N m^-2 s
-    double radius; // m
-    double currentTime;
-    double deltaTime; // Seconds
-    double endTime; // Seconds
-	double mass; // kg
-}environmentVariables;
-
 
 int  particle_read_in(particleVariables **particles);
 

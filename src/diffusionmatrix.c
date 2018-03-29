@@ -15,7 +15,7 @@
 
 #include "diffusionmatrix.h"
 #include "maths_functions.h"
-#include "particles.h"
+#include "initial_finalisation.h"
 
 //
 // Physucal constants

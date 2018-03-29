@@ -12,7 +12,7 @@
 #include <omp.h>
 
 #include "moving_on.h"
-#include "particles.h"
+#include "initial_finalisation.h"
 
 extern double gBoltzmannConst;
 

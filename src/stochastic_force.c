@@ -30,15 +30,13 @@ void stochastic_displacement_creation(int numberOfParticles, double *stochasticW
     #pragma omp parallel
     {
         gsl_rng *tSeed = rndarray[omp_get_thread_num()];
-        #pragma omp single
+
+		#pragma omp single
     	for (int k = 0; k < N; k++) // iterates over diagonals
     	{
 
-
-            #pragma omp single
     		stochasticWeighting[k*(N+1)] = sqrt(stochasticWeighting[k*(N+1)]); // square roots diagonals
 
-        	#pragma omp parallel for
     		for (int i = k + 1; i < N; i++) // iterates over the elements in the column below the diagonal
     		{
     			stochasticWeighting[i*N + k] = stochasticWeighting[i*N + k] / stochasticWeighting[k*(N+1)];
@@ -46,7 +44,6 @@ void stochastic_displacement_creation(int numberOfParticles, double *stochasticW
             //
     		// iterate over lower triangle subtended by (k,k) element
             //
-
     		for (int j = k + 1; j < N; j++) // iterates over the columns j>k
     		{
     			for (int i = j; i < N; i++) // iterates over the rows i>k

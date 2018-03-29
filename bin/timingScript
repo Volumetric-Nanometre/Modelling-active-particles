@@ -10,7 +10,7 @@
 # Repeat
 #
 numOfLoops=1
-numOfThreads=2
+numOfThreads=8
 cubeSize=1E-5
 echo "num = 2"
 for((n=0;n<numOfLoops;n++))
