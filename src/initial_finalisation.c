@@ -144,7 +144,7 @@ void boilerplate_variables(environmentVariables *conditions)
 	conditions->viscosity = 8.9E-4; //N m^-2 s
 	conditions->radius = 50E-9; // m
 	conditions->currentTime = 0; // Seconds
-	conditions->deltaTime = 1E-6; // Seconds
+	conditions->deltaTime = 1E-7; // Seconds
 	conditions->endTime = 1E-3; // Seconds
 	conditions->mass = (4/3) * gPi * pow(conditions->radius,3)*19320; // kg - density of gold
 	conditions->xMax = 1E-7;
@@ -189,17 +189,24 @@ double* generalised_coordinate_initilisation(environmentVariables *conditions, g
 	    }
 
 	    printf("Data read in success\n" );
+		fflush(stdout);
 	}
 	else
 	{
-		generate_particle_data(conditions->numberOfParticles, &particles, rndarray[0], conditions->xMax, conditions->yMax, conditions->zMax);
+		if(generate_particle_data(conditions->numberOfParticles, &particles, rndarray[0], conditions->radius, conditions->xMax, conditions->yMax, conditions->zMax) != 0)
+		{
+			free_memory(1,particles);
+			particles = NULL ;
+			return NULL;
+		}
+		printf("Particle Generation Success\n" );
+		fflush(stdout);
 	}
 
     double *generalisedCoordinates = generalised_coordinate_creation( conditions->numberOfParticles, particles);
 
-    free( particles );
-
-    particles = NULL ;
+	free_memory(1,particles);
+	particles = NULL ;
 
 	return generalisedCoordinates;
 
