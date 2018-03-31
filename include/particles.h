@@ -30,7 +30,7 @@ typedef struct
 
 int  particle_read_in(particleVariables **particles);
 
-int generate_particle_data(int numberOfParticles, particleVariables **particles, gsl_rng *tSeed, double xMax, double yMax, double zMax);
+int generate_particle_data(int numberOfParticles, particleVariables **particles, gsl_rng *tSeed, double radius, double xMax, double yMax, double zMax);
 
 double *generalised_coordinate_creation(int numberOfParticles, particleVariables *particles);
 
