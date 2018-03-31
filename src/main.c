@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
     //
     //  Choose forces to be included
     //
-    int numberOfForces = 4; // must be at least 1, with the force none chosen
+    int numberOfForces = 3; // must be at least 1, with the force none chosen
     //
     // Copy of enum to understand force forceList
     //
@@ -99,11 +99,12 @@ int main(int argc, char *argv[])
     //    EXP_REPULSION ,
     //	  ALIGN_TORQUE ,
     //	  DRIVING_FIELD,
-    //	  POLAR_DRIVING_FORCE
+    //	  POLAR_DRIVING_FORCE,
+    //    VISECK_ALIGN_TORQUE
     //};
 
 
-    int forceList[4] = {VAN_DER_WAALS,EXP_REPULSION, POLAR_DRIVING_FORCE, ALIGN_TORQUE};
+    int forceList[4] = {VAN_DER_WAALS,EXP_REPULSION, VISECK_ALIGN_TORQUE};
     //
     // Master process environment
     //
