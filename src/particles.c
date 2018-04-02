@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <math.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
@@ -81,10 +82,15 @@ int particle_read_in(particleVariables **particles)
     return numberOfParticles;
 }
 
-int generate_particle_data(int numberOfParticles, particleVariables **particles, gsl_rng *tSeed, double xMax, double yMax, double zMax)
+int generate_particle_data(int numberOfParticles, particleVariables **particles, gsl_rng *tSeed, double radius, double xMax, double yMax, double zMax)
 {
 	particleVariables *initParticles = calloc(numberOfParticles, sizeof(*initParticles));
-
+    if(initParticles == NULL)
+    {
+        return -1;
+    }
+    int attempt = 0;
+    double closestApproach2 = pow(7*radius, 2);
 	for (int i=0; i<numberOfParticles; i++)
 	{
 		initParticles[i].x = xMax * gsl_rng_uniform(tSeed);
@@ -93,6 +99,33 @@ int generate_particle_data(int numberOfParticles, particleVariables **particles,
 		initParticles[i].alpha = 2*gPi * gsl_rng_uniform(tSeed);
 		initParticles[i].beta = 2*gPi * gsl_rng_uniform(tSeed);
 		initParticles[i].gamma = 2*gPi * gsl_rng_uniform(tSeed);
+
+        for(int j = 0; j < i; j ++)
+        {
+            double x = initParticles[i].x - initParticles[j].x;
+            double y = initParticles[i].y - initParticles[j].y;
+            double  z = initParticles[i].z - initParticles[j].z;
+            //
+            // Calculate |r|
+            //
+            double r2 = x * x + y * y + z * z;
+            if( r2 < closestApproach2)
+            {
+                i--;
+                attempt ++;
+                break;
+            }
+            if(i == (j-1))
+            {
+                attempt = 0;
+            }
+        }
+
+        if(attempt == 10000)
+        {
+            printf("Particle generation time out, particle %d could not be placed.\n",i );
+            return -1;
+        }
 	}
 
 	*particles = initParticles;
