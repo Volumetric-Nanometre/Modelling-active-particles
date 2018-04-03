@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 	//
 	environmentVariables conditions;
 	//
-	// Initilise conditions with boilerplate varaibles
+	// Initilise conditions with boilerplate variables
 	//
 	boilerplate_variables(&conditions);
 	//
@@ -103,8 +103,7 @@ int main(int argc, char *argv[])
     //    VISECK_ALIGN_TORQUE
     //};
 
-
-    int forceList[4] = {VAN_DER_WAALS,EXP_REPULSION, VISECK_ALIGN_TORQUE};
+    int forceList[1] = {NONE};
     //
     // Master process environment
     //
@@ -116,16 +115,22 @@ int main(int argc, char *argv[])
         char filename1[sizeof "../results/output10000.csv"];
         char filename2[sizeof "../results/angle_output10000.csv"];
         char filename3[sizeof "../results/forces_output10000.csv"];
+        char filename4[sizeof "../results/rms_output10000.csv"];
+        char filename5[sizeof "../results/diffusion_output10000.csv"];
 
         sprintf(filename1, "../results/output%05d.csv", conditions.fileNum);
         sprintf(filename2, "../results/angle_output%05d.csv", conditions.fileNum);
         sprintf(filename3, "../results/forces_output%05d.csv", conditions.fileNum);
+        sprintf(filename4, "../results/rms_output%05d.csv", conditions.fileNum);
+        sprintf(filename5, "../results/diffusion_output%05d.csv", conditions.fileNum);
 
 
         FILE *output = fopen(filename1,"w");
         FILE *angle_output = fopen(filename2,"w");
     	FILE *forces_output = fopen(filename3,"w");
-        if(output == NULL || angle_output == NULL || forces_output == NULL)
+    	FILE *rms_output = fopen(filename4,"w");
+    	FILE *diffusion_output = fopen(filename5,"w");
+        if(output == NULL || angle_output == NULL || forces_output == NULL || rms_output == NULL || diffusion_output == NULL)
         {
             printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
             MPI_Abort(MPI_COMM_WORLD, MPI_error);
@@ -147,8 +152,8 @@ int main(int argc, char *argv[])
         // Initilise generalised coordinates
         //
 
-    	double *generalisedCoordinates = generalised_coordinate_initilisation(&conditions,rndarray);
-
+    	double *generalisedCoordinates = generalised_coordinate_initialisation(&conditions,rndarray);
+		
     	if(generalisedCoordinates == NULL)
     	{
             MPI_Abort(MPI_COMM_WORLD, MPI_error);
@@ -180,6 +185,30 @@ int main(int argc, char *argv[])
         }
         //--------------------------- END ---------------------------------//
 
+
+		//
+		// Retain each particle's initial position and calculate the average initial position
+		//
+		double *initialGeneralisedCoordinates = calloc(3*conditions.numberOfParticles, sizeof(double));
+		memcpy(initialGeneralisedCoordinates, generalisedCoordinates, 3*conditions.numberOfParticles*sizeof(double));
+		
+		double initialTotalX = 0;
+		double initialTotalY = 0;
+		double initialTotalZ = 0;
+		double initialMeanX,initialMeanY,initialMeanZ;
+		
+		for (int i=0; i < 3*conditions.numberOfParticles; i+= 3)
+		{
+			// Sum each particle's initial position
+			initialTotalX += initialGeneralisedCoordinates[i + 0];
+			initialTotalY += initialGeneralisedCoordinates[i + 1];
+			initialTotalZ += initialGeneralisedCoordinates[i + 2];
+		}
+		
+		initialMeanX = initialTotalX/conditions.numberOfParticles;
+		initialMeanY = initialTotalY/conditions.numberOfParticles;
+		initialMeanZ = initialTotalZ/conditions.numberOfParticles;
+		
 
         //
         // Allocate memory required for the program.
@@ -222,8 +251,111 @@ int main(int argc, char *argv[])
 
         double progTime = omp_get_wtime();
 
-        while(conditions.currentTime<=conditions.endTime)
+        while(conditions.currentTime<conditions.endTime)
         {
+			//
+			// Save data
+			//
+			
+			if(loop%100 == 0)
+            {
+				/* Count number of particles within the volume in which the particles were initially generated,
+					centred on the average position*/
+				int diffusionCount = 0;
+				double diffusionCoeff;
+				
+				// Calculate the mean position
+				double totalX = 0;
+				double totalY = 0;
+				double totalZ = 0;
+				double meanX,meanY,meanZ;
+				
+				for (int i=0; i < 3*conditions.numberOfParticles; i+= 3)
+				{
+					// Sum each particle's position
+					totalX += generalisedCoordinates[i + 0];
+					totalY += generalisedCoordinates[i + 1];
+					totalZ += generalisedCoordinates[i + 2];
+				}
+				
+				meanX = totalX/conditions.numberOfParticles;
+				meanY = totalY/conditions.numberOfParticles;
+				meanZ = totalZ/conditions.numberOfParticles;
+				
+				// Calculate the root mean square displacement relative to the average position
+				double totalSquare = 0;
+				double rootMeanSquare;
+				for (int i=0; i < 3*conditions.numberOfParticles; i+= 3)
+				{
+					/* Sum each particle's total relative displacement (i.e. its position relative to the average position now,
+						minus its initial position relative to the initial average position)*/
+					totalSquare +=	  pow((generalisedCoordinates[i + 0] - meanX) - (initialGeneralisedCoordinates[i + 0] - initialMeanX), 2)
+									+ pow((generalisedCoordinates[i + 1] - meanY) - (initialGeneralisedCoordinates[i + 1] - initialMeanY), 2)
+									+ pow((generalisedCoordinates[i + 2] - meanZ) - (initialGeneralisedCoordinates[i + 2] - initialMeanZ), 2);
+					
+					/* Count the total number of particles within the volume in which the particles were initially generated,
+						centred on the average position*/
+					if (abs(generalisedCoordinates[i + 0] - meanX) < conditions.xMax
+						&& abs(generalisedCoordinates[i + 1] - meanY) < conditions.yMax
+						&& abs(generalisedCoordinates[i + 2] - meanZ) < conditions.zMax)
+					{
+						diffusionCount++;
+					}
+				}
+				rootMeanSquare = sqrt(totalSquare/conditions.numberOfParticles);
+				// Percentage of particles still within volume
+				diffusionCoeff = diffusionCount/conditions.numberOfParticles;
+				
+				
+    			int angle_offset = 3*conditions.numberOfParticles;
+                fprintf(output, "%e, ", conditions.currentTime);
+                fprintf(angle_output, "%e, ", conditions.currentTime);
+    			fprintf(forces_output, "%e, ",conditions.currentTime);
+    			fprintf(rms_output, "%e, %e, %e\n",conditions.currentTime, rootMeanSquare, sqrt(2 * diffusionMatrix[0] * conditions.currentTime));
+    			fprintf(diffusion_output, "%e, %e\n",conditions.currentTime, diffusionCoeff);
+                fflush(output);
+                fflush(angle_output);
+                fflush(forces_output);
+                fflush(rms_output);
+                fflush(diffusion_output);
+                for(int i = 0; i < 3 * conditions.numberOfParticles; i++)
+                {
+                    fprintf(output, "%e", generalisedCoordinates[i]);
+    				fprintf(forces_output, "%e", additionalForces[i]);
+                    double temp =fmod(generalisedCoordinates[angle_offset + i],2*gPi);
+                    if(temp < 0)
+                    {
+                        temp = 2*gPi + temp;
+                    }
+                    fprintf(angle_output, "%e", temp);
+                    fflush(output);
+                    fflush(angle_output);
+                    fflush(forces_output);
+    				if (i < 3*conditions.numberOfParticles - 1)
+                    {
+    	                fprintf(output, ", ");
+    	                fprintf(angle_output, ", ");
+    					fprintf(forces_output, ", ");
+                        fflush(output);
+                        fflush(angle_output);
+                        fflush(forces_output);
+                    }
+                }
+                fprintf(output, "\n");
+                fprintf(angle_output, "\n");
+    			fprintf(forces_output, "\n");
+                fflush(output);
+                fflush(angle_output);
+                fflush(forces_output);
+            }
+            conditions.currentTime+=conditions.deltaTime; // time step
+    		if((maxLoop/10)*count == loop)
+    		{
+    			//printf("%d%%\n",count*10);
+    			count++;
+    		}
+            loop ++;
+			
             //
             // Create diffusion matrix
             //
@@ -296,54 +428,6 @@ int main(int argc, char *argv[])
             // Calculate time step.
             //
             moving_on_routine(conditions.numberOfParticles, &conditions, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates, NULL);
-            if(loop%100 == 0)
-            {
-    			int angle_offset = 3*conditions.numberOfParticles;
-                fprintf(output, "%e, ", conditions.currentTime);
-                fprintf(angle_output, "%e, ", conditions.currentTime);
-    			fprintf(forces_output, "%e,",conditions.currentTime);
-                fflush(output);
-                fflush(angle_output);
-                fflush(forces_output);
-                for(int i = 0; i < 3 * conditions.numberOfParticles; i++)
-                {
-                    fprintf(output, "%e", generalisedCoordinates[i]);
-    				fprintf(forces_output, "%e", additionalForces[i]);
-                    double temp =fmod(generalisedCoordinates[angle_offset + i],2*gPi);
-                    if(temp < 0)
-                    {
-                        temp = 2*gPi + temp;
-                    }
-                    fprintf(angle_output, "%e", temp);
-                    fflush(output);
-                    fflush(angle_output);
-                    fflush(forces_output);
-    				if (i < 3*conditions.numberOfParticles - 1)
-                    {
-    	                fprintf(output, ", ");
-    	                fprintf(angle_output, ", ");
-    					fprintf(forces_output, ", ");
-                        fflush(output);
-                        fflush(angle_output);
-                        fflush(forces_output);
-                    }
-                }
-                fprintf(output, "\n");
-                fprintf(angle_output, "\n");
-    			fprintf(forces_output, "\n");
-                fflush(output);
-                fflush(angle_output);
-                fflush(forces_output);
-            }
-
-    		loop ++;
-            conditions.currentTime+=conditions.deltaTime; // time step
-    		if((maxLoop/10)*count == loop)
-    		{
-    			//printf("%d%%\n",count*10);
-    			count++;
-    		}
-            loop ++;
         }
     	progTime = omp_get_wtime() - progTime;
 
