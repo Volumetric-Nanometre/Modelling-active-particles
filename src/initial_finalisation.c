@@ -154,7 +154,7 @@ void boilerplate_variables(environmentVariables *conditions)
 	conditions->fileNum = 0;
 
 
-	gNumOfthreads =omp_get_max_threads();
+	gNumOfthreads = omp_get_max_threads();
 }
 
 //
@@ -174,7 +174,7 @@ gsl_rng** rand_array_allocation()
 //
 // Generate generalised coordinate data from either file or randomly
 //
-double* generalised_coordinate_initilisation(environmentVariables *conditions, gsl_rng *rndarray[])
+double* generalised_coordinate_initialisation(environmentVariables *conditions, gsl_rng *rndarray[])
 {
 	particleVariables* particles = NULL;
 

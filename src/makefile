@@ -28,4 +28,4 @@ clean:
 	rm -f $(ODIR)/*.o *~ core $(INCDIR)/*~
 
 run:
-	../bin/executable.exe ${args}
+	mpiexec -n $(n) ../bin/executable.exe ${args}

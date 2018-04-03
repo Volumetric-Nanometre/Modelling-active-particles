@@ -347,7 +347,7 @@ static void viseck_alignment_torque(double *additionalForces, double *generalise
         }
 
         meanAlpha = totalAlpha/numNeighbours;
-        meanBeta =totalBeta/numNeighbours;
+        meanBeta = totalBeta/numNeighbours;
         // Calculate torques in alpha and beta directions such that maximum torque is when the particle's axes are maximally separated from the average angle.
 
         additionalForces[rotOffset + 3*i + 0] += difAlpha = forceConst * sin(meanAlpha - generalisedCoordinates[rotOffset + 3*i + 0]);
