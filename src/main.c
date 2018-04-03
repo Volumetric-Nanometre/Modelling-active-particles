@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
     //    VISECK_ALIGN_TORQUE
     //};
 
-    int forceList[4] = {VAN_DER_WAALS,EXP_REPULSION};
+    int forceList[1] = {NONE};
     //
     // Master process environment
     //
@@ -251,7 +251,7 @@ int main(int argc, char *argv[])
 
         double progTime = omp_get_wtime();
 
-        while(conditions.currentTime<=conditions.endTime)
+        while(conditions.currentTime<conditions.endTime)
         {
             //
             // Create diffusion matrix
@@ -379,7 +379,7 @@ int main(int argc, char *argv[])
                 fprintf(output, "%e, ", conditions.currentTime);
                 fprintf(angle_output, "%e, ", conditions.currentTime);
     			fprintf(forces_output, "%e, ",conditions.currentTime);
-    			fprintf(rms_output, "%e, %e\n",conditions.currentTime, rootMeanSquare);
+    			fprintf(rms_output, "%e, %e, %e\n",conditions.currentTime, rootMeanSquare, sqrt(2 * diffusionMatrix[0] * conditions.currentTime));
     			fprintf(diffusion_output, "%e, %e\n",conditions.currentTime, diffusionCoeff);
                 fflush(output);
                 fflush(angle_output);
