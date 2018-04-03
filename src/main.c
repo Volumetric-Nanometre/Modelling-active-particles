@@ -253,79 +253,11 @@ int main(int argc, char *argv[])
 
         while(conditions.currentTime<conditions.endTime)
         {
-            //
-            // Create diffusion matrix
-            //
-            if(gNumOfNodes > 1)
-            {
-                MPI_Send(&generalisedCoordinates[0], vectorSize, MPI_DOUBLE, TOP_SLAVE, COORDINATES, MPI_COMM_WORLD);
-            }
-
-    	    diffusion_matrix_creation( conditions.numberOfParticles, diffusionMatrix, stochasticWeighting, generalisedCoordinates, &conditions);
-
-    	    //---------------------------- DEBUG------------------------------//
-    	    //
-    	    // Prints the diffusionMatrix to a file for inspection
-    	    //
-    	    if( gDebug == 1 && diffusionMatrix != NULL)
-    	    {
-    	        //conditions.currentTime = conditions.endTime+1;
-    	        FILE *matrixOutput = fopen("../bin/matrix_output.txt","w");
-
-    	        for(int i = 0; i < 6 * conditions.numberOfParticles; i++)
-    	        {
-    	            for(int j = 0; j < 6 * conditions.numberOfParticles; j++)
-    	            {
-    	                fprintf(matrixOutput, "%e\t", diffusionMatrix[i * 6 * conditions.numberOfParticles + j]);
-    	            }
-    	            fprintf(matrixOutput, "\n");
-
-    	        }
-    	        fclose (matrixOutput);
-    	    }
-    	    //---------------------------END---------------------------------//
-
-
-    	    //
-    	    // Create the stochastic displacement
-    	    //
-
-    	    stochastic_displacement_creation( conditions.numberOfParticles, stochasticWeighting, stochasticDisplacement, rndarray, conditions.deltaTime);
-
-    		if( gDebug == 1 && stochasticWeighting != NULL)
-    	    {
-    	    	//conditions.currentTime = conditions.endTime+1;
-    	        FILE *stochasticOutput = fopen("../bin/stochastic_matrix_output.txt","w");
-
-    	        for(int i = 0; i < 6 * conditions.numberOfParticles; i++)
-    	        {
-    	            for(int j = 0; j < 6 * conditions.numberOfParticles; j++)
-    	            {
-    	                fprintf(stochasticOutput, "%e\t", stochasticWeighting[i * 6 * conditions.numberOfParticles + j]);
-    	            }
-    	            fprintf(stochasticOutput, "\n");
-    	        }
-    	        fclose (stochasticOutput);
-    		}
-
-
-    		//
-    		// Include additional forces (only calculates if its the only node)
-    		//
-            if(gNumOfNodes <= 1)
-            {
-                force_torque_summation(additionalForces, generalisedCoordinates, 6 * conditions.numberOfParticles, forceList, numberOfForces, conditions, drivingField);
-            }
-            else
-            {
-                MPI_Recv(&additionalForces[0], vectorSize, MPI_DOUBLE, TOP_SLAVE, ADDITIONAL_FORCES, MPI_COMM_WORLD, &status);
-            }
-
-            //
-            // Calculate time step.
-            //
-            moving_on_routine(conditions.numberOfParticles, &conditions, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates, NULL);
-            if(loop%100 == 0)
+			//
+			// Save data
+			//
+			
+			if(loop%100 == 0)
             {
 				/* Count number of particles within the volume in which the particles were initially generated,
 					centred on the average position*/
@@ -423,6 +355,79 @@ int main(int argc, char *argv[])
     			count++;
     		}
             loop ++;
+			
+            //
+            // Create diffusion matrix
+            //
+            if(gNumOfNodes > 1)
+            {
+                MPI_Send(&generalisedCoordinates[0], vectorSize, MPI_DOUBLE, TOP_SLAVE, COORDINATES, MPI_COMM_WORLD);
+            }
+
+    	    diffusion_matrix_creation( conditions.numberOfParticles, diffusionMatrix, stochasticWeighting, generalisedCoordinates, &conditions);
+
+    	    //---------------------------- DEBUG------------------------------//
+    	    //
+    	    // Prints the diffusionMatrix to a file for inspection
+    	    //
+    	    if( gDebug == 1 && diffusionMatrix != NULL)
+    	    {
+    	        //conditions.currentTime = conditions.endTime+1;
+    	        FILE *matrixOutput = fopen("../bin/matrix_output.txt","w");
+
+    	        for(int i = 0; i < 6 * conditions.numberOfParticles; i++)
+    	        {
+    	            for(int j = 0; j < 6 * conditions.numberOfParticles; j++)
+    	            {
+    	                fprintf(matrixOutput, "%e\t", diffusionMatrix[i * 6 * conditions.numberOfParticles + j]);
+    	            }
+    	            fprintf(matrixOutput, "\n");
+
+    	        }
+    	        fclose (matrixOutput);
+    	    }
+    	    //---------------------------END---------------------------------//
+
+
+    	    //
+    	    // Create the stochastic displacement
+    	    //
+
+    	    stochastic_displacement_creation( conditions.numberOfParticles, stochasticWeighting, stochasticDisplacement, rndarray, conditions.deltaTime);
+
+    		if( gDebug == 1 && stochasticWeighting != NULL)
+    	    {
+    	    	//conditions.currentTime = conditions.endTime+1;
+    	        FILE *stochasticOutput = fopen("../bin/stochastic_matrix_output.txt","w");
+
+    	        for(int i = 0; i < 6 * conditions.numberOfParticles; i++)
+    	        {
+    	            for(int j = 0; j < 6 * conditions.numberOfParticles; j++)
+    	            {
+    	                fprintf(stochasticOutput, "%e\t", stochasticWeighting[i * 6 * conditions.numberOfParticles + j]);
+    	            }
+    	            fprintf(stochasticOutput, "\n");
+    	        }
+    	        fclose (stochasticOutput);
+    		}
+
+
+    		//
+    		// Include additional forces (only calculates if its the only node)
+    		//
+            if(gNumOfNodes <= 1)
+            {
+                force_torque_summation(additionalForces, generalisedCoordinates, 6 * conditions.numberOfParticles, forceList, numberOfForces, conditions, drivingField);
+            }
+            else
+            {
+                MPI_Recv(&additionalForces[0], vectorSize, MPI_DOUBLE, TOP_SLAVE, ADDITIONAL_FORCES, MPI_COMM_WORLD, &status);
+            }
+
+            //
+            // Calculate time step.
+            //
+            moving_on_routine(conditions.numberOfParticles, &conditions, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates, NULL);
         }
     	progTime = omp_get_wtime() - progTime;
 
