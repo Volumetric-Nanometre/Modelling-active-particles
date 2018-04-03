@@ -321,11 +321,6 @@ static void viseck_alignment_torque(double *additionalForces, double *generalise
         {
             double x,y,z,r2;
             //
-            // Ignore self interaction
-            //
-            if(i == j)
-            continue ;
-            //
             // Calculate the vector components of r
             //
             x = generalisedCoordinates[j * 3] - generalisedCoordinates[i * 3];
