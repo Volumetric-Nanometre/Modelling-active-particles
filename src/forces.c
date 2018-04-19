@@ -26,7 +26,7 @@ static void viseck_alignment_torque(double *additionalForces, double *generalise
 
 static void driving_force(double *additionalForces, double *generalisedCoordinates, int numberOfCells, field_t drivingField);
 
-static void polar_driving_force(double *additionalForces, double *generalisedCoordinates, int numberOfCells);
+static void polar_driving_force(double *additionalForces, double *generalisedCoordinates, int numberOfCells, double drivingForceMagnitude);
 
 extern int gDebug;
 
@@ -71,7 +71,7 @@ void force_torque_summation(double *additionalForces,double *generalisedCoordina
             case EXP_REPULSION : force_exp_repulsion(additionalForces, generalisedCoordinates, numberOfCells); break;
 			case ALIGN_TORQUE : alignment_torque(additionalForces, generalisedCoordinates, numberOfCells, conditions); break;
 			case DRIVING_FIELD : driving_force(additionalForces, generalisedCoordinates, numberOfCells, drivingField); break;
-            case POLAR_DRIVING_FORCE : polar_driving_force(additionalForces, generalisedCoordinates, numberOfCells); break;
+            case POLAR_DRIVING_FORCE : polar_driving_force(additionalForces, generalisedCoordinates, numberOfCells, conditions.drivingForceMagnitude); break;
             case VISECK_ALIGN_TORQUE : viseck_alignment_torque(additionalForces, generalisedCoordinates,  conditions, rCutoff);break;
             default : break;
         }
@@ -276,15 +276,14 @@ static void driving_force(double *additionalForces, double *generalisedCoordinat
 	}
 
 }
-static void polar_driving_force(double *additionalForces, double *generalisedCoordinates, int numberOfCells)
+static void polar_driving_force(double *additionalForces, double *generalisedCoordinates, int numberOfCells, double drivingForceMagnitude)
 {
-    double forceConst = 1E-12;
     #pragma omp parallel for
 	for (int i=0; i<numberOfCells/6; i++)
 	{
-		additionalForces[3*i + 0] +=  forceConst * cos(generalisedCoordinates[numberOfCells/2 + 3*i + 0]) * sin (generalisedCoordinates[numberOfCells/2 + 3*i + 1]) ;
-		additionalForces[3*i + 1] +=  forceConst * sin (generalisedCoordinates[numberOfCells/2 + 3*i + 0]) * sin(generalisedCoordinates[numberOfCells/2 + 3*i + 1]) ;
-        additionalForces[3*i + 2] +=  forceConst * cos(generalisedCoordinates[numberOfCells/2 + 3*i + 1]) ;
+		additionalForces[3*i + 0] +=  drivingForceMagnitude * cos(generalisedCoordinates[numberOfCells/2 + 3*i + 0]) * sin (generalisedCoordinates[numberOfCells/2 + 3*i + 1]) ;
+		additionalForces[3*i + 1] +=  drivingForceMagnitude * sin (generalisedCoordinates[numberOfCells/2 + 3*i + 0]) * sin(generalisedCoordinates[numberOfCells/2 + 3*i + 1]) ;
+        additionalForces[3*i + 2] +=  drivingForceMagnitude * cos(generalisedCoordinates[numberOfCells/2 + 3*i + 1]) ;
 	}
 
 }

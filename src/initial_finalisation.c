@@ -22,7 +22,7 @@ int cmd_line_read_in(int argc, char *argv[], environmentVariables *conditions)
 {
 	if (argc > 1)
 	{
-		for (int i=0; i<argc; i++)
+		for (int i=1; i<argc; i++)
 		{
 			if(strstr(argv[i],"-debug") != NULL) gDebug = 1;
 			else if(strstr(argv[i],"-serial") != NULL)	gSerial = 1;
@@ -32,6 +32,22 @@ int cmd_line_read_in(int argc, char *argv[], environmentVariables *conditions)
 				if (sscanf(argv[i+1],"%d", &conditions->numberOfParticles) != 1)
 				{
 					printf("Invalid number of particles\n");
+					return -1;
+				}
+			}
+			else if (strstr(argv[i],"-temp") != NULL)
+			{
+				if (sscanf(argv[i+1],"%lf", &conditions->temperature) != 1)
+				{
+					printf("Invalid temperature\n");
+					return -1;
+				}
+			}
+			else if (strstr(argv[i],"-drivemag") != NULL)
+			{
+				if (sscanf(argv[i+1],"%lf", &conditions->drivingForceMagnitude) != 1)
+				{
+					printf("Invalid polar driving force magnitude\n");
 					return -1;
 				}
 			}
@@ -147,11 +163,12 @@ void boilerplate_variables(environmentVariables *conditions)
 	conditions->deltaTime = 1E-7; // Seconds
 	conditions->endTime = 1E-3; // Seconds
 	conditions->mass = (4/3) * gPi * pow(conditions->radius,3)*19320; // kg - density of gold
-	conditions->xMax = 1E-7;
-	conditions->yMax = 1E-7;
-	conditions->zMax = 1E-7;
+	conditions->xMax = 1E-6;
+	conditions->yMax = 1E-6;
+	conditions->zMax = 1E-6;
 	conditions->numberOfParticles = 0;
 	conditions->fileNum = 0;
+	conditions->drivingForceMagnitude=1E-12; //N,  set to 1pN
 
 
 	gNumOfthreads = omp_get_max_threads();
