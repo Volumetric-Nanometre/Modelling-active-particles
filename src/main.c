@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
     //    VISECK_ALIGN_TORQUE
     //};
 
-    int forceList[1] = {NONE};
+    int forceList[4] = {VAN_DER_WAALS,EXP_REPULSION,POLAR_DRIVING_FORCE,VISECK_ALIGN_TORQUE};
     //
     // Master process environment
     //
@@ -112,17 +112,17 @@ int main(int argc, char *argv[])
         //
     	//Open files for output
     	//
-        char filename1[sizeof "../results/output10000.csv"];
-        char filename2[sizeof "../results/angle_output10000.csv"];
-        char filename3[sizeof "../results/forces_output10000.csv"];
-        char filename4[sizeof "../results/rms_output10000.csv"];
-        char filename5[sizeof "../results/diffusion_output10000.csv"];
+        char filename1[sizeof "../results/output1000000.csv"];
+        char filename2[sizeof "../results/angle_output1000000.csv"];
+        char filename3[sizeof "../results/forces_output1000000.csv"];
+        char filename4[sizeof "../results/rms_output1000000.csv"];
+        char filename5[sizeof "../results/diffusion_output1000000.csv"];
 
-        sprintf(filename1, "../results/output%05d.csv", conditions.fileNum);
-        sprintf(filename2, "../results/angle_output%05d.csv", conditions.fileNum);
-        sprintf(filename3, "../results/forces_output%05d.csv", conditions.fileNum);
-        sprintf(filename4, "../results/rms_output%05d.csv", conditions.fileNum);
-        sprintf(filename5, "../results/diffusion_output%05d.csv", conditions.fileNum);
+        sprintf(filename1, "../results/output%07d.csv", conditions.fileNum);
+        sprintf(filename2, "../results/angle_output%07d.csv", conditions.fileNum);
+        sprintf(filename3, "../results/forces_output%07d.csv", conditions.fileNum);
+        sprintf(filename4, "../results/rms_output%07d.csv", conditions.fileNum);
+        sprintf(filename5, "../results/diffusion_output%07d.csv", conditions.fileNum);
 
 
         FILE *output = fopen(filename1,"w");
@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
         //
 
     	double *generalisedCoordinates = generalised_coordinate_initialisation(&conditions,rndarray);
-		
+
     	if(generalisedCoordinates == NULL)
     	{
             MPI_Abort(MPI_COMM_WORLD, MPI_error);
@@ -191,12 +191,12 @@ int main(int argc, char *argv[])
 		//
 		double *initialGeneralisedCoordinates = calloc(3*conditions.numberOfParticles, sizeof(double));
 		memcpy(initialGeneralisedCoordinates, generalisedCoordinates, 3*conditions.numberOfParticles*sizeof(double));
-		
+
 		double initialTotalX = 0;
 		double initialTotalY = 0;
 		double initialTotalZ = 0;
 		double initialMeanX,initialMeanY,initialMeanZ;
-		
+
 		for (int i=0; i < 3*conditions.numberOfParticles; i+= 3)
 		{
 			// Sum each particle's initial position
@@ -204,11 +204,11 @@ int main(int argc, char *argv[])
 			initialTotalY += initialGeneralisedCoordinates[i + 1];
 			initialTotalZ += initialGeneralisedCoordinates[i + 2];
 		}
-		
+
 		initialMeanX = initialTotalX/conditions.numberOfParticles;
 		initialMeanY = initialTotalY/conditions.numberOfParticles;
 		initialMeanZ = initialTotalZ/conditions.numberOfParticles;
-		
+
 
         //
         // Allocate memory required for the program.
@@ -245,10 +245,6 @@ int main(int argc, char *argv[])
         int count = 0;
         int maxLoop = conditions.endTime/(double)conditions.deltaTime;
 
-        fprintf(output, "Particles %d,\n ", conditions.numberOfParticles);
-        fprintf(angle_output, "Particles %d\n ", conditions.numberOfParticles);
-        fprintf(forces_output, "Particles %d\n",conditions.numberOfParticles);
-
         double progTime = omp_get_wtime();
 
         while(conditions.currentTime<conditions.endTime)
@@ -256,20 +252,20 @@ int main(int argc, char *argv[])
 			//
 			// Save data
 			//
-			
+
 			if(loop%100 == 0)
             {
 				/* Count number of particles within the volume in which the particles were initially generated,
 					centred on the average position*/
 				int diffusionCount = 0;
 				double diffusionCoeff;
-				
+
 				// Calculate the mean position
 				double totalX = 0;
 				double totalY = 0;
 				double totalZ = 0;
 				double meanX,meanY,meanZ;
-				
+
 				for (int i=0; i < 3*conditions.numberOfParticles; i+= 3)
 				{
 					// Sum each particle's position
@@ -277,11 +273,11 @@ int main(int argc, char *argv[])
 					totalY += generalisedCoordinates[i + 1];
 					totalZ += generalisedCoordinates[i + 2];
 				}
-				
+
 				meanX = totalX/conditions.numberOfParticles;
 				meanY = totalY/conditions.numberOfParticles;
 				meanZ = totalZ/conditions.numberOfParticles;
-				
+
 				// Calculate the root mean square displacement relative to the average position
 				double totalSquare = 0;
 				double rootMeanSquare;
@@ -292,7 +288,7 @@ int main(int argc, char *argv[])
 					totalSquare +=	  pow((generalisedCoordinates[i + 0] - meanX) - (initialGeneralisedCoordinates[i + 0] - initialMeanX), 2)
 									+ pow((generalisedCoordinates[i + 1] - meanY) - (initialGeneralisedCoordinates[i + 1] - initialMeanY), 2)
 									+ pow((generalisedCoordinates[i + 2] - meanZ) - (initialGeneralisedCoordinates[i + 2] - initialMeanZ), 2);
-					
+
 					/* Count the total number of particles within the volume in which the particles were initially generated,
 						centred on the average position*/
 					if (abs(generalisedCoordinates[i + 0] - meanX) < conditions.xMax
@@ -305,8 +301,8 @@ int main(int argc, char *argv[])
 				rootMeanSquare = sqrt(totalSquare/conditions.numberOfParticles);
 				// Percentage of particles still within volume
 				diffusionCoeff = diffusionCount/conditions.numberOfParticles;
-				
-				
+
+
     			int angle_offset = 3*conditions.numberOfParticles;
                 fprintf(output, "%e, ", conditions.currentTime);
                 fprintf(angle_output, "%e, ", conditions.currentTime);
@@ -355,7 +351,7 @@ int main(int argc, char *argv[])
     			count++;
     		}
             loop ++;
-			
+
             //
             // Create diffusion matrix
             //
