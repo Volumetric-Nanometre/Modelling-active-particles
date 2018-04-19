@@ -117,12 +117,14 @@ int main(int argc, char *argv[])
         char filename3[sizeof "../results/forces_output1000000.csv"];
         char filename4[sizeof "../results/rms_output1000000.csv"];
         char filename5[sizeof "../results/diffusion_output1000000.csv"];
+        char filename6[sizeof "../results/details1000000.csv"];
 
         sprintf(filename1, "../results/output%07d.csv", conditions.fileNum);
         sprintf(filename2, "../results/angle_output%07d.csv", conditions.fileNum);
         sprintf(filename3, "../results/forces_output%07d.csv", conditions.fileNum);
         sprintf(filename4, "../results/rms_output%07d.csv", conditions.fileNum);
         sprintf(filename5, "../results/diffusion_output%07d.csv", conditions.fileNum);
+        sprintf(filename6, "../results/details%07d.csv", conditions.fileNum);
 
 
         FILE *output = fopen(filename1,"w");
@@ -130,7 +132,8 @@ int main(int argc, char *argv[])
     	FILE *forces_output = fopen(filename3,"w");
     	FILE *rms_output = fopen(filename4,"w");
     	FILE *diffusion_output = fopen(filename5,"w");
-        if(output == NULL || angle_output == NULL || forces_output == NULL || rms_output == NULL || diffusion_output == NULL)
+        FILE *details = fopen(filename6,"w");
+        if(output == NULL || angle_output == NULL || forces_output == NULL || rms_output == NULL || diffusion_output == NULL || details==NULL)
         {
             printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
             MPI_Abort(MPI_COMM_WORLD, MPI_error);
@@ -237,7 +240,11 @@ int main(int argc, char *argv[])
             return -errno;
         }
 
-
+        fprintf(details,"Particle Num %d\n",conditions.numberOfParticles);
+        fprintf(details,"Temp %g K\n",conditions.temperature);
+        fprintf(details,"Polar driving magnitude %g N\n",conditions.drivingForceMagnitude);
+        fprintf(details,"Viscosity %g Nm^-2 s\n",conditions.viscosity);
+        fprintf(details,"Radius %g m\n",conditions.radius);
         //
         // Loop through time, output each time step to a file.
         //
@@ -427,7 +434,7 @@ int main(int argc, char *argv[])
         }
     	progTime = omp_get_wtime() - progTime;
 
-    	printf("Run time %lf s\n",progTime);
+    	fprintf(details,"Run time %lf s\n",progTime);
 
         //
         // Free memory
@@ -436,6 +443,9 @@ int main(int argc, char *argv[])
         fclose(output);
     	fclose(angle_output);
     	fclose(forces_output);
+        fclose(details);
+        fclose(rms_output);
+        fclose(diffusion_output);
 
     	free_memory(5,diffusionMatrix, generalisedCoordinates, stochasticWeighting, stochasticDisplacement, additionalForces);
     	diffusionMatrix = generalisedCoordinates = stochasticWeighting = stochasticDisplacement = additionalForces = NULL ;
