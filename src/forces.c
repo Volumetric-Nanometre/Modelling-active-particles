@@ -301,22 +301,18 @@ static void viseck_alignment_torque(double *additionalForces, double *generalise
 	int numberOfCells = conditions.numberOfParticles/6;
 	int rotOffset = numberOfCells/2;
 
-	// Calculated from rotational version of Langevin equation, substituting that the average angular displacement per timestep is pi/2
-	// Torque T= pi*I/dt^2 for change in angle ~pi/2 per timestep
+	// Torque T = I * dw/dt = I * d(theta)/dt^2
 	// Moment of intertia I = (2/5)MR^2 for solid sphere of radius R and mass M
-	double forceConst = 4E6*gPi * 0.4 * conditions.mass * pow(conditions.radius, 2) * conditions.radius / pow(conditions.deltaTime, 2);
-	/*															  |						  |
-															Kept separate simply for clarity, might
-														  be more comptuationally efficient to combine.
-		 The second radius multiplier comes from using the inverse distance mutliplier in the force equation
-		 	- the result is that the force is normalised based on particles separated by a distance of the same order as their radius
-	*/
+	double forceConst = 0.4 * conditions.mass * pow(conditions.radius, 2) / pow(conditions.deltaTime, 2);
 
     #pragma omp parallel for
     for(int i = 0; i < conditions.numberOfParticles; i++)
     {
-        int meanAlpha, meanBeta, difAlpha,difBeta,totalAlpha=0,totalBeta=0;
+        double meanAlpha, meanBeta, difAlpha, difBeta;
+		double totalAlpha = 0;
+		double totalBeta = 0;
         int numNeighbours = 0;
+		
         for(int j = 0; j < conditions.numberOfParticles; j++)
         {
             double x,y,z,r2;
@@ -345,13 +341,19 @@ static void viseck_alignment_torque(double *additionalForces, double *generalise
             }
 
         }
+		
+		if (numNeighbours > 0)
+		{
+	        meanAlpha = totalAlpha/numNeighbours;
+	        meanBeta = totalBeta/numNeighbours;
 
-        meanAlpha = totalAlpha/numNeighbours;
-        meanBeta = totalBeta/numNeighbours;
-        // Calculate torques in alpha and beta directions such that maximum torque is when the particle's axes are maximally separated from the average angle.
-
-        additionalForces[rotOffset + 3*i + 0] += difAlpha = forceConst * sin(meanAlpha - generalisedCoordinates[rotOffset + 3*i + 0]);
-        additionalForces[rotOffset + 3*i + 1] += difBeta = forceConst * sin(meanBeta - generalisedCoordinates[rotOffset + 3*i + 1]);
+			difAlpha = meanAlpha - generalisedCoordinates[rotOffset + 3*i + 0];
+			difBeta = meanBeta - generalisedCoordinates[rotOffset + 3*i + 1];
+			
+			// Reduce difAlpha/Beta to between 0 and 2pi, and 0 and pi respectively
+	        additionalForces[rotOffset + 3*i + 0] += forceConst * (difAlpha - floor(difAlpha/(2*gPi)) * 2*gPi);
+	        additionalForces[rotOffset + 3*i + 1] += forceConst * (difBeta - floor(difBeta/gPi) * gPi);
+		}
     }
 
 }

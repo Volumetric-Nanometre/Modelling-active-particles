@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
     //    VISECK_ALIGN_TORQUE
     //};
 
-    int forceList[1] = {NONE};
+    int forceList[3] = {VAN_DER_WAALS, EXP_REPULSION, VISECK_ALIGN_TORQUE};
     //
     // Master process environment
     //
@@ -117,12 +117,14 @@ int main(int argc, char *argv[])
         char filename3[sizeof "../results/forces_output10000.csv"];
         char filename4[sizeof "../results/rms_output10000.csv"];
         char filename5[sizeof "../results/diffusion_output10000.csv"];
+        char filename6[sizeof "../results/angle_rms_output10000.csv"];
 
         sprintf(filename1, "../results/output%05d.csv", conditions.fileNum);
         sprintf(filename2, "../results/angle_output%05d.csv", conditions.fileNum);
         sprintf(filename3, "../results/forces_output%05d.csv", conditions.fileNum);
         sprintf(filename4, "../results/rms_output%05d.csv", conditions.fileNum);
         sprintf(filename5, "../results/diffusion_output%05d.csv", conditions.fileNum);
+        sprintf(filename6, "../results/angle_rms_output%05d.csv", conditions.fileNum);
 
 
         FILE *output = fopen(filename1,"w");
@@ -130,7 +132,8 @@ int main(int argc, char *argv[])
     	FILE *forces_output = fopen(filename3,"w");
     	FILE *rms_output = fopen(filename4,"w");
     	FILE *diffusion_output = fopen(filename5,"w");
-        if(output == NULL || angle_output == NULL || forces_output == NULL || rms_output == NULL || diffusion_output == NULL)
+    	FILE *angle_rms_output = fopen(filename6,"w");
+        if(output == NULL || angle_output == NULL || forces_output == NULL || rms_output == NULL || diffusion_output == NULL || angle_rms_output == NULL)
         {
             printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
             MPI_Abort(MPI_COMM_WORLD, MPI_error);
@@ -257,8 +260,10 @@ int main(int argc, char *argv[])
 			// Save data
 			//
 			
-			if(loop%100 == 0)
+			if(loop%1000 == 0)
             {
+    			int angle_offset = 3*conditions.numberOfParticles;
+				
 				/* Count number of particles within the volume in which the particles were initially generated,
 					centred on the average position*/
 				int diffusionCount = 0;
@@ -270,21 +275,33 @@ int main(int argc, char *argv[])
 				double totalZ = 0;
 				double meanX,meanY,meanZ;
 				
+				double totalAlpha = 0;
+				double totalBeta = 0;
+				double meanAlpha,meanBeta;
+				
 				for (int i=0; i < 3*conditions.numberOfParticles; i+= 3)
 				{
 					// Sum each particle's position
 					totalX += generalisedCoordinates[i + 0];
 					totalY += generalisedCoordinates[i + 1];
 					totalZ += generalisedCoordinates[i + 2];
+					
+					totalAlpha += generalisedCoordinates[angle_offset + i + 0];
+					totalBeta += generalisedCoordinates[angle_offset + i + 1];
 				}
 				
 				meanX = totalX/conditions.numberOfParticles;
 				meanY = totalY/conditions.numberOfParticles;
 				meanZ = totalZ/conditions.numberOfParticles;
 				
+				meanAlpha = totalAlpha/conditions.numberOfParticles;
+				meanBeta = totalBeta/conditions.numberOfParticles;
+				
 				// Calculate the root mean square displacement relative to the average position
 				double totalSquare = 0;
-				double rootMeanSquare;
+				double angleTotalSquare = 0;
+				double rootMeanSquare,angleRootMeanSquare;
+				
 				for (int i=0; i < 3*conditions.numberOfParticles; i+= 3)
 				{
 					/* Sum each particle's total relative displacement (i.e. its position relative to the average position now,
@@ -292,6 +309,9 @@ int main(int argc, char *argv[])
 					totalSquare +=	  pow((generalisedCoordinates[i + 0] - meanX) - (initialGeneralisedCoordinates[i + 0] - initialMeanX), 2)
 									+ pow((generalisedCoordinates[i + 1] - meanY) - (initialGeneralisedCoordinates[i + 1] - initialMeanY), 2)
 									+ pow((generalisedCoordinates[i + 2] - meanZ) - (initialGeneralisedCoordinates[i + 2] - initialMeanZ), 2);
+					
+					angleTotalSquare +=	pow(generalisedCoordinates[angle_offset + i + 0] - meanAlpha, 2)
+									  + pow(2*(generalisedCoordinates[angle_offset + i + 1] - meanBeta), 2);
 					
 					/* Count the total number of particles within the volume in which the particles were initially generated,
 						centred on the average position*/
@@ -302,22 +322,25 @@ int main(int argc, char *argv[])
 						diffusionCount++;
 					}
 				}
+				
 				rootMeanSquare = sqrt(totalSquare/conditions.numberOfParticles);
+				angleRootMeanSquare = sqrt(angleTotalSquare/conditions.numberOfParticles);
 				// Percentage of particles still within volume
 				diffusionCoeff = diffusionCount/conditions.numberOfParticles;
 				
 				
-    			int angle_offset = 3*conditions.numberOfParticles;
                 fprintf(output, "%e, ", conditions.currentTime);
                 fprintf(angle_output, "%e, ", conditions.currentTime);
     			fprintf(forces_output, "%e, ",conditions.currentTime);
     			fprintf(rms_output, "%e, %e, %e\n",conditions.currentTime, rootMeanSquare, sqrt(2 * diffusionMatrix[0] * conditions.currentTime));
     			fprintf(diffusion_output, "%e, %e\n",conditions.currentTime, diffusionCoeff);
+    			fprintf(angle_rms_output, "%e, %e, %e\n",conditions.currentTime, angleRootMeanSquare, sqrt(2 * diffusionMatrix[3*conditions.numberOfParticles * ((6 * conditions.numberOfParticles) + 1)] * conditions.currentTime));
                 fflush(output);
                 fflush(angle_output);
                 fflush(forces_output);
                 fflush(rms_output);
                 fflush(diffusion_output);
+                fflush(angle_rms_output);
                 for(int i = 0; i < 3 * conditions.numberOfParticles; i++)
                 {
                     fprintf(output, "%e", generalisedCoordinates[i]);
@@ -440,6 +463,9 @@ int main(int argc, char *argv[])
         fclose(output);
     	fclose(angle_output);
     	fclose(forces_output);
+    	fclose(rms_output);
+    	fclose(diffusion_output);
+    	fclose(angle_rms_output);
 
     	free_memory(5,diffusionMatrix, generalisedCoordinates, stochasticWeighting, stochasticDisplacement, additionalForces);
     	diffusionMatrix = generalisedCoordinates = stochasticWeighting = stochasticDisplacement = additionalForces = NULL ;
