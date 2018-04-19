@@ -20,6 +20,7 @@ typedef struct
     double zMax; //m
     int numberOfParticles;
 	int fileNum;
+	double drivingForceMagnitude; // N
 }environmentVariables;
 
 int cmd_line_read_in(int argc, char *argv[], environmentVariables *conditions);

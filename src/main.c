@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
     //    VISECK_ALIGN_TORQUE
     //};
 
-    int forceList[3] = {VAN_DER_WAALS, EXP_REPULSION, VISECK_ALIGN_TORQUE};
+    int forceList[4] = {VAN_DER_WAALS,EXP_REPULSION,POLAR_DRIVING_FORCE,VISECK_ALIGN_TORQUE};
     //
     // Master process environment
     //
@@ -118,6 +118,7 @@ int main(int argc, char *argv[])
         char filename4[sizeof "../results/rms_output10000.csv"];
         char filename5[sizeof "../results/diffusion_output10000.csv"];
         char filename6[sizeof "../results/angle_rms_output10000.csv"];
+        char filename7[sizeof "../results/details1000000.csv"];
 
         sprintf(filename1, "../results/output%05d.csv", conditions.fileNum);
         sprintf(filename2, "../results/angle_output%05d.csv", conditions.fileNum);
@@ -125,6 +126,7 @@ int main(int argc, char *argv[])
         sprintf(filename4, "../results/rms_output%05d.csv", conditions.fileNum);
         sprintf(filename5, "../results/diffusion_output%05d.csv", conditions.fileNum);
         sprintf(filename6, "../results/angle_rms_output%05d.csv", conditions.fileNum);
+        sprintf(filename7, "../results/details%05d.csv", conditions.fileNum);
 
 
         FILE *output = fopen(filename1,"w");
@@ -133,7 +135,9 @@ int main(int argc, char *argv[])
     	FILE *rms_output = fopen(filename4,"w");
     	FILE *diffusion_output = fopen(filename5,"w");
     	FILE *angle_rms_output = fopen(filename6,"w");
-        if(output == NULL || angle_output == NULL || forces_output == NULL || rms_output == NULL || diffusion_output == NULL || angle_rms_output == NULL)
+    	FILE *details = fopen(filename7,"w");
+		
+        if(output == NULL || angle_output == NULL || forces_output == NULL || rms_output == NULL || diffusion_output == NULL || angle_rms_output == NULL || details == NULL)
         {
             printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
             MPI_Abort(MPI_COMM_WORLD, MPI_error);
@@ -156,7 +160,7 @@ int main(int argc, char *argv[])
         //
 
     	double *generalisedCoordinates = generalised_coordinate_initialisation(&conditions,rndarray);
-		
+
     	if(generalisedCoordinates == NULL)
     	{
             MPI_Abort(MPI_COMM_WORLD, MPI_error);
@@ -194,12 +198,12 @@ int main(int argc, char *argv[])
 		//
 		double *initialGeneralisedCoordinates = calloc(3*conditions.numberOfParticles, sizeof(double));
 		memcpy(initialGeneralisedCoordinates, generalisedCoordinates, 3*conditions.numberOfParticles*sizeof(double));
-		
+
 		double initialTotalX = 0;
 		double initialTotalY = 0;
 		double initialTotalZ = 0;
 		double initialMeanX,initialMeanY,initialMeanZ;
-		
+
 		for (int i=0; i < 3*conditions.numberOfParticles; i+= 3)
 		{
 			// Sum each particle's initial position
@@ -207,11 +211,11 @@ int main(int argc, char *argv[])
 			initialTotalY += initialGeneralisedCoordinates[i + 1];
 			initialTotalZ += initialGeneralisedCoordinates[i + 2];
 		}
-		
+
 		initialMeanX = initialTotalX/conditions.numberOfParticles;
 		initialMeanY = initialTotalY/conditions.numberOfParticles;
 		initialMeanZ = initialTotalZ/conditions.numberOfParticles;
-		
+
 
         //
         // Allocate memory required for the program.
@@ -240,17 +244,17 @@ int main(int argc, char *argv[])
             return -errno;
         }
 
-
+        fprintf(details,"Particle Num %d\n",conditions.numberOfParticles);
+        fprintf(details,"Temp %g K\n",conditions.temperature);
+        fprintf(details,"Polar driving magnitude %g N\n",conditions.drivingForceMagnitude);
+        fprintf(details,"Viscosity %g Nm^-2 s\n",conditions.viscosity);
+        fprintf(details,"Radius %g m\n",conditions.radius);
         //
         // Loop through time, output each time step to a file.
         //
         int loop = 0;
         int count = 0;
         int maxLoop = conditions.endTime/(double)conditions.deltaTime;
-
-        fprintf(output, "Particles %d,\n ", conditions.numberOfParticles);
-        fprintf(angle_output, "Particles %d\n ", conditions.numberOfParticles);
-        fprintf(forces_output, "Particles %d\n",conditions.numberOfParticles);
 
         double progTime = omp_get_wtime();
 
@@ -268,7 +272,7 @@ int main(int argc, char *argv[])
 					centred on the average position*/
 				int diffusionCount = 0;
 				double diffusionCoeff;
-				
+
 				// Calculate the mean position
 				double totalX = 0;
 				double totalY = 0;
@@ -289,7 +293,7 @@ int main(int argc, char *argv[])
 					totalAlpha += generalisedCoordinates[angle_offset + i + 0];
 					totalBeta += generalisedCoordinates[angle_offset + i + 1];
 				}
-				
+
 				meanX = totalX/conditions.numberOfParticles;
 				meanY = totalY/conditions.numberOfParticles;
 				meanZ = totalZ/conditions.numberOfParticles;
@@ -378,7 +382,7 @@ int main(int argc, char *argv[])
     			count++;
     		}
             loop ++;
-			
+
             //
             // Create diffusion matrix
             //
@@ -454,7 +458,7 @@ int main(int argc, char *argv[])
         }
     	progTime = omp_get_wtime() - progTime;
 
-    	printf("Run time %lf s\n",progTime);
+    	fprintf(details,"Run time %lf s\n",progTime);
 
         //
         // Free memory
@@ -466,6 +470,7 @@ int main(int argc, char *argv[])
     	fclose(rms_output);
     	fclose(diffusion_output);
     	fclose(angle_rms_output);
+        fclose(details);
 
     	free_memory(5,diffusionMatrix, generalisedCoordinates, stochasticWeighting, stochasticDisplacement, additionalForces);
     	diffusionMatrix = generalisedCoordinates = stochasticWeighting = stochasticDisplacement = additionalForces = NULL ;
