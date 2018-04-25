@@ -303,7 +303,7 @@ static void viseck_alignment_torque(double *additionalForces, double *generalise
 	// Calculated from rotational version of Langevin equation, substituting that the average angular displacement per timestep is pi/2
 	// Torque T= pi*I/dt^2 for change in angle ~pi/2 per timestep
 	// Moment of intertia I = (2/5)MR^2 for solid sphere of radius R and mass M
-	double forceConst = 4E6*gPi * 0.4 * conditions.mass * pow(conditions.radius, 2) * conditions.radius / pow(conditions.deltaTime, 2);
+	double forceConst = gPi * 0.4 * conditions.mass * pow(conditions.radius, 2) * conditions.radius / pow(conditions.deltaTime, 2);
 	/*															  |						  |
 															Kept separate simply for clarity, might
 														  be more comptuationally efficient to combine.
