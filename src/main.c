@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
     //
     //  Choose forces to be included
     //
-    int numberOfForces = 3; // must be at least 1, with the force none chosen
+    int numberOfForces = 2; // must be at least 1, with the force none chosen
     //
     // Copy of enum to understand force forceList
     //
@@ -131,9 +131,8 @@ int main(int argc, char *argv[])
         FILE *angle_output = fopen(filename2,"w");
     	FILE *forces_output = fopen(filename3,"w");
     	FILE *rms_output = fopen(filename4,"w");
-    	FILE *diffusion_output = fopen(filename5,"w");
         FILE *details = fopen(filename6,"w");
-        if(output == NULL || angle_output == NULL || forces_output == NULL || rms_output == NULL || diffusion_output == NULL || details==NULL)
+        if(output == NULL || angle_output == NULL || forces_output == NULL || rms_output == NULL  || details==NULL)
         {
             printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
             MPI_Abort(MPI_COMM_WORLD, MPI_error);
@@ -189,35 +188,11 @@ int main(int argc, char *argv[])
         //--------------------------- END ---------------------------------//
 
 
-		//
-		// Retain each particle's initial position and calculate the average initial position
-		//
-		double *initialGeneralisedCoordinates = calloc(3*conditions.numberOfParticles, sizeof(double));
-		memcpy(initialGeneralisedCoordinates, generalisedCoordinates, 3*conditions.numberOfParticles*sizeof(double));
-
-		double initialTotalX = 0;
-		double initialTotalY = 0;
-		double initialTotalZ = 0;
-		double initialMeanX,initialMeanY,initialMeanZ;
-
-		for (int i=0; i < 3*conditions.numberOfParticles; i+= 3)
-		{
-			// Sum each particle's initial position
-			initialTotalX += initialGeneralisedCoordinates[i + 0];
-			initialTotalY += initialGeneralisedCoordinates[i + 1];
-			initialTotalZ += initialGeneralisedCoordinates[i + 2];
-		}
-
-		initialMeanX = initialTotalX/conditions.numberOfParticles;
-		initialMeanY = initialTotalY/conditions.numberOfParticles;
-		initialMeanZ = initialTotalZ/conditions.numberOfParticles;
-
-
         //
         // Allocate memory required for the program.
         // Requires: Diffusion matrix, stochastic displacement,
         //          additional forces, stochasticWeighting,
-        //          velocities
+        //
         //
 
 
@@ -245,6 +220,8 @@ int main(int argc, char *argv[])
         fprintf(details,"Polar driving magnitude %g N\n",conditions.drivingForceMagnitude);
         fprintf(details,"Viscosity %g Nm^-2 s\n",conditions.viscosity);
         fprintf(details,"Radius %g m\n",conditions.radius);
+        fflush(details);
+
         //
         // Loop through time, output each time step to a file.
         //
@@ -264,8 +241,6 @@ int main(int argc, char *argv[])
             {
 				/* Count number of particles within the volume in which the particles were initially generated,
 					centred on the average position*/
-				int diffusionCount = 0;
-				double diffusionCoeff;
 
 				// Calculate the mean position
 				double totalX = 0;
@@ -292,22 +267,15 @@ int main(int argc, char *argv[])
 				{
 					/* Sum each particle's total relative displacement (i.e. its position relative to the average position now,
 						minus its initial position relative to the initial average position)*/
-					totalSquare +=	  pow((generalisedCoordinates[i + 0] - meanX) - (initialGeneralisedCoordinates[i + 0] - initialMeanX), 2)
-									+ pow((generalisedCoordinates[i + 1] - meanY) - (initialGeneralisedCoordinates[i + 1] - initialMeanY), 2)
-									+ pow((generalisedCoordinates[i + 2] - meanZ) - (initialGeneralisedCoordinates[i + 2] - initialMeanZ), 2);
+					totalSquare +=	  pow((generalisedCoordinates[i + 0] - meanX) , 2)
+									+ pow((generalisedCoordinates[i + 1] - meanY) , 2)
+									+ pow((generalisedCoordinates[i + 2] - meanZ) , 2);
 
 					/* Count the total number of particles within the volume in which the particles were initially generated,
 						centred on the average position*/
-					if (abs(generalisedCoordinates[i + 0] - meanX) < conditions.xMax
-						&& abs(generalisedCoordinates[i + 1] - meanY) < conditions.yMax
-						&& abs(generalisedCoordinates[i + 2] - meanZ) < conditions.zMax)
-					{
-						diffusionCount++;
-					}
 				}
 				rootMeanSquare = sqrt(totalSquare/conditions.numberOfParticles);
-				// Percentage of particles still within volume
-				diffusionCoeff = diffusionCount/conditions.numberOfParticles;
+
 
 
     			int angle_offset = 3*conditions.numberOfParticles;
@@ -315,12 +283,10 @@ int main(int argc, char *argv[])
                 fprintf(angle_output, "%e, ", conditions.currentTime);
     			fprintf(forces_output, "%e, ",conditions.currentTime);
     			fprintf(rms_output, "%e, %e, %e\n",conditions.currentTime, rootMeanSquare, sqrt(2 * diffusionMatrix[0] * conditions.currentTime));
-    			fprintf(diffusion_output, "%e, %e\n",conditions.currentTime, diffusionCoeff);
                 fflush(output);
                 fflush(angle_output);
                 fflush(forces_output);
                 fflush(rms_output);
-                fflush(diffusion_output);
                 for(int i = 0; i < 3 * conditions.numberOfParticles; i++)
                 {
                     fprintf(output, "%e", generalisedCoordinates[i]);
@@ -445,7 +411,6 @@ int main(int argc, char *argv[])
     	fclose(forces_output);
         fclose(details);
         fclose(rms_output);
-        fclose(diffusion_output);
 
     	free_memory(5,diffusionMatrix, generalisedCoordinates, stochasticWeighting, stochasticDisplacement, additionalForces);
     	diffusionMatrix = generalisedCoordinates = stochasticWeighting = stochasticDisplacement = additionalForces = NULL ;
