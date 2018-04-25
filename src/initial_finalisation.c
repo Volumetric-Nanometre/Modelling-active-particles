@@ -6,6 +6,7 @@
 #include <math.h>
 #include <stdarg.h>
 #include <gsl/gsl_rng.h>
+#include <time.h>
 
 #include "initial_finalisation.h"
 
@@ -22,7 +23,7 @@ int cmd_line_read_in(int argc, char *argv[], environmentVariables *conditions)
 {
 	if (argc > 1)
 	{
-		for (int i=0; i<argc; i++)
+		for (int i=1; i<argc; i++)
 		{
 			if(strstr(argv[i],"-debug") != NULL) gDebug = 1;
 			else if(strstr(argv[i],"-serial") != NULL)	gSerial = 1;
@@ -32,6 +33,22 @@ int cmd_line_read_in(int argc, char *argv[], environmentVariables *conditions)
 				if (sscanf(argv[i+1],"%d", &conditions->numberOfParticles) != 1)
 				{
 					printf("Invalid number of particles\n");
+					return -1;
+				}
+			}
+			else if (strstr(argv[i],"-temp") != NULL)
+			{
+				if (sscanf(argv[i+1],"%lf", &conditions->temperature) != 1)
+				{
+					printf("Invalid temperature\n");
+					return -1;
+				}
+			}
+			else if (strstr(argv[i],"-drivemag") != NULL)
+			{
+				if (sscanf(argv[i+1],"%lf", &conditions->drivingForceMagnitude) != 1)
+				{
+					printf("Invalid polar driving force magnitude\n");
 					return -1;
 				}
 			}
@@ -144,17 +161,18 @@ void boilerplate_variables(environmentVariables *conditions)
 	conditions->viscosity = 8.9E-4; //N m^-2 s
 	conditions->radius = 50E-9; // m
 	conditions->currentTime = 0; // Seconds
-	conditions->deltaTime = 1E-6; // Seconds
+	conditions->deltaTime = 1E-7; // Seconds
 	conditions->endTime = 1E-3; // Seconds
 	conditions->mass = (4/3) * gPi * pow(conditions->radius,3)*19320; // kg - density of gold
-	conditions->xMax = 1E-7;
-	conditions->yMax = 1E-7;
-	conditions->zMax = 1E-7;
+	conditions->xMax = 1E-6;
+	conditions->yMax = 1E-6;
+	conditions->zMax = 1E-6;
 	conditions->numberOfParticles = 0;
 	conditions->fileNum = 0;
+	conditions->drivingForceMagnitude=1E-12; //N,  set to 1pN
 
 
-	gNumOfthreads =omp_get_max_threads();
+	gNumOfthreads = omp_get_max_threads();
 }
 
 //
@@ -162,11 +180,13 @@ void boilerplate_variables(environmentVariables *conditions)
 //
 gsl_rng** rand_array_allocation()
 {
+	unsigned int seed;
 	gsl_rng **rndarray = calloc(gNumOfthreads,sizeof(*rndarray));
 	for(int i = 0; i<gNumOfthreads; i++)
 	{
+		seed =(i+1) * (unsigned int)time(NULL);
 		rndarray[i] = gsl_rng_alloc(gsl_rng_mt19937);
-		gsl_rng_set(rndarray[i], i);
+		gsl_rng_set(rndarray[i], seed);
 	}
 	return rndarray;
 }
@@ -174,7 +194,7 @@ gsl_rng** rand_array_allocation()
 //
 // Generate generalised coordinate data from either file or randomly
 //
-double* generalised_coordinate_initilisation(environmentVariables *conditions, gsl_rng *rndarray[])
+double* generalised_coordinate_initialisation(environmentVariables *conditions, gsl_rng *rndarray[])
 {
 	particleVariables* particles = NULL;
 
@@ -189,17 +209,24 @@ double* generalised_coordinate_initilisation(environmentVariables *conditions, g
 	    }
 
 	    printf("Data read in success\n" );
+		fflush(stdout);
 	}
 	else
 	{
-		generate_particle_data(conditions->numberOfParticles, &particles, rndarray[0], conditions->xMax, conditions->yMax, conditions->zMax);
+		if(generate_particle_data(conditions->numberOfParticles, &particles, rndarray[0], conditions->radius, conditions->xMax, conditions->yMax, conditions->zMax) != 0)
+		{
+			free_memory(1,particles);
+			particles = NULL ;
+			return NULL;
+		}
+		printf("Particle Generation Success\n" );
+		fflush(stdout);
 	}
 
     double *generalisedCoordinates = generalised_coordinate_creation( conditions->numberOfParticles, particles);
 
-    free( particles );
-
-    particles = NULL ;
+	free_memory(1,particles);
+	particles = NULL ;
 
 	return generalisedCoordinates;
 
