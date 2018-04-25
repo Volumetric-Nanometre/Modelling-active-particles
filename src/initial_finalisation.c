@@ -6,6 +6,7 @@
 #include <math.h>
 #include <stdarg.h>
 #include <gsl/gsl_rng.h>
+#include <time.h>
 
 #include "initial_finalisation.h"
 
@@ -179,11 +180,13 @@ void boilerplate_variables(environmentVariables *conditions)
 //
 gsl_rng** rand_array_allocation()
 {
+	unsigned int seed;
 	gsl_rng **rndarray = calloc(gNumOfthreads,sizeof(*rndarray));
 	for(int i = 0; i<gNumOfthreads; i++)
 	{
+		seed =(i+1) * (unsigned int)time(NULL);
 		rndarray[i] = gsl_rng_alloc(gsl_rng_mt19937);
-		gsl_rng_set(rndarray[i], i);
+		gsl_rng_set(rndarray[i], seed);
 	}
 	return rndarray;
 }
