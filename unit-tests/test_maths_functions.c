@@ -32,3 +32,16 @@ void test_levi_civita_density()
 	assert(levi_civita_density( 2,  2)==0);
 	printf("[PASS]\n");
 }
+
+//
+// Test the levi_civita_density(int i, int j) delta outputs 1 when a==b and 0 when a!=b
+//
+
+void test_linear_index_from_coordinates()
+{
+	printf("%s","linear_index_from_coordinates..." );
+
+	assert(linear_index_from_coordinates(5, 5, 3,  2,  1) == 38);
+
+	printf("[PASS]\n");
+}
