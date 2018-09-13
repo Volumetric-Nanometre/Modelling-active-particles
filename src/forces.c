@@ -86,7 +86,7 @@ static void force_gravity(double *additionalForces, int numberOfCells, double ma
     // Add the forces onto the preexisting values
     //
     #pragma omp parallel for
-    for(int i = 0; i < numberOfCells/2; i+=3)
+    for(int i = 2; i < numberOfCells/2; i+=3)
     	additionalForces[i] -= mass * gGrav;
 }
 
