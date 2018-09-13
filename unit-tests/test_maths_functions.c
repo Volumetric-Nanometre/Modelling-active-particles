@@ -34,7 +34,8 @@ void test_levi_civita_density()
 }
 
 //
-// Test the levi_civita_density(int i, int j) delta outputs 1 when a==b and 0 when a!=b
+// Test the linear_index_from_coordinates() function. x = 3 y = 2 z = 1. Therefore
+// 25+10+3 = 38
 //
 
 void test_linear_index_from_coordinates()
@@ -44,4 +45,21 @@ void test_linear_index_from_coordinates()
 	assert(linear_index_from_coordinates(5, 5, 3,  2,  1) == 38);
 
 	printf("[PASS]\n");
+}
+
+//
+// Test the test_coordinates_from_linear_index() function.Index of 38, therefore x = 3 y = 2 z = 1.
+//
+
+void test_coordinates_from_linear_index()
+{
+	int x=0, y=0, z=0;
+	printf("%s","coordinates_from_linear_index..." );
+
+	coordinates_from_linear_index(38, 5, 5, &x, &y, &z);
+
+	assert(x == 3 && y == 2 && z == 1);
+
+	printf("[PASS]\n");
+
 }
