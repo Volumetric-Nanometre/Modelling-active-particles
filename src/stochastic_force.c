@@ -22,7 +22,7 @@
 extern int gDebug;
 extern int gNumOfthreads;
 
-void stochastic_displacement_creation(int numberOfParticles, double *stochasticWeighting, double *stochasticDisplacement, gsl_rng *rndarray[], double timestep){
+void stochastic_displacement_creation(int numberOfParticles, double *stochasticWeighting, double *stochasticDisplacement, gsl_rng *rndarray[],double *rndNumArray, double timestep){
 
 
 	/*// HOME-MADE METHOD
@@ -85,6 +85,9 @@ void stochastic_displacement_creation(int numberOfParticles, double *stochasticW
 	double sum;
 	int i, j, k;
 	int cutoff = N/2;
+
+
+
 	// copy contents from input matrix to output matrix
 	//  this is done to simplify the code and potential testing
 	//  and should not be counted as algorithm time
@@ -114,24 +117,32 @@ void stochastic_displacement_creation(int numberOfParticles, double *stochasticW
 	// reset upper triangle
 	//  this is done to simplify the code and potential testing
 	//  and should not be counted as algorithm time
-	#pragma omp for
+	#pragma parallel omp for
 	for (i = 0; i < N; i++)
 	{
 		for (j = 0; j < i; j++) {
 			stochasticWeighting[j * N + i] = 0;
 		}
 	}
-
-	#pragma omp for
-	for (int i = 0; i < N; i++)
+	
+	#pragma parallel
 	{
 		gsl_rng *tSeed = rndarray[omp_get_thread_num()];
-		double ran_num;
+		#pragma omp for
+		for (i = 0; i < N; i++)
+		{
+			rndNumArray[i] = gsl_ran_gaussian(tSeed, 1);
+		}
+	}
+
+
+	#pragma parallel omp for
+	for (int i = 0; i < N; i++)
+	{
 		stochasticDisplacement[i] = 0;
 		for (int j = 0; j < N; j++)
 		{
-			ran_num = gsl_ran_gaussian(tSeed, 1);
-			stochasticDisplacement[i] += stochasticWeighting[i*N + j] * ran_num * sqrt(2*timestep);
+			stochasticDisplacement[i] += stochasticWeighting[i*N + j] * rndNumArray[j] * sqrt(2*timestep);
 		}
 		//if (gDebug == 1) printf("%+1.5e\n\n", stochasticDisplacement[i]);
 	}

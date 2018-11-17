@@ -200,16 +200,17 @@ int main(int argc, char *argv[])
         double *stochasticWeighting = NULL;
         double *additionalForces = NULL;
         double *stochasticDisplacement = NULL;
-
+		double *rndNumArray = NULL;
         diffusionMatrix = calloc( pow(vectorSize, 2), sizeof *diffusionMatrix) ;
         stochasticWeighting = calloc( pow( vectorSize, 2), sizeof *stochasticWeighting);
         stochasticDisplacement = calloc( vectorSize, sizeof *stochasticDisplacement);
         additionalForces = calloc( vectorSize, sizeof *additionalForces);
+		rndNumArray = calloc( vectorSize, sizeof *rndNumArray);
 
-        if(  diffusionMatrix==NULL  || stochasticWeighting==NULL || stochasticDisplacement==NULL || additionalForces==NULL)
+        if(  diffusionMatrix==NULL  || stochasticWeighting==NULL || stochasticDisplacement==NULL || additionalForces==NULL || rndNumArray==NULL)
         {
-    		free_memory(6,diffusionMatrix, generalisedCoordinates, stochasticWeighting, stochasticDisplacement,additionalForces);
-    		diffusionMatrix = generalisedCoordinates = stochasticWeighting = stochasticDisplacement = additionalForces = NULL ;
+    		free_memory(6,diffusionMatrix, generalisedCoordinates, stochasticWeighting, stochasticDisplacement,additionalForces,rndNumArray);
+    		diffusionMatrix = generalisedCoordinates = stochasticWeighting = stochasticDisplacement = additionalForces = rndNumArray=NULL ;
             printf("-Error %d : %s\n : File %s : Line : %d", errno, strerror( errno ), __FILE__, __LINE__);
             MPI_Abort(MPI_COMM_WORLD, MPI_error);
             return -errno;
@@ -362,7 +363,7 @@ int main(int argc, char *argv[])
     	    // Create the stochastic displacement
     	    //
 
-    	    stochastic_displacement_creation( conditions.numberOfParticles, stochasticWeighting, stochasticDisplacement, rndarray, conditions.deltaTime);
+    	    stochastic_displacement_creation( conditions.numberOfParticles, stochasticWeighting, stochasticDisplacement, rndarray,rndNumArray, conditions.deltaTime);
 
     		if( gDebug == 1 && stochasticWeighting != NULL)
     	    {
