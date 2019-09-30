@@ -159,7 +159,7 @@ void boilerplate_variables(environmentVariables *conditions)
 {
     conditions->temperature = 298; // K
 	conditions->viscosity = 8.9E-4; //N m^-2 s
-	conditions->radius = 50E-9; // m
+	conditions->radius = 0.5E-6; // m
 	conditions->currentTime = 0; // Seconds
 	conditions->deltaTime = 1E-7; // Seconds
 	conditions->endTime = 1E-3; // Seconds

@@ -10,7 +10,9 @@
 #include <stdlib.h>
 #include <omp.h>
 #include <math.h>
+#include <stdbool.h>
 
+#include "mosh-dda.h"
 #include "forces.h"
 #include "initial_finalisation.h"
 
@@ -27,6 +29,8 @@ static void viseck_alignment_torque(double *additionalForces, double *generalise
 static void driving_force(double *additionalForces, double *generalisedCoordinates, int numberOfCells, field_t drivingField);
 
 static void polar_driving_force(double *additionalForces, double *generalisedCoordinates, int numberOfCells, double drivingForceMagnitude);
+
+static void optical_binding_force(double *additionalForces, double *generalisedCoordinates, environmentVariables conditions);
 
 extern int gDebug;
 
@@ -73,6 +77,8 @@ void force_torque_summation(double *additionalForces,double *generalisedCoordina
 			case DRIVING_FIELD : driving_force(additionalForces, generalisedCoordinates, numberOfCells, drivingField); break;
             case POLAR_DRIVING_FORCE : polar_driving_force(additionalForces, generalisedCoordinates, numberOfCells, conditions.drivingForceMagnitude); break;
             case VISECK_ALIGN_TORQUE : viseck_alignment_torque(additionalForces, generalisedCoordinates,  conditions, rCutoff);break;
+			case OPTICAL_BINDING_FORCE : optical_binding_force(additionalForces, generalisedCoordinates, conditions);break;
+
             default : break;
         }
     }
@@ -347,5 +353,57 @@ static void viseck_alignment_torque(double *additionalForces, double *generalise
         additionalForces[rotOffset + 3*i + 0] += difAlpha = forceConst * sin(meanAlpha - generalisedCoordinates[rotOffset + 3*i + 0]);
         additionalForces[rotOffset + 3*i + 1] += difBeta = forceConst * sin(meanBeta - generalisedCoordinates[rotOffset + 3*i + 1]);
     }
+
+}
+
+static void optical_binding_force(double *additionalForces, double *generalisedCoordinates, environmentVariables conditions)
+{
+	static bool isInitialised = false;
+	static systemdata sysData={0};
+	static objectdata objData={0};
+	static eFieldData elecData={0};
+	static int *dipolePositions=NULL;
+	static complex double *m_refract=NULL;
+	gMosh_DDA_FileNames.logfileOutput="logfile.txt";
+	gMosh_DDA_FileNames.timingOutput="timing.txt";
+
+	if(!isInitialised)
+	{
+		//mosh_dda_io_cmd_read_in( argc,argv);
+		mosh_dda_io_logfile_fopen(gMosh_DDA_FileNames.logfileOutput);
+		mosh_dda_io_timings_fopen(gMosh_DDA_FileNames.timingOutput);
+		mosh_dda_io_logfile_fprintf(gMosh_DDA_LogFile,"Beginning file read in\n");
+
+		if(mosh_dda_io_sysparam_read_in(&sysData,&objData,&elecData, gMosh_DDA_FileNames.systemInput)!=0)
+		{
+			mosh_dda_io_sysparam_read_in(&sysData,&objData,&elecData,"../bin/systemparameters.param");
+		}
+
+		sysData.numberOfParticles=conditions.numberOfParticles;
+
+		//
+		//	Attempt to open files. If fail, revert to defaults
+		//
+		if((dipolePositions = mosh_dda_io_dipole_read_in(&objData, gMosh_DDA_FileNames.dipolesInput))==NULL)
+		{
+			dipolePositions = mosh_dda_io_dipole_read_in(&objData,"../bin/positions.txt");
+		}
+		if((m_refract = mosh_dda_io_particle_refractive_index_read_in(sysData, gMosh_DDA_FileNames.refractiveIndexInput))==NULL)
+		{
+			m_refract = mosh_dda_io_particle_refractive_index_read_in(sysData, "../bin/refractiveIndex.txt");
+		}
+
+		mosh_dda_simple_check_validity(sysData,  objData,  elecData, m_refract);
+		mosh_dda_simple_scalefactor(&sysData,objData);
+		mosh_dda_simple_grand_matrix_dimensions(&sysData,objData);
+
+		isInitialised=true;
+	}
+
+
+
+	mosh_dda_simple_full_force_calculation(sysData, objData, elecData, dipolePositions,generalisedCoordinates ,m_refract, additionalForces);
+
+	//mosh_dda_simple_cleanup();
 
 }
