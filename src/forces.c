@@ -73,11 +73,11 @@ void force_torque_summation(double *additionalForces,double *generalisedCoordina
             case GRAVITY : force_gravity(additionalForces, numberOfCells, conditions.mass); break;
             case VAN_DER_WAALS : force_van_der_waals(additionalForces, generalisedCoordinates, numberOfCells, conditions.radius); break;
             case EXP_REPULSION : force_exp_repulsion(additionalForces, generalisedCoordinates, numberOfCells); break;
-			case ALIGN_TORQUE : alignment_torque(additionalForces, generalisedCoordinates, numberOfCells, conditions); break;
-			case DRIVING_FIELD : driving_force(additionalForces, generalisedCoordinates, numberOfCells, drivingField); break;
+			      case ALIGN_TORQUE : alignment_torque(additionalForces, generalisedCoordinates, numberOfCells, conditions); break;
+			      case DRIVING_FIELD : driving_force(additionalForces, generalisedCoordinates, numberOfCells, drivingField); break;
             case POLAR_DRIVING_FORCE : polar_driving_force(additionalForces, generalisedCoordinates, numberOfCells, conditions.drivingForceMagnitude); break;
             case VISECK_ALIGN_TORQUE : viseck_alignment_torque(additionalForces, generalisedCoordinates,  conditions, rCutoff);break;
-			case OPTICAL_BINDING_FORCE : optical_binding_force(additionalForces, generalisedCoordinates, conditions);break;
+			      case OPTICAL_BINDING_FORCE : optical_binding_force(additionalForces, generalisedCoordinates, conditions);break;
 
             default : break;
         }
