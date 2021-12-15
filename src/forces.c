@@ -47,7 +47,9 @@ static double gExpTuningB = 4.8E8;
 static double gTuningC = -550E-9;
 static double gTuningD = 7;
 
-
+extern FILE *gMosh_DDA_LogFile ;
+extern FILE *gMosh_DDA_Timings ;
+extern ioFileStruct gMosh_DDA_FileNames;
 //
 // Calculate the sum of the forces and torques from the forces and torques wanted
 //
@@ -360,49 +362,31 @@ static void optical_binding_force(double *additionalForces, double *generalisedC
 {
 	static bool isInitialised = false;
 	static systemdata sysData={0};
-	static objectdata objData={0};
+	static objectdata *objData; // turn into point - still needs to be initiliased
 	static eFieldData elecData={0};
-	static int *dipolePositions=NULL;
 	static complex double *m_refract=NULL;
-	gMosh_DDA_FileNames.logfileOutput="logfile.txt";
-	gMosh_DDA_FileNames.timingOutput="timing.txt";
+	//gMosh_DDA_FileNames.logfileOutput="logfile.txt";
+	//gMosh_DDA_FileNames.timingOutput="timing.txt";
 
 	if(!isInitialised)
 	{
+
+    /* Aquire input data*/
 		//mosh_dda_io_cmd_read_in( argc,argv);
-		mosh_dda_io_logfile_fopen(gMosh_DDA_FileNames.logfileOutput);
-		mosh_dda_io_timings_fopen(gMosh_DDA_FileNames.timingOutput);
-		mosh_dda_io_logfile_fprintf(gMosh_DDA_LogFile,"Beginning file read in\n");
 
-		if(mosh_dda_io_sysparam_read_in(&sysData,&objData,&elecData, gMosh_DDA_FileNames.systemInput)!=0)
-		{
-			mosh_dda_io_sysparam_read_in(&sysData,&objData,&elecData,"../bin/systemparameters.param");
-		}
+    mosh_dda_io_initilisation(argc, argv, &particlePositions, &m_refract, &sysData2,  &objData, &elecData, &precalcData);
 
-		sysData.numberOfParticles=conditions.numberOfParticles;
-
-		//
-		//	Attempt to open files. If fail, revert to defaults
-		//
-		if((dipolePositions = mosh_dda_io_dipole_read_in(&objData, gMosh_DDA_FileNames.dipolesInput))==NULL)
-		{
-			dipolePositions = mosh_dda_io_dipole_read_in(&objData,"../bin/positions.txt");
-		}
-		if((m_refract = mosh_dda_io_particle_refractive_index_read_in(sysData, gMosh_DDA_FileNames.refractiveIndexInput))==NULL)
-		{
-			m_refract = mosh_dda_io_particle_refractive_index_read_in(sysData, "../bin/refractiveIndex.txt");
-		}
-
-		mosh_dda_simple_check_validity(sysData,  objData,  elecData, m_refract);
-		mosh_dda_simple_scalefactor(&sysData,objData);
-		mosh_dda_simple_grand_matrix_dimensions(&sysData,objData);
+  	mosh_utility_logfile_fprintf(gMosh_DDA_LogFile,"File read in complete\n");
+		mosh_dda_simple_scalefactor(&sysData,objData[0],elecData);
 
 		isInitialised=true;
 	}
 
+  //
+  //	Check that the system is within the convergence criteria
+  //
 
-
-	mosh_dda_simple_full_force_calculation(sysData, objData, elecData, dipolePositions,generalisedCoordinates ,m_refract, additionalForces);
+	mosh_dda_simple_full_force_calculation(sysData, objData, elecData, generalisedCoordinates ,m_refract, additionalForces);
 
 	//mosh_dda_simple_cleanup();
 
