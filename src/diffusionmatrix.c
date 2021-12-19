@@ -8,6 +8,7 @@
 **************************************/
 
 #include <stdlib.h>
+#include <stdbool.h>
 #include <math.h>
 #include <errno.h>
 #include <string.h>
@@ -23,6 +24,7 @@
 
 extern double gBoltzmannConst;
 extern double gPi;
+extern bool gFaxens;
 
 //
 // Create the diffusion matrix

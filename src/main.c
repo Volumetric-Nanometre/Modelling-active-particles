@@ -9,6 +9,7 @@
 // GNU and external libraries
 //
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
@@ -39,6 +40,7 @@ int gDebug = 0;
 int gSerial = 0;
 int gNumOfthreads;
 int gNumOfNodes = 1;
+bool gFaxens = false;
 
 enum MESSAGE_TAGS
 {

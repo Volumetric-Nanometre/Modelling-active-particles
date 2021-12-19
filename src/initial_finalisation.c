@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <omp.h>
 #include <math.h>
@@ -14,7 +15,7 @@ extern int gDebug;
 extern int gSerial;
 extern int gNumOfthreads;
 extern double gPi;
-
+extern bool gFaxens;
 
 //
 // Read in cmd line arguments and handle them
@@ -27,6 +28,8 @@ int cmd_line_read_in(int argc, char *argv[], environmentVariables *conditions)
 		{
 			if(strstr(argv[i],"-debug") != NULL) gDebug = 1;
 			else if(strstr(argv[i],"-serial") != NULL)	gSerial = 1;
+
+			else if(strstr(argv[i],"-faxen") != NULL)	gFaxens = true;
 
 			else if (strstr(argv[i],"-num") != NULL || strstr(argv[i],"-n") != NULL)
 			{
