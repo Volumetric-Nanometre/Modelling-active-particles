@@ -26,6 +26,16 @@ extern double gBoltzmannConst;
 extern double gPi;
 extern bool gFaxens;
 
+
+//
+// Static prototypes
+//
+
+static void translational_faxens(double faxens[3], double *generalisedCoordinates, environmentVariables *conditions, int i, int j);
+
+static void rotational_faxens(double faxens[3], double *generalisedCoordinates, environmentVariables *conditions, int i, int j);
+
+
 //
 // Create the diffusion matrix
 //
@@ -93,15 +103,20 @@ void diffusion_matrix_creation(int numberOfParticles, double *diffusionMatrix, d
 //
 void translational_tensor_creation(double *tempMatrix, double *generalisedCoordinates, environmentVariables *conditions, int i, int j)
 {
+    double faxens[3] = {1,1,1};
     double stokesConstantProduct = ( gBoltzmannConst * conditions->temperature ) / ( gPi * conditions->viscosity);
     if(i==j)
     {
+        if(gFaxens == true)
+        translational_faxens(faxens,generalisedCoordinates, conditions, i, j);
+
         for(int n = 0; n < 3; n ++)
         {
             for(int m = 0; m < 3; m ++)
             {
-                tempMatrix[n * 3 + m] = kronecker_delta(n,m) * stokesConstantProduct / (6 * conditions->radius); // Over 6 for the self interaction terms
-
+                // The faxens term strictly speaking only applies to the diagonal. But as all other terms are 0 (zero), we
+                // can allow it to be ran off the n loop
+                tempMatrix[n * 3 + m] = kronecker_delta(n,m) * stokesConstantProduct / (6 * conditions->radius)/faxens[n]; // Over 6 for the self interaction terms
 
             }
         }
@@ -142,14 +157,21 @@ void translational_tensor_creation(double *tempMatrix, double *generalisedCoordi
 
 void rotational_tensor_creation(double *tempMatrix, double *generalisedCoordinates, environmentVariables *conditions, int i, int j)
 {
+    double faxens[3] = {1,1,1};
     double stokesConstantProduct = ( gBoltzmannConst * conditions->temperature ) / ( gPi * conditions->viscosity);
     if(i==j)
     {
+
+        if(gFaxens == true)
+        rotational_faxens(faxens,generalisedCoordinates, conditions, i, j);
+
         for(int n = 0; n < 3; n ++)
         {
             for(int m = 0; m < 3; m ++)
             {
-                tempMatrix[n * 3 + m] = kronecker_delta(n,m) * stokesConstantProduct / (8 * pow(conditions->radius, 3) ); // Over 8 for the self interaction terms
+                // The faxens term strictly speaking only applies to the diagonal. But as all other terms are 0 (zero), we
+                // can allow it to be ran off the n loop
+                tempMatrix[n * 3 + m] = kronecker_delta(n,m) * stokesConstantProduct / (8 * pow(conditions->radius, 3) ) / faxens[n]; // Over 8 for the self interaction terms
 
 
             }
@@ -223,4 +245,40 @@ void translation_rotation_coupling_tensor_creation(double *tempMatrix, double *g
 
         }
     }
+}
+
+//
+// Translational components of a faxens correction. These components assume no cross terms, and assume Z is the perpendicular
+// axis. The XY plane is the parallel axis. The code is correct to 3rd order and the corrections taken from
+// Leach, J., Mushfique, H., Keen, S., Di Leonardo, R., Ruocco, G., Cooper, J. M., & Padgett, M. J. (2009).
+// Comparison of Faxén’s correction for a microsphere translating or rotating near a surface. Physical Review E - Statistical,
+// Nonlinear, and Soft Matter Physics, 79(2). https://doi.org/10.1103/PhysRevE.79.026301
+//
+static void translational_faxens(double faxens[3], double *generalisedCoordinates, environmentVariables *conditions, int i, int j)
+{
+
+    double parallel = 1.0 - (9.0/16.0)*(conditions->radius/generalisedCoordinates[i * 3 + 2]) + (1.0/8.0)*pow((conditions->radius/generalisedCoordinates[i * 3 + 2]),3.0);
+    double perpendicular = 1.0 - (9.0/8.0)*(conditions->radius/generalisedCoordinates[i * 3 + 2]) + (1.0/2.0)*pow((conditions->radius/generalisedCoordinates[i * 3 + 2]),3.0);
+
+    faxens[0]=faxens[1]=parallel;
+    faxens[2]=perpendicular;
+
+}
+
+//
+// Rotational components of a faxens correction. These components assume no cross terms, and assume Z is the perpendicular
+// axis. The XY plane is the parallel axis. The code is correct to 3rd order and the corrections taken from
+// Leach, J., Mushfique, H., Keen, S., Di Leonardo, R., Ruocco, G., Cooper, J. M., & Padgett, M. J. (2009).
+// Comparison of Faxén’s correction for a microsphere translating or rotating near a surface. Physical Review E - Statistical,
+// Nonlinear, and Soft Matter Physics, 79(2). https://doi.org/10.1103/PhysRevE.79.026301
+//
+static void rotational_faxens(double faxens[3], double *generalisedCoordinates, environmentVariables *conditions, int i, int j)
+{
+
+    double parallel = 1.0 - (1.0/8.0)*pow((conditions->radius/generalisedCoordinates[i * 3 + 2]),3.0);
+    double perpendicular = 1.0 - (5.0/16.0)*pow((conditions->radius/generalisedCoordinates[i * 3 + 2]),3.0) + (15.0/256.0)*pow((conditions->radius/generalisedCoordinates[i * 3 + 2]),6.0);
+
+    faxens[0]=faxens[1]=parallel;
+    faxens[2]=perpendicular;
+
 }
