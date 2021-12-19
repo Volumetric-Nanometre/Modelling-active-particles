@@ -283,24 +283,24 @@ int main(int argc, char *argv[])
 
 
     			int angle_offset = 3*conditions.numberOfParticles;
-                fprintf(output, "%e, ", conditions.currentTime);
-                fprintf(angle_output, "%e, ", conditions.currentTime);
-    			fprintf(forces_output, "%e, ",conditions.currentTime);
-    			fprintf(rms_output, "%e, %e, %e\n",conditions.currentTime, rootMeanSquare, sqrt(2 * diffusionMatrix[0] * conditions.currentTime));
+                fprintf(output, "%g, ", conditions.currentTime);
+                fprintf(angle_output, "%g, ", conditions.currentTime);
+    			fprintf(forces_output, "%g, ",conditions.currentTime);
+    			fprintf(rms_output, "%g, %g, %g\n",conditions.currentTime, rootMeanSquare, sqrt(2 * diffusionMatrix[0] * conditions.currentTime));
                 fflush(output);
                 fflush(angle_output);
                 fflush(forces_output);
                 fflush(rms_output);
                 for(int i = 0; i < 3 * conditions.numberOfParticles; i++)
                 {
-                    fprintf(output, "%e", generalisedCoordinates[i]);
-    				fprintf(forces_output, "%e", additionalForces[i]);
+                    fprintf(output, "%g", generalisedCoordinates[i]);
+    				fprintf(forces_output, "%g", additionalForces[i]);
                     double temp =fmod(generalisedCoordinates[angle_offset + i],2*gPi);
                     if(temp < 0)
                     {
                         temp = 2*gPi + temp;
                     }
-                    fprintf(angle_output, "%e", temp);
+                    fprintf(angle_output, "%g", temp);
                     fflush(output);
                     fflush(angle_output);
                     fflush(forces_output);
