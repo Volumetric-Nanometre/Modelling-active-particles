@@ -157,6 +157,7 @@ int main(int argc, char *argv[])
         // Initilise generalised coordinates
         //
 
+        printf("Make gen coords\n");
     	double *generalisedCoordinates = generalised_coordinate_initialisation(&conditions,rndarray);
 
     	if(generalisedCoordinates == NULL)
@@ -235,6 +236,7 @@ int main(int argc, char *argv[])
 
         double progTime = omp_get_wtime();
 
+        printf("Start loop\n");
         while(conditions.currentTime<conditions.endTime)
         {
 			//
@@ -243,6 +245,7 @@ int main(int argc, char *argv[])
 
 			if(loop%100 == 0)
             {
+                printf("Saving data\n");
 				/* Count number of particles within the volume in which the particles were initially generated,
 					centred on the average position*/
 
@@ -336,7 +339,7 @@ int main(int argc, char *argv[])
             {
                 MPI_Send(&generalisedCoordinates[0], vectorSize, MPI_DOUBLE, TOP_SLAVE, COORDINATES, MPI_COMM_WORLD);
             }
-
+            printf("Create diff matrix\n");
     	    diffusion_matrix_creation( conditions.numberOfParticles, diffusionMatrix, stochasticWeighting, generalisedCoordinates, &conditions);
 
     	    //---------------------------- DEBUG------------------------------//
@@ -365,7 +368,7 @@ int main(int argc, char *argv[])
     	    //
     	    // Create the stochastic displacement
     	    //
-
+            printf("Stochastic\n");
     	    stochastic_displacement_creation( conditions.numberOfParticles, stochasticWeighting, stochasticDisplacement, rndarray,rndNumArray, conditions.deltaTime);
 
     		if( gDebug == 1 && stochasticWeighting != NULL)
@@ -390,6 +393,7 @@ int main(int argc, char *argv[])
     		//
             if(gNumOfNodes <= 1)
             {
+                printf("Force-Torque\n");
                 force_torque_summation(additionalForces, generalisedCoordinates, 6 * conditions.numberOfParticles, forceList, numberOfForces, conditions, drivingField);
             }
             else
@@ -400,7 +404,9 @@ int main(int argc, char *argv[])
             //
             // Calculate time step.
             //
+            printf("Moving on\n");
             moving_on_routine(conditions.numberOfParticles, &conditions, diffusionMatrix, additionalForces, stochasticDisplacement, generalisedCoordinates, NULL);
+            printf("Loop restart\n");
         }
     	progTime = omp_get_wtime() - progTime;
 
