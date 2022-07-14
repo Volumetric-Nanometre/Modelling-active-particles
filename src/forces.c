@@ -13,6 +13,7 @@
 #include <stdbool.h>
 
 #include "mosh-dda.h"
+#include "io-cmd-parse.h"
 #include "forces.h"
 #include "initial_finalisation.h"
 
@@ -49,7 +50,7 @@ static double gTuningD = 7;
 
 extern FILE *gMosh_DDA_LogFile ;
 extern FILE *gMosh_DDA_Timings ;
-extern ioFileStruct gMosh_DDA_FileNames;
+//extern ioFileStruct gMosh_DDA_FileNames;
 //
 // Calculate the sum of the forces and torques from the forces and torques wanted
 //
@@ -365,29 +366,35 @@ static void optical_binding_force(double *additionalForces, double *generalisedC
 	static objectdata *objData; // turn into point - still needs to be initiliased
 	static eFieldData elecData={0};
 	static complex double *m_refract=NULL;
+    static precalcdata precalcData = {0};
+
 	//gMosh_DDA_FileNames.logfileOutput="logfile.txt";
 	//gMosh_DDA_FileNames.timingOutput="timing.txt";
+
+    char *inputArray[]= {"-no-validity-check"};
+    int inputNums = 1;
+
 
 	if(!isInitialised)
 	{
 
-    /* Aquire input data*/
+        //Aquire input data
 		//mosh_dda_io_cmd_read_in( argc,argv);
 
-    mosh_dda_io_initilisation(argc, argv, &particlePositions, &m_refract, &sysData2,  &objData, &elecData, &precalcData);
+        mosh_dda_io_initilisation(inputNums, inputArray, &generalisedCoordinates, &m_refract, &sysData,  &objData, &elecData, &precalcData);
 
-  	mosh_utility_logfile_fprintf(gMosh_DDA_LogFile,"File read in complete\n");
-		mosh_dda_simple_scalefactor(&sysData,objData[0],elecData);
+
+    	mosh_dda_simple_scalefactor(&sysData,objData[0],elecData);
 
 		isInitialised=true;
 	}
 
-  //
-  //	Check that the system is within the convergence criteria
-  //
+    //
+    //	Check that the system is within the convergence criteria
+    //
 
 	mosh_dda_simple_full_force_calculation(sysData, objData, elecData, generalisedCoordinates ,m_refract, additionalForces);
 
-	//mosh_dda_simple_cleanup();
+	mosh_dda_simple_cleanup();
 
 }
