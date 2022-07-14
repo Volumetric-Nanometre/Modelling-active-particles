@@ -1,13 +1,13 @@
 IDIR =../include
 MOSHDDA = C:\Users\Michael\Documents\GitHub\Discrete-dipole-approximation
 CC=gcc
-CFLAGS=-Wall -std=c11 -fopenmp -O3 -I$(IDIR) -I"C:\Program Files (x86)\Microsoft SDKs\MPI\Include" -I"$(MOSHDDA)\lib-src\mosh-dda\include" -I"$(MOSHDDA)\lib-src\mosh-beam\include" -I"$(MOSHDDA)\lib-src\mosh-matrix\include" -I"$(MOSHDDA)\lib-src\mosh-utility\include"
+CFLAGS=-Wall -std=c11 -fopenmp -O3 -I$(IDIR) -I"C:\Program Files (x86)\Microsoft SDKs\MPI\Include" -I"$(MOSHDDA)\lib-src\mosh-dda\include" -I"$(MOSHDDA)\lib-src\mosh-beam\include" -I"$(MOSHDDA)\lib-src\mosh-matrix\include" -I"$(MOSHDDA)\lib-src\mosh-utility\include" -I"$(MOSHDDA)\lib-src\mosh-io\include"
 
 
 ODIR=obj
 LDIR =../lib
 
-LIBS=-lm -lmosh-matrix -lmosh-beam -lmosh-utility -lgsl -lgslcblas -lmsmpi  -lfftw3 -L$(LDIR) -L"C:\Program Files (x86)\Microsoft SDKs\MPI\Lib" -L"$(MOSHDDA)\lib"
+LIBS=-lm -lmosh-io -lmosh-dda -lmosh-matrix -lmosh-beam -lmosh-utility -lgsl -lgslcblas -lmsmpi  -lfftw3 -L$(LDIR) -L"C:\Program Files (x86)\Microsoft SDKs\MPI\Lib" -L"$(MOSHDDA)\lib"
 
 _DEPS = diffusionmatrix.h maths_functions.h particles.h stochastic_force.h moving_on.h forces.h initial_finalisation.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
